@@ -20,6 +20,7 @@ interface DynamicReportProps {
   onClose: () => void;
   technicalResponsibleName?: string;
   technicalResponsibleCred?: string;
+  hideTOC?: boolean;
 }
 
 // Fixed Header for every report page with green background and full bleed (bleed to borders)
@@ -128,7 +129,8 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
   blocks,
   onClose,
   technicalResponsibleName,
-  technicalResponsibleCred
+  technicalResponsibleCred,
+  hideTOC = false
 }) => {
   const reportRef = useRef<HTMLDivElement>(null);
   const measurerRef = useRef<HTMLDivElement>(null);
@@ -186,7 +188,7 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
       }
     });
 
-    const hasMultipleSections = sections.length >= 2;
+    const hasMultipleSections = !hideTOC && sections.length >= 2;
     // Page index offset: if there is an index page, actual content starts on Page 2
     const firstContentPageNum = hasMultipleSections ? 2 : 1;
 
@@ -228,9 +230,9 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
       });
     });
 
-    setTocSections(computedToc);
+    setTocSections(hideTOC ? [] : computedToc);
     setPaginatedPages(computedPages);
-  }, [isMeasuring, measuredHeights, blocks]);
+  }, [isMeasuring, measuredHeights, blocks, hideTOC]);
 
   const handlePrint = () => {
     const isIframe = window.self !== window.top;

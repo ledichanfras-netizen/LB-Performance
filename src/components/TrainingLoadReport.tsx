@@ -30,21 +30,63 @@ export const TrainingLoadReport: React.FC<TrainingLoadReportProps> = ({ athlete,
   let feedbackText = "O atleta encontra-se na zona de equilíbrio ótimo ('Sweet Spot', ACWR entre 0.8 e 1.3). Esse índice promove a supercompensação cardiovascular e neuromuscular, maximizando o ganho físico e reduzindo drasticamente as chances de lesões de tecidos moles.";
   let actionText = "Manter o microciclo planejado de treinamento sem restrições de volume ou intensidade. Continuar o monitoramento diário de wellness.";
 
+  let explicacoes: string[] = [
+    "Equilíbrio Fisiológico Ideal: A aptidão física desenvolvida ao longo do último mês (carga crônica) neutraliza perfeitamente a fadiga gerada nos últimos 7 dias (carga aguda).",
+    "Supercompensação Ativa: O corpo do atleta está assimilando os estímulos de treino com excelência, o que potencializa ganhos em força muscular, velocidade e resistência cardiorrespiratória.",
+    "Risco de Lesão Minimizado: Estudos científicos apontam que atletas no Sweet Spot mantêm taxas de lesões musculares inferiores a 5% em microciclos subsequentes."
+  ];
+
+  let solucoes: string[] = [
+    "Manutenção do Planejamento: Prosseguir com o microciclo planejado de treinos táticos e físicos, sem necessidade de cortes preventivos.",
+    "Estímulos de Intensidade: Excelente janela fisiológica para focar em potência e velocidade máxima, pois o sistema neuromuscular encontra-se descansado e receptivo.",
+    "Suporte Nutricional e Ergogênico: Garantir a ingestão ideal de macronutrientes e manter o protocolo padrão de hidratação pós-treino."
+  ];
+
   if (acwr < 0.8) {
     acwrStatus = "Subtreinamento (Under-trained)";
     acwrColor = "text-amber-600 bg-amber-50 border-amber-100";
     feedbackText = "Índice ACWR abaixo do Sweet Spot recomendado (< 0.8). O atleta está exposto a um destreinamento funcional e perda de robustez física. O risco de lesões aumenta indiretamente quando o atleta for exposto a picos súbitos de intensidade futura.";
     actionText = "Programar aumentos graduais e lineares de carga mecânica e volume nas próximas sessões de campo/quadra para recalibrar a tolerância ao esforço.";
+    explicacoes = [
+      "Perda de Robustez Física: O estímulo recente de treino foi insuficiente para manter ou desenvolver a base atlética prévia, resultando em destreinamento gradual.",
+      "Vulnerabilidade a Picos de Carga: Ao treinar menos do que o habitual, o limiar de tolerância ao esforço do atleta diminui. Picos de intensidade futuros representarão um estresse excessivo.",
+      "Aptidão Físico-Motora Estagnada: A musculatura esquelética e o sistema cardiovascular não estão recebendo a sobrecarga mínima necessária para adaptações de alta performance."
+    ];
+    solucoes = [
+      "Aumento Progressivo Controlado: Elevar gradualmente a carga semanal utilizando uma taxa segura (recomenda-se um incremento de 10% a 15% na carga total).",
+      "Sessões Coadjuvantes de Força: Inserir trabalhos complementares de pliometria leve e exercícios de força reativa para reativar o tônus e a resiliência articular.",
+      "Ajuste de Volume Mínimo: Garantir que a duração mínima das sessões principais de treinamento atinja os limiares de condicionamento estipulados para a modalidade."
+    ];
   } else if (acwr > 1.3 && acwr <= 1.5) {
     acwrStatus = "Zona de Alerta (Danger Zone)";
     acwrColor = "text-orange-600 bg-orange-50 border-orange-100";
     feedbackText = "ACWR em zona de transição limítrofe (1.3 - 1.5). O acúmulo de estresse agudo está ligeiramente desequilibrado em relação à capacidade crônica desenvolvida. O sistema neuromuscular do atleta apresenta sinais latentes de fadiga.";
     actionText = "Recomenda-se realizar treinos de intensidade moderada e corte de 15% no volume mecânico total da próxima sessão principal.";
+    explicacoes = [
+      "Sobrecarga Aguda Limítrofe: O volume ou intensidade acumulada nos últimos 7 dias cresceu rápido demais em comparação com o histórico das últimas 4 semanas.",
+      "Acúmulo de Fadiga Neuromuscular: O sistema de recrutamento muscular começa a falhar na eficiência de contração, elevando a percepção de cansaço subjetivo e dores localizadas.",
+      "Elevação Moderada de Risco: O risco relativo de lesão de tecidos moles (músculos, tendões) aumenta cerca de 1.5x a 2x devido à lentidão nos processos regenerativos celular."
+    ];
+    solucoes = [
+      "Corte Estratégico de Volume: Reduzir em 15% a 20% a duração total da próxima sessão principal de treino, priorizando gestos técnicos e táticos de menor impacto mecânico.",
+      "Manutenção Inteligente de Intensidade: Evitar treinos exaustivos de resistência, mas manter breves estímulos de alta qualidade para evitar perda de rendimento esportivo.",
+      "Protocolo Ativo de Recovery: Sessões focadas em mobilidade articular ativa, liberação miofascial suave com rolo de espuma e hidratação com isotônicos para reequilibrar eletrólitos."
+    ];
   } else if (acwr > 1.5) {
     acwrStatus = "Zona de Perigo Extremo (Extreme Overload)";
     acwrColor = "text-rose-600 bg-rose-50 border-rose-100";
     feedbackText = "O atleta ultrapassou a 'Zona de Perigo' (ACWR > 1.5). O risco relativo de ocorrência de lesões musculares por estresse mecânico, contraturas severas ou estiramentos ligamentares está multiplicado por até 4 vezes nas próximas 72 horas.";
     actionText = "Prescrever sessão regenerativa (recovery ativo) imediata. Reduzir as demandas pliométricas e sprints de alta velocidade nas próximas duas sessões de campo.";
+    explicacoes = [
+      "Fadiga Aguda Descompensada: A carga de trabalho recente atingiu um nível crítico que ultrapassa com folga a capacidade fisiológica crônica suportada pelo corpo.",
+      "Risco Crítico de Lesão: A taxa de lesões aumenta exponencialmente (até 4x mais). É o momento mais perigoso para estiramentos isquiotibiais, estresse de tendão ou contraturas severas.",
+      "Estresse no Sistema Nervoso Central (SNC): Queda expressiva no tempo de reação de tomada de decisão e na precisão da coordenação motora fina do atleta, propiciando erros mecânicos e entorses."
+    ];
+    solucoes = [
+      "Intervenção de Deload Imediata: Redução drástica de 40% a 50% no volume de treino geral nas próximas 48 a 72 horas, suspendendo temporariamente picos agudos de esforço.",
+      "Vetar Exercícios de Impacto Máximo: Proibir temporariamente sprints de velocidade máxima e saltos de pliometria de alta intensidade até que o ACWR volte a níveis seguros (< 1.3).",
+      "Regeneração Acelerada Avançada: Aplicar crioterapia de imersão por 10-12 min a 10°C nas primeiras horas pós-sessão e priorizar a suplementação com antioxidantes e alto teor de carboidratos para reposição do glicogênio esgotado."
+    ];
   }
 
   // Combine and sort sessions to show recent trends in graph
@@ -88,9 +130,8 @@ export const TrainingLoadReport: React.FC<TrainingLoadReportProps> = ({ athlete,
     {
       id: "load_chart_block",
       section: "Tendências de Carga",
-      forcePageBreak: true,
       content: (
-        <div className="grid grid-cols-12 gap-5 text-left">
+        <div className="grid grid-cols-12 gap-5 text-left mt-4">
           {/* Load trends graph */}
           <div className="col-span-8 bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between">
             <div>
@@ -224,96 +265,87 @@ export const TrainingLoadReport: React.FC<TrainingLoadReportProps> = ({ athlete,
       )
     },
     {
-      id: "diagnostico_metabolico",
-      section: "Análise de Prontidão",
+      id: "explicacoes_detalhadas",
+      section: "Explicações Detalhadas",
+      forcePageBreak: true,
       content: (
-        <div className="grid grid-cols-2 gap-5 text-left">
-          {/* Interpretacao do LB */}
-          <div className="p-5 bg-emerald-50/20 border border-emerald-100 rounded-2xl flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-                  <Gauge className="w-4 h-4 text-emerald-600" />
-                </div>
-                <div>
-                  <span className="text-[7px] font-black text-emerald-600 block uppercase tracking-wider font-sans">Racional Clínico</span>
-                  <h4 className="text-[10px] font-black text-slate-900 uppercase font-sans">Interpretação e Diagnóstico de Ciclagem</h4>
-                </div>
-              </div>
-              <p className="text-xs text-slate-700 leading-relaxed font-bold border-t border-slate-100 pt-3 italic font-sans">
-                "{feedbackText}"
-              </p>
+        <div className="space-y-4 text-left font-sans">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600">
+              <Gauge className="w-5 h-5 text-amber-500" />
             </div>
-            <div className="mt-4 pt-2.5 border-t border-slate-150 flex items-center gap-2 font-sans">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-              <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wide">
-                Indicação Cineto-Muscular: ESTÁVEL
-              </p>
+            <div>
+              <span className="text-[8px] font-black text-amber-500 block uppercase tracking-wider">Mapeamento de Causa e Efeito</span>
+              <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                Explicações Técnicas e Diagnóstico Clínico
+              </h3>
             </div>
           </div>
 
-          {/* Ajustes prescritos */}
-          <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-slate-950 flex items-center justify-center text-white shrink-0">
-                  <Activity className="w-4 h-4 text-emerald-500" />
+          <div className="bg-amber-50/30 border border-amber-100 p-5 rounded-2xl">
+            <p className="text-xs text-amber-900 leading-relaxed font-bold italic">
+              "{feedbackText}"
+            </p>
+          </div>
+
+          <div className="space-y-3.5 mt-2">
+            <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+              Análise Multidimensional de Impacto:
+            </h4>
+            <div className="grid grid-cols-1 gap-3">
+              {explicacoes.map((exp, idx) => (
+                <div key={idx} className="flex gap-3 items-start bg-slate-50 border border-slate-150 p-4 rounded-xl">
+                  <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-750 text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
+                    {idx + 1}
+                  </span>
+                  <p className="text-[11.5px] text-slate-600 leading-relaxed font-semibold">
+                    {exp}
+                  </p>
                 </div>
-                <div>
-                  <span className="text-[7px] font-black text-slate-400 block uppercase tracking-wider font-sans">Prescrição do Treinador</span>
-                  <h4 className="text-[10px] font-black text-slate-900 uppercase font-sans">Ajustes de Sessão Recomentados</h4>
-                </div>
-              </div>
-              <p className="text-xs text-slate-700 leading-relaxed font-bold border-t border-slate-100 pt-3 italic font-sans">
-                "{actionText}"
-              </p>
-            </div>
-            <div className="mt-4 pt-2.5 border-t border-slate-150 flex items-center gap-2 font-sans">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-              <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wide">
-                Protocolo: LB ELITE PERFORMANCE
-              </p>
+              ))}
             </div>
           </div>
         </div>
       )
     },
     {
-      id: "metodos_recuperacao",
-      section: "Plano de Recuperação",
-      forcePageBreak: true,
+      id: "solucoes_acao",
+      section: "Soluções & Prescrições",
       content: (
-        <div className="space-y-4 text-left font-sans">
-          <div className="flex items-center gap-2 mb-1.5">
-            <Award className="w-4.5 h-4.5 text-emerald-600" />
-            <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest font-sans">
-              Controle de Carga de Elite e Estratégia de Regeneração
-            </h3>
+        <div className="space-y-4 text-left font-sans mt-6">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+              <Activity className="w-5 h-5 text-emerald-500" />
+            </div>
+            <div>
+              <span className="text-[8px] font-black text-emerald-600 block uppercase tracking-wider">Ações de Enfrentamento</span>
+              <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                Soluções Recomendadas e Plano de Ação Imediato
+              </h3>
+            </div>
           </div>
 
-          <p className="text-xs text-slate-600 leading-relaxed font-semibold">
-            Visando blindar a estrutura mecânica do atleta contra descompensações funcionais e lesões graves por fadiga excessiva acumulada, a comissão multidisciplinar prescreve as seguintes intervenções científicas complementares ao plano de sessões táticas ordinárias:
-          </p>
+          <div className="bg-emerald-50/30 border border-emerald-100 p-5 rounded-2xl">
+            <p className="text-xs text-emerald-900 leading-relaxed font-bold italic">
+              "{actionText}"
+            </p>
+          </div>
 
-          <div className="grid grid-cols-2 gap-5 mt-3 font-sans">
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-              <h5 className="text-[9.5px] font-black text-slate-900 uppercase mb-1 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                Método 1: Crioterapia por Imersão (Ice Bath)
-              </h5>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
-                Sessão de imersão de 10-12 minutos a uma temperatura de 10°C a 12°C em até 2 horas pós-treino longo. Reduz citocinas pró-inflamatórias musculares e atenua a percepção subjetiva de dor muscular tardia (DOMS).
-              </p>
-            </div>
-
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-              <h5 className="text-[9.5px] font-black text-slate-900 uppercase mb-1 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                Método 2: Nutrição e Ciclagem de Glicogênio
-              </h5>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-semibold">
-                Ingestão imediata pós-esforço de proporção 3:1 de carboidratos complexos de rápida absorção e proteínas isoladas de alto valor biológico (Whey/Caseína) para restabelecer os estoques musculares e acelerar a síntese proteica.
-              </p>
+          <div className="space-y-3.5 mt-2">
+            <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+              Protocolos de Correção e Ciclagem:
+            </h4>
+            <div className="grid grid-cols-1 gap-3">
+              {solucoes.map((sol, idx) => (
+                <div key={idx} className="flex gap-3 items-start bg-slate-50 border border-slate-150 p-4 rounded-xl">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
+                    ✓
+                  </span>
+                  <p className="text-[11.5px] text-slate-600 leading-relaxed font-semibold">
+                    {sol}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -336,6 +368,7 @@ export const TrainingLoadReport: React.FC<TrainingLoadReportProps> = ({ athlete,
       ]}
       blocks={blocks}
       onClose={onClose || (() => {})}
+      hideTOC={true}
     />
   );
 };
