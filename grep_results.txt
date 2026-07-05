@@ -1,0 +1,37 @@
+656:  const [activeTab, setActiveTab] = useState<
+1302:                  activeTab === "dash" && dashboardSubTab === "pro" && !aiModelingResult
+1319:                  activeTab === "dash" && dashboardSubTab === "classic" && !aiModelingResult
+1335:                  activeTab === "assessment"
+1351:                  activeTab === "training"
+1367:                  activeTab === "injuries"
+1384:                  activeTab === "dash" && dashboardSubTab === "elite-monitoring" && !aiModelingResult
+1400:                  activeTab === "ai-modeling" || aiModelingResult
+1416:                  activeTab === "info"
+1467:                    activeTab === "dash" && !aiModelingResult
+1472:                  <LayoutDashboard className={`w-4 h-4 shrink-0 ${activeTab === "dash" && !aiModelingResult ? "text-amber-400" : "text-slate-500"}`} />
+1537:                      activeTab === "assessment"
+1542:                    <ClipboardList className={`w-4 h-4 shrink-0 ${activeTab === "assessment" ? "text-amber-400" : "text-slate-500"}`} />
+1554:                    activeTab === "training"
+1559:                  <Dumbbell className={`w-4 h-4 shrink-0 ${activeTab === "training" ? "text-amber-400" : "text-slate-500"}`} />
+1571:                      activeTab === "ai-modeling" || aiModelingResult
+1576:                    <Sparkles className={`w-4 h-4 shrink-0 ${activeTab === "ai-modeling" || aiModelingResult ? "text-amber-400" : "text-slate-500"}`} />
+1607:                      activeTab === "injuries"
+1613:                      <Bell className={`w-4 h-4 shrink-0 ${activeTab === "injuries" ? "text-amber-400" : "text-slate-500"}`} />
+1629:                    activeTab === "info"
+1634:                  <BookOpen className={`w-4 h-4 shrink-0 ${activeTab === "info" ? "text-amber-400" : "text-slate-500"}`} />
+1791:                          {activeTab === "dash" && "Performance Lab"}
+1792:                          {activeTab === "training" && "Training Zone"}
+1793:                          {activeTab === "assessment" && "Elite Testing"}
+1794:                          {activeTab === "ai-modeling" && "AI Modeling"}
+1795:                          {activeTab === "premium" && "Exclusive Area"}
+1796:                          {activeTab === "info" && "Guia de Performance"}
+1797:                          {activeTab === "injuries" && "Departamento Médico"}
+2380:                      <Card className={`${activeTab === "training" ? "lg:col-span-3" : "lg:col-span-4"} premium-card p-1`}>
+2465:                          {activeTab === "training" && user.role === "coach" && (
+2525:                      {activeTab === "training" && (() => {
+2609:                    {activeTab === "dash" && (
+2649:                    {activeTab === "premium" && <PremiumHub />}
+2651:                    {activeTab === "info" && <AthleteGuide />}
+2653:                    {activeTab === "training" && (
+2917:                    {activeTab === "assessment" && (
+2943:                    {activeTab === "injuries" && (
