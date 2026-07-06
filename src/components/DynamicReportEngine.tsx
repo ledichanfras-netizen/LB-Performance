@@ -150,8 +150,9 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
   // Header: ~180px.
   // Footer: ~70px.
   // Usable content area height = 1122.5px - 151px - 180px - 70px = 721.5px.
-  // We use 715px to be absolutely safe and avoid unwanted blank overflows.
-  const maxContentHeight = 715;
+  // We use 680px to be absolutely safe and avoid unwanted blank overflows, leaving
+  // a small robust buffer to keep high-quality header/footers without clipping.
+  const maxContentHeight = 680;
 
   // Measure block heights in a layout effect to get layout-ready pixel sizes
   useLayoutEffect(() => {
@@ -194,21 +195,25 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
 
     blocks.forEach((block) => {
       const blockHeight = measuredHeights[block.id] || 150; // Fallback default height
+      
+      // space-y-6 adds 24px top margin to every block after the first on the page
+      const spacing = currentPage.length > 0 ? 24 : 0;
+      const projectedHeight = currentPageHeight + blockHeight + spacing;
 
       // Start a new page if:
       // 1. Force break is requested
       // 2. Or, adding this block exceeds the maximum content height limit
       const needsNewPage = 
         block.forcePageBreak || 
-        (currentPageHeight + blockHeight > maxContentHeight && currentPage.length > 0);
+        (projectedHeight > maxContentHeight && currentPage.length > 0);
 
       if (needsNewPage) {
         computedPages.push(currentPage);
         currentPage = [block];
-        currentPageHeight = blockHeight;
+        currentPageHeight = blockHeight; // First block on new page, so spacing is 0
       } else {
         currentPage.push(block);
-        currentPageHeight += blockHeight;
+        currentPageHeight = projectedHeight;
       }
     });
 
@@ -311,12 +316,12 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
           {tocSections.length >= 2 && (
             <div
               className="report-page page-break bg-white text-slate-950 shadow-2xl my-10 mx-auto overflow-hidden relative text-left"
-              style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box" }}
+              style={{ width: "210mm", height: "297mm", padding: "20mm", boxSizing: "border-box" }}
             >
               {/* Decorative top green border */}
               <div className="absolute top-0 left-0 w-full h-2 bg-emerald-600"></div>
 
-              <div className="flex flex-col h-full min-h-[257mm] justify-between">
+              <div className="flex flex-col h-full justify-between" style={{ height: "257mm" }}>
                 <div>
                   <ReportHeader
                     title={reportTitle}
@@ -392,12 +397,12 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
               <div
                 key={pageIndex}
                 className="report-page page-break bg-white text-slate-950 shadow-2xl my-10 mx-auto overflow-hidden relative text-left"
-                style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box" }}
+                style={{ width: "210mm", height: "297mm", padding: "20mm", boxSizing: "border-box" }}
               >
                 {/* Decorative top green border */}
                 <div className="absolute top-0 left-0 w-full h-2 bg-emerald-600"></div>
 
-                <div className="flex flex-col h-full min-h-[257mm] justify-between">
+                <div className="flex flex-col h-full justify-between" style={{ height: "257mm" }}>
                   <div className="flex-grow">
                     <ReportHeader
                       title={reportTitle}
