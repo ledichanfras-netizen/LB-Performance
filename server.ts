@@ -79,7 +79,7 @@ app.use((req, res, next) => {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') ? { rejectUnauthorized: false } : false,
-  connectionTimeoutMillis: 15000, // Aumentado para 15 segundos
+  connectionTimeoutMillis: 3000, // Reduzido para 3 segundos para falhar rápido se desativado
   idleTimeoutMillis: 30000,
   max: 20,
 });
@@ -832,16 +832,16 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
 apiRouter.post('/salvar', authMiddleware, async (req, res) => {
   const athletes = req.body;
   
-  // Tentar reconectar se não estiver conectado
+  // Tentar reconectar de forma assíncrona se não estiver conectado, sem bloquear a requisição atual
   if (!isDbConnected && process.env.DATABASE_URL) {
-    try {
-      const client = await pool.connect();
+    pool.connect().then(client => {
       client.release();
       isDbConnected = true;
-      console.log("Reconexão bem-sucedida durante a requisição /salvar");
-    } catch (err: any) {
-      console.error("Falha na tentativa de reconexão durante /salvar:", err.message);
-    }
+      console.log("Reconexão assíncrona bem-sucedida durante /salvar");
+      ensureColumns();
+    }).catch(err => {
+      // Ignorar erro em background para não poluir o console excessivamente
+    });
   }
 
   // Definimos o helper para encapsular a lógica de salvamento via REST Proxy
@@ -1553,6 +1553,9 @@ apiRouter.delete('/atletas/:id', authMiddleware, async (req, res) => {
   const runSupabaseDeleteFallback = async () => {
     console.log(`[API] Executando Fallback Supabase para excluir atleta: ${id}`);
     try {
+      // Delete user reference or user account first to avoid foreign key issues
+      await supabase.from('users').delete().eq('athlete_id', id);
+
       await supabase.from('wellness').delete().eq('athlete_id', id);
       await supabase.from('external_sessions').delete().eq('athlete_id', id);
       await supabase.from('bioimpedance').delete().eq('athlete_id', id);
@@ -1562,6 +1565,7 @@ apiRouter.delete('/atletas/:id', authMiddleware, async (req, res) => {
       await supabase.from('vo2max').delete().eq('athlete_id', id);
       await supabase.from('speed').delete().eq('athlete_id', id);
       await supabase.from('general_strength').delete().eq('athlete_id', id);
+      await supabase.from('imtp').delete().eq('athlete_id', id);
       
       const { data: workouts } = await supabase.from('workouts').select('id').eq('athlete_id', id);
       if (workouts && workouts.length > 0) {
@@ -2157,7 +2161,7 @@ apiRouter.all('*', (req, res) => {
 
 app.use('/api', apiRouter);
 
-async function runSetup(retries = 3) {
+async function runSetup(retries = 1) {
   if (!process.env.DATABASE_URL) {
     console.warn("DATABASE_URL não configurada. O banco de dados não estará disponível.");
     return;
