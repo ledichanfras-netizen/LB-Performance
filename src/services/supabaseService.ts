@@ -304,6 +304,7 @@ export const supabaseService = {
                 flightTime: c.flight_time,
                 rsi: c.rsi,
                 weight: c.weight,
+                averageForce: c.average_force,
                 observations: c.observations
             })).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
             dropJump: (() => {

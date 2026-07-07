@@ -15360,6 +15360,7 @@ const AssessmentForm: FC<{
           depth: 0,
           flightTime: 0,
           rsi: 0,
+          averageForce: 0,
           observations: "",
         };
       case "dropJump":
