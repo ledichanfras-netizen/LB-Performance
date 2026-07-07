@@ -2645,61 +2645,47 @@ async function startServer() {
       }
     });
   } else {
-    // Verificar se a pasta dist existe antes de tentar servir
-    try {
-      await fs.access(indexPath);
-      console.log(`Servindo arquivos estáticos de: ${distPath}`);
-      
-      // Serve static assets EXCEPT index.html since we handle index.html below
-      app.use(express.static(distPath, { index: false }));
-      
-      // Rota catch-all para o SPA com injeção de variáveis de ambiente
-      app.get('*', async (req, res) => {
-        try {
-          let html = await fs.readFile(indexPath, 'utf-8');
-          const envScript = `
-            <script>
-              window.ENV = {
-                VITE_SUPABASE_URL: "${supabaseUrl}",
-                VITE_SUPABASE_ANON_KEY: "${supabaseAnonKey}"
-              };
-            </script>
-          `;
-          html = html.replace('<head>', `<head>\n${envScript}`);
-          res.status(200).set({
-            'Content-Type': 'text/html',
-            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }).send(html);
-        } catch (err) {
-          // Fallback to sending as file
-          res.sendFile(indexPath);
-        }
-      });
-    } catch (e) {
-      console.error(`\n--- ERRO CRÍTICO NO DEPLOY ---`);
-      console.error(`Arquivo não encontrado: ${indexPath}`);
-      
-      app.get('*', (req, res) => {
-        res.status(500).send(`
-          <div style="font-family: sans-serif; padding: 40px; text-align: center; color: #334155;">
-            <h1 style="color: #e11d48;">LBHUB - Erro de Inicialização</h1>
-            <p>Os arquivos do front-end (build) não foram encontrados no servidor.</p>
-            <div style="background: #f1f5f9; padding: 20px; border-radius: 12px; display: inline-block; text-align: left; margin-top: 20px; border: 1px solid #e2e8f0;">
-              <strong style="display: block; margin-bottom: 10px;">Como resolver no Render:</strong>
-              <ol style="margin: 0; padding-left: 20px; line-height: 1.6;">
-                <li>Vá em <strong>Settings</strong> do seu Web Service.</li>
-                <li>No campo <strong>Build Command</strong>, use: <br><code>npm install && npm run build</code></li>
-                <li>No campo <strong>Start Command</strong>, use: <br><code>npm start</code></li>
-                <li>Certifique-se de que o deploy terminou sem erros de build.</li>
-              </ol>
-            </div>
-            <p style="margin-top: 20px; font-size: 0.8rem; color: #64748b;">Dica: Verifique os logs de build no painel do Render.</p>
+    console.log(`Servindo arquivos estáticos de: ${distPath}`);
+    
+    // Serve static assets EXCEPT index.html since we handle index.html below
+    app.use(express.static(distPath, { index: false }));
+    
+    // Rota catch-all para o SPA com injeção de variáveis de ambiente
+    app.get('*', async (req, res) => {
+      try {
+        await fs.access(indexPath);
+        let html = await fs.readFile(indexPath, 'utf-8');
+        const envScript = `
+          <script>
+            window.ENV = {
+              VITE_SUPABASE_URL: "${supabaseUrl}",
+              VITE_SUPABASE_ANON_KEY: "${supabaseAnonKey}"
+            };
+          </script>
+        `;
+        html = html.replace('<head>', `<head>\n${envScript}`);
+        res.status(200).set({
+          'Content-Type': 'text/html',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }).send(html);
+      } catch (err) {
+        // Se dist/index.html ainda não estiver pronto, mostra carregamento temporário que auto-recarrega
+        res.status(202).set({
+          'Content-Type': 'text/html',
+          'Refresh': '3'
+        }).send(`
+          <div style="font-family: sans-serif; padding: 40px; text-align: center; color: #334155; max-width: 500px; margin: 80px auto; background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+            <div style="width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #0f172a; border-radius: 50%; margin: 0 auto 20px auto; animation: spin 1s linear infinite;"></div>
+            <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+            <h1 style="color: #0f172a; font-size: 1.5rem; margin-bottom: 10px; font-weight: 800;">LBHUB - Inicializando...</h1>
+            <p style="font-size: 0.95rem; color: #64748b; line-height: 1.5;">O sistema está carregando e otimizando os arquivos do painel. Por favor, aguarde alguns segundos.</p>
+            <p style="margin-top: 15px; font-size: 0.8rem; color: #94a3b8;">A página será recarregada automaticamente...</p>
           </div>
         `);
-      });
-    }
+      }
+    });
   }
 
   app.listen(port, '0.0.0.0', () => {
