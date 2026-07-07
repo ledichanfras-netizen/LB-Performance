@@ -456,17 +456,13 @@ export const useAthletes = (token?: string | null) => {
 
   const deleteWellness = async (athleteId: string, wellnessId: string) => {
     setSyncing(true);
-    let updated: Athlete[] = [];
-
-    setAthletes(prev => {
-      updated = prev.map(a => {
-        if (a.id === athleteId) {
-          return { ...a, wellness: (a.wellness || []).filter(w => w.id !== wellnessId) };
-        }
-        return a;
-      });
-      return updated;
+    const updated = athletes.map(a => {
+      if (a.id === athleteId) {
+        return { ...a, wellness: (a.wellness || []).filter(w => w.id !== wellnessId) };
+      }
+      return a;
     });
+    setAthletes(updated);
 
     try {
       if (token) {
@@ -483,9 +479,7 @@ export const useAthletes = (token?: string | null) => {
         await supabaseService.deleteWellness(wellnessId);
       }
       
-      // Safety save to ensure state is synchronized if DELETE fails silently or for JSON persistence
-      await save(updated, athleteId);
-      
+      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
       toast.success("Check-in removido!");
     } catch (e) {
       logError("Erro ao deletar wellness:", e);
@@ -524,17 +518,13 @@ export const useAthletes = (token?: string | null) => {
 
   const deleteWorkout = async (athleteId: string, workoutId: string) => {
     setSyncing(true);
-    let updated: Athlete[] = [];
-    
-    setAthletes(prev => {
-      updated = prev.map(a => {
-        if (a.id === athleteId) {
-          return { ...a, workouts: (a.workouts || []).filter(w => w.id !== workoutId) };
-        }
-        return a;
-      });
-      return updated;
+    const updated = athletes.map(a => {
+      if (a.id === athleteId) {
+        return { ...a, workouts: (a.workouts || []).filter(w => w.id !== workoutId) };
+      }
+      return a;
     });
+    setAthletes(updated);
 
     try {
       if (token) {
@@ -551,9 +541,7 @@ export const useAthletes = (token?: string | null) => {
         await supabaseService.deleteWorkout(workoutId);
       }
       
-      // Safety save to ensure state is synchronized if DELETE fails silently or for JSON persistence
-      await save(updated, athleteId);
-      
+      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
       toast.success("Treino removido!");
     } catch (e) {
       logError("Erro ao deletar treino:", e);
@@ -649,9 +637,7 @@ export const useAthletes = (token?: string | null) => {
         await supabaseService.deleteAssessment(type, assessmentId);
       }
 
-      // Safety save to ensure state is synchronized if DELETE fails silently or for JSON persistence
-      await save(updatedAthletes, athleteId);
-
+      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updatedAthletes));
       toast.success(`Avaliação removida!`);
     } catch (e) {
       logError("Erro ao deletar avaliação:", e);
@@ -1084,17 +1070,15 @@ export const useAthletes = (token?: string | null) => {
   };
 
   const deleteExternalSession = async (athleteId: string, sessionId: string) => {
-    let updated: Athlete[] = [];
-    setAthletes(prev => {
-      updated = prev.map(a => {
-        if (a.id === athleteId) {
-          const history = Array.isArray(a.externalSessions) ? a.externalSessions : [];
-          return { ...a, externalSessions: history.filter(s => s.id !== sessionId) };
-        }
-        return a;
-      });
-      return updated;
+    setSyncing(true);
+    const updated = athletes.map(a => {
+      if (a.id === athleteId) {
+        const history = Array.isArray(a.externalSessions) ? a.externalSessions : [];
+        return { ...a, externalSessions: history.filter(s => s.id !== sessionId) };
+      }
+      return a;
     });
+    setAthletes(updated);
 
     try {
       if (token) {
@@ -1111,13 +1095,13 @@ export const useAthletes = (token?: string | null) => {
         await supabaseService.deleteExternalSession(sessionId);
       }
       
-      // Safety save to ensure state is synchronized if DELETE fails silently
-      await save(updated, athleteId);
-
+      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
       toast.success("Sessão removida!");
     } catch (e) {
       logError("Erro ao deletar sessão:", e);
       toast.error("Erro ao sincronizar exclusão.");
+    } finally {
+      setSyncing(false);
     }
   };
 
