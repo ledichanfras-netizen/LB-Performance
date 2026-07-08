@@ -10849,6 +10849,39 @@ const StrengthReport: FC<{
   const reportRef = useRef<HTMLDivElement>(null);
   const previousData = getPreviousAssessment(data, history);
 
+  const asymQuad = getAsymmetryStatus(data.quadricepsR, data.quadricepsL);
+  const asymHam = getAsymmetryStatus(data.hamstringsR, data.hamstringsL);
+
+  const AsymmetryBracket = ({ percent }: { percent: number }) => {
+    const isGood = percent <= 10;
+    const isAttention = percent > 10 && percent <= 15;
+    const colorClass = isGood 
+      ? "text-emerald-600 border-emerald-500 bg-emerald-50/50" 
+      : isAttention 
+        ? "text-amber-500 border-amber-500 bg-amber-50/50" 
+        : "text-rose-600 border-rose-500 bg-rose-50/50";
+
+    return (
+      <div className="flex items-center gap-1 shrink-0 select-none">
+        <svg className="w-2.5 h-8 text-slate-300" viewBox="0 0 10 32" fill="none">
+          <path d="M1 2 L8 16 L1 30" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <div className={`text-[8.5px] font-black px-1.5 py-0.5 rounded-md border ${colorClass} italic`}>
+          {percent}%
+        </div>
+      </div>
+    );
+  };
+
+  const getAsymmetryColor = (pct: number) => {
+    if (pct <= 10) return { fill: "#22c55e", stroke: "#16a34a" }; // Emerald 500
+    if (pct <= 15) return { fill: "#f59e0b", stroke: "#d97706" }; // Amber 500
+    return { fill: "#ef4444", stroke: "#dc2626" }; // Rose 500
+  };
+
+  const quadColors = getAsymmetryColor(asymQuad.value);
+  const hamColors = getAsymmetryColor(asymHam.value);
+
   const handleExportJpeg = async () => {
     if (!reportRef.current) return;
     const toastId = toast.loading("Otimizando layout para exportação...");
@@ -10878,8 +10911,6 @@ const StrengthReport: FC<{
     triggerPrint();
   };
 
-  const asymQuad = getAsymmetryStatus(data.quadricepsR, data.quadricepsL);
-  const asymHam = getAsymmetryStatus(data.hamstringsR, data.hamstringsL);
   const iqR = getIQRatioStatus(data.hamstringsR, data.quadricepsR);
   const iqL = getIQRatioStatus(data.hamstringsL, data.quadricepsL);
 
@@ -11039,189 +11070,6 @@ const StrengthReport: FC<{
     );
   };
 
-  const getStrengthHistory = (key: keyof IsometricStrength) => {
-    const sortedValid = [...history]
-      .filter((item) => {
-        const val = item[key] as number;
-        return val !== undefined && val > 0;
-      })
-      .sort((a, b) => getSafeDateTime(a.date) - getSafeDateTime(b.date));
-
-    return sortedValid
-      .map((item, index) => {
-        const val = (item[key] as number) || 0;
-        const prevVal = index > 0 ? (sortedValid[index - 1][key] as number) : undefined;
-        const diff = prevVal ? ((val - prevVal) / prevVal) * 100 : 0;
-        const refVal = key.includes("quadriceps") ? REF_EXT : REF_FLEX;
-        return {
-          date: formatDate(item.date),
-          value: val,
-          progression: diff,
-          isOptimal: val >= refVal,
-        };
-      })
-      .slice(-3);
-  };
-
-  const StrengthSectionComponent = ({
-    title,
-    dataKey,
-    refValue,
-  }: {
-    title: string;
-    dataKey: keyof IsometricStrength;
-    refValue: number;
-  }) => {
-    const sectionHistory = getStrengthHistory(dataKey);
-    const currentVal = (data[dataKey] as number) || 0;
-    const firstVal = sectionHistory[0]?.value || 0;
-    const prevVal = sectionHistory[sectionHistory.length - 2]?.value;
-
-    const totalImprovement = firstVal
-      ? ((currentVal - firstVal) / firstVal) * 105
-      : 0; // Wait, let's keep exact math:
-    const totalCalc = firstVal ? ((currentVal - firstVal) / firstVal) * 100 : 0;
-    const lastImprovement = prevVal
-      ? ((currentVal - prevVal) / prevVal) * 100
-      : 0;
-
-    const statusLabel = currentVal >= refValue * 1.35 
-      ? "ELITE 🔥" 
-      : currentVal >= refValue 
-        ? "IDEAL" 
-        : "ABAIXO ⚠️";
-        
-    const statusColor = currentVal >= refValue * 1.35 
-      ? "text-emerald-600 font-black tracking-wider" 
-      : currentVal >= refValue 
-        ? "text-teal-600 font-extrabold" 
-        : "text-rose-600 font-extrabold";
-
-    return (
-      <div className="mb-4 font-sans">
-        <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-2 border-l-2 border-brand-primary pl-2 font-bold select-none">
-          {title}
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm relative h-[130px] flex flex-col justify-between">
-            <div className="flex justify-between items-center text-[7.5px] font-black uppercase text-slate-400 mb-1 leading-none select-none">
-              <span>Evolução</span>
-              <div className="flex gap-2">
-                <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-0.5 bg-slate-300 inline-block"></span>
-                  BASE: {refValue} kg
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-0.5 bg-emerald-500 inline-block"></span>
-                  ELITE: {(refValue * 1.35).toFixed(1)} kg
-                </span>
-              </div>
-            </div>
-            <div className="flex-grow min-h-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={sectionHistory}
-                  margin={{ top: 15, right: 10, left: -20, bottom: -5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="date"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#334155", fontSize: 8, fontWeight: 900 }}
-                  />
-                  <YAxis
-                    domain={[
-                      0,
-                      Math.max(
-                        refValue * 1.7,
-                        ...sectionHistory.map((d) => d.value)
-                      ),
-                    ]}
-                    hide
-                  />
-                  <ReferenceLine 
-                    y={refValue} 
-                    stroke="#94a3b8" 
-                    strokeDasharray="4 4" 
-                  />
-                  <ReferenceLine 
-                    y={refValue * 1.35} 
-                    stroke="#10b981" 
-                    strokeDasharray="3 3" 
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke={currentVal >= refValue ? "#10b981" : "#ef4444"}
-                    strokeWidth={2.5}
-                    dot={(props: any) => {
-                      const { cx, cy, payload } = props;
-                      const isEliteVal = payload.value >= refValue * 1.35;
-                      const isIdealVal = payload.value >= refValue;
-                      return (
-                        <g key={cx}>
-                          <circle
-                            cx={cx}
-                            cy={cy}
-                            r={4.5}
-                            fill={isEliteVal ? "#10b981" : isIdealVal ? "#10b981" : "#ef4444"}
-                            stroke="#fff"
-                            strokeWidth={1.5}
-                          />
-                          <text
-                            x={cx}
-                            y={cy - 9}
-                            textAnchor="middle"
-                            fill="#0f172a"
-                            fontSize={8}
-                            fontWeight={900}
-                          >
-                            {payload.value} kg
-                          </text>
-                        </g>
-                      );
-                    }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="flex flex-col justify-center bg-slate-50 border border-slate-100 rounded-xl p-4 h-[130px]">
-            <div className="flex justify-between items-center text-[8.5px] font-black text-slate-500 uppercase tracking-wider mb-2 font-bold">
-              <span>Valor Atual:</span>
-              <span className={statusColor}>
-                {currentVal} kgf ({statusLabel})
-              </span>
-            </div>
-            <p className="text-[9px] text-slate-800 font-bold leading-relaxed uppercase">
-              {lastImprovement >= 0 ? (
-                <>
-                  Melhora de <span className="text-emerald-700 font-extrabold">{lastImprovement.toFixed(1)}%</span>
-                </>
-              ) : (
-                <>
-                  Déficit de <span className="text-rose-600 font-extrabold">{Math.abs(lastImprovement).toFixed(1)}%</span>
-                </>
-              )}{" "}
-              vs exame anterior. 
-              {totalCalc >= 0 ? (
-                <>
-                  {" "}Total de <span className="text-emerald-700 font-extrabold">{totalCalc.toFixed(1)}%</span> de evolução desde o primeiro registro.
-                </>
-              ) : (
-                <>
-                  {" "}Total de <span className="text-rose-600 font-extrabold">{Math.abs(totalCalc).toFixed(1)}%</span> de déficit desde o primeiro registro.
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="fixed inset-0 z-[1100] flex items-start justify-center bg-slate-900/95 backdrop-blur-xl overflow-y-auto p-0 md:p-4 no-scrollbar report-modal">
       <div className="max-w-5xl w-full mx-auto md:my-10 h-full md:h-auto font-sans">
@@ -11233,7 +11081,7 @@ const StrengthReport: FC<{
           <ReportPage pageNumber={1} totalPages={totalReportPages}>
             <ReportHeader
               title="RELATÓRIO DE FORÇA ISOMÉTRICA"
-              subTitle="FORÇA DE EXTENSÃO E FLEXÃO SEGMENTADA"
+              subTitle="ANÁLISE DINAMOMÉTRICA E MAPA CORPORAL"
               athlete={athlete}
               date={formatDate(data.date)}
               extraStats={[
@@ -11242,28 +11090,396 @@ const StrengthReport: FC<{
               ]}
             />
 
-            <div className="space-y-4 mt-6">
-              <StrengthSectionComponent
-                title="Extensão Joelho Direito (Quadríceps)"
-                dataKey="quadricepsR"
-                refValue={REF_EXT}
-              />
-              <StrengthSectionComponent
-                title="Extensão Joelho Esquerdo (Quadríceps)"
-                dataKey="quadricepsL"
-                refValue={REF_EXT}
-              />
-              <StrengthSectionComponent
-                title="Flexão Joelho Direito (Isquiotibiais)"
-                dataKey="hamstringsR"
-                refValue={REF_FLEX}
-              />
-              <StrengthSectionComponent
-                title="Flexão Joelho Esquerdo (Isquiotibiais)"
-                dataKey="hamstringsL"
-                refValue={REF_FLEX}
-              />
-            </div>
+            <div className="grid grid-cols-12 gap-6 mt-6 h-[210mm] font-sans">
+                {/* Left side panel: Metrics, Legend & References */}
+                <div className="col-span-5 flex flex-col justify-between h-full">
+                  {/* Knee Metrics Section */}
+                  <div className="bg-slate-50/50 border border-slate-100 p-4 rounded-2xl shadow-sm">
+                    <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-4 border-l-2 border-emerald-500 pl-2">
+                      Ações Articulares (Joelho)
+                    </h3>
+                    
+                    {/* Extensão (Quadríceps) */}
+                    <div className="mb-6">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-[9.5px] font-black text-slate-700 uppercase tracking-wider">
+                          Extensão (Quadríceps)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-grow space-y-1.5">
+                          {/* Right Side (D) */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[8px] font-black text-slate-400 w-3">D</span>
+                            <div className="flex-grow h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-slate-500 rounded-full transition-all duration-500" 
+                                style={{ width: `${Math.min((data.quadricepsR / 60) * 100, 100)}%` }} 
+                              />
+                            </div>
+                            <div className="w-12 text-right shrink-0">
+                              <span className="text-[9.5px] font-black text-slate-700">
+                                {data.quadricepsR.toFixed(1)} kgf
+                              </span>
+                            </div>
+                          </div>
+                          {/* Left Side (E) */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[8px] font-black text-slate-400 w-3">E</span>
+                            <div className="flex-grow h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-slate-500 rounded-full transition-all duration-500" 
+                                style={{ width: `${Math.min((data.quadricepsL / 60) * 100, 100)}%` }} 
+                              />
+                            </div>
+                            <div className="w-12 text-right shrink-0">
+                              <span className="text-[9.5px] font-black text-slate-700">
+                                {data.quadricepsL.toFixed(1)} kgf
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Asymmetry Deficit Bracket */}
+                        <AsymmetryBracket percent={asymQuad.value} />
+                      </div>
+                    </div>
+
+                    {/* Flexão (Isquiotibiais) */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-[9.5px] font-black text-slate-700 uppercase tracking-wider">
+                          Flexão (Isquiotibiais)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-grow space-y-1.5">
+                          {/* Right Side (D) */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[8px] font-black text-slate-400 w-3">D</span>
+                            <div className="flex-grow h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-slate-500 rounded-full transition-all duration-500" 
+                                style={{ width: `${Math.min((data.hamstringsR / 30) * 100, 100)}%` }} 
+                              />
+                            </div>
+                            <div className="w-12 text-right shrink-0">
+                              <span className="text-[9.5px] font-black text-slate-700">
+                                {data.hamstringsR.toFixed(1)} kgf
+                              </span>
+                            </div>
+                          </div>
+                          {/* Left Side (E) */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[8px] font-black text-slate-400 w-3">E</span>
+                            <div className="flex-grow h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-slate-500 rounded-full transition-all duration-500" 
+                                style={{ width: `${Math.min((data.hamstringsL / 30) * 100, 100)}%` }} 
+                              />
+                            </div>
+                            <div className="w-12 text-right shrink-0">
+                              <span className="text-[9.5px] font-black text-slate-700">
+                                {data.hamstringsL.toFixed(1)} kgf
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Asymmetry Deficit Bracket */}
+                        <AsymmetryBracket percent={asymHam.value} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Asymmetry Classification Legend Box */}
+                  <div className="bg-white border border-slate-150 p-4 rounded-2xl shadow-sm">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider block mb-2 select-none text-center">
+                      Classificação da Assimetria
+                    </span>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-emerald-50 border border-emerald-100 text-center">
+                        <span className="text-[8px] font-black text-emerald-600 block">0 - 10%</span>
+                        <span className="text-[6.5px] font-extrabold text-emerald-500 uppercase tracking-wider">Leve</span>
+                      </div>
+                      <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-amber-50 border border-amber-100 text-center">
+                        <span className="text-[8px] font-black text-amber-600 block">10 - 15%</span>
+                        <span className="text-[6.5px] font-extrabold text-amber-500 uppercase tracking-wider">Moderada</span>
+                      </div>
+                      <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-rose-50 border border-rose-100 text-center">
+                        <span className="text-[8px] font-black text-rose-600 block">15% +</span>
+                        <span className="text-[6.5px] font-extrabold text-rose-500 uppercase tracking-wider">Alta</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Comparativo Histórico (if previous test exists) */}
+                  {previousData && (
+                    <div className="bg-emerald-500/10 border border-dashed border-emerald-500/30 p-3 rounded-2xl text-center select-none">
+                      <span className="text-[8.5px] font-black text-emerald-700 uppercase tracking-widest block mb-0.5">
+                        Evolução Histórica Ativa
+                      </span>
+                      <p className="text-[7.5px] text-slate-500 leading-tight">
+                        Evoluções indicadas nas silhuetas comparadas com o teste de <strong>{formatDate(previousData.date)}</strong>.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* References Box (Footer) */}
+                  <div className="border-t border-slate-100 pt-3 select-none">
+                    <span className="text-[6.5px] font-black text-slate-400 uppercase tracking-wider block mb-1">
+                      Referências Científicas:
+                    </span>
+                    <p className="text-[5.5px] text-slate-400 leading-tight mb-1">
+                      <strong>PARKINSON et al.</strong> The Calculation, Thresholds and Reporting of Inter-limb Strength Asymmetry: A Systematic Review. J. Sports Sci Med. 2021.
+                    </p>
+                    <p className="text-[5.5px] text-slate-400 leading-tight">
+                      <strong>GRINDEM et al.</strong> Simple decision rules can reduce re-injury risk by 84% after ACL reconstruction. Br. J. Sports Medicine (BJSM) 2016.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right side panel: Dynamic Human Muscle Map */}
+                <div className="col-span-7 flex flex-col justify-center items-center bg-slate-50/25 border-l border-slate-100 px-4 h-full w-full">
+                  <div className="flex flex-col justify-around h-full py-2 w-full max-w-[300px]">
+                    
+                    {/* Front View (Anterior) */}
+                    <div className="flex flex-col items-center w-full">
+                      {/* Title & Side letters row */}
+                      <div className="w-full flex justify-between items-center px-1 mb-2">
+                        <span className="font-sans font-black text-[11px] text-slate-300">D</span>
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Anterior</span>
+                        <span className="font-sans font-black text-[11px] text-slate-300">E</span>
+                      </div>
+                      
+                      {/* 3-column Layout for Label (D) - SVG - Label (E) */}
+                      <div className="flex items-center justify-between w-full gap-2">
+                        {/* Right Quad label (D, on left side of image) */}
+                        <div className="w-24 flex flex-col items-end text-right shrink-0 select-none">
+                          {/* Evolution Data (Above Force) */}
+                          {previousData && (
+                            <div className={`text-[7.5px] font-black leading-tight mb-1 ${
+                              data.quadricepsR - previousData.quadricepsR > 0 
+                                ? "text-emerald-600" 
+                                : data.quadricepsR - previousData.quadricepsR === 0 
+                                  ? "text-slate-500" 
+                                  : "text-rose-600"
+                            }`}>
+                              <span className="block">{data.quadricepsR - previousData.quadricepsR > 0 ? "▲" : data.quadricepsR - previousData.quadricepsR === 0 ? "•" : "▼"} {Math.abs(((data.quadricepsR - previousData.quadricepsR) / previousData.quadricepsR) * 100).toFixed(0)}%</span>
+                              <span className="block opacity-75 font-bold text-[6.5px]">({data.quadricepsR - previousData.quadricepsR > 0 ? "+" : ""}{(data.quadricepsR - previousData.quadricepsR).toFixed(1)} kg)</span>
+                            </div>
+                          )}
+
+                          {/* Current Force (Middle) */}
+                          <span className="text-[10px] font-black text-slate-800 block leading-tight">
+                            {data.quadricepsR.toFixed(1)} kgf
+                          </span>
+                          <span className="text-[6.5px] font-black text-slate-400 uppercase block tracking-wider leading-none mt-0.5">
+                            Extensão
+                          </span>
+
+                          {/* Historical Force (Below Force) */}
+                          {previousData && (
+                            <span className="text-[7.5px] font-bold text-slate-400 block leading-tight mt-1">
+                              Anterior:<br />{previousData.quadricepsR.toFixed(1)} kg
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Front Outline SVG */}
+                        <div className="flex-grow flex justify-center">
+                          <svg viewBox="0 0 100 240" className="w-20 h-52 select-none">
+                            <g fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="50" cy="18" r="9" />
+                              <path d="M48,27 L52,27 L52,32 L48,32 Z" />
+                              <path d="M36,32 L64,32 L60,88 L40,88 Z" />
+                              <path d="M38,50 Q50,55 62,50" fill="none" stroke="#cbd5e1" strokeWidth="0.5" />
+                              <path d="M50,32 L50,88" fill="none" stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="2 2" />
+                              <path d="M64,32 L74,75 L71,110 L66,110 L68,75 L60,38" />
+                              <path d="M36,32 L26,75 L29,110 L34,110 L32,75 L40,38" />
+                              <path d="M40,88 L60,88 L58,105 L42,105 Z" />
+                              <path d="M57,155 L61,215 L56,215 L53,155" />
+                              <path d="M43,155 L39,215 L44,215 L47,155" />
+                              <path d="M56,215 L62,222 L54,222 Z" />
+                              <path d="M44,215 L38,222 L46,222 Z" />
+                            </g>
+                            
+                            {/* Quadriceps Left (Esq - on the right of drawing) */}
+                            <path 
+                              d="M51,105 L58,105 C58,110 59,125 57,155 L51,155 C52,125 51,110 51,105 Z" 
+                              fill={quadColors.fill} 
+                              fillOpacity="0.8" 
+                              stroke={quadColors.stroke} 
+                              strokeWidth="1" 
+                              className="transition-all duration-500 cursor-pointer hover:fill-opacity-100"
+                            />
+                            
+                            {/* Quadriceps Right (Dir - on the left of drawing) */}
+                            <path 
+                              d="M49,105 L42,105 C42,110 41,125 43,155 L49,155 C48,125 49,110 49,105 Z" 
+                              fill={quadColors.fill} 
+                              fillOpacity="0.8" 
+                              stroke={quadColors.stroke} 
+                              strokeWidth="1" 
+                              className="transition-all duration-500 cursor-pointer hover:fill-opacity-100"
+                            />
+                          </svg>
+                        </div>
+
+                        {/* Left Quad label (E, on right side of image) */}
+                        <div className="w-24 flex flex-col items-start text-left shrink-0 select-none">
+                          {/* Evolution Data (Above Force) */}
+                          {previousData && (
+                            <div className={`text-[7.5px] font-black leading-tight mb-1 ${
+                              data.quadricepsL - previousData.quadricepsL > 0 
+                                ? "text-emerald-600" 
+                                : data.quadricepsL - previousData.quadricepsL === 0 
+                                  ? "text-slate-500" 
+                                  : "text-rose-600"
+                            }`}>
+                              <span className="block">{data.quadricepsL - previousData.quadricepsL > 0 ? "▲" : data.quadricepsL - previousData.quadricepsL === 0 ? "•" : "▼"} {Math.abs(((data.quadricepsL - previousData.quadricepsL) / previousData.quadricepsL) * 100).toFixed(0)}%</span>
+                              <span className="block opacity-75 font-bold text-[6.5px]">({data.quadricepsL - previousData.quadricepsL > 0 ? "+" : ""}{(data.quadricepsL - previousData.quadricepsL).toFixed(1)} kg)</span>
+                            </div>
+                          )}
+
+                          {/* Current Force (Middle) */}
+                          <span className="text-[10px] font-black text-slate-800 block leading-tight">
+                            {data.quadricepsL.toFixed(1)} kgf
+                          </span>
+                          <span className="text-[6.5px] font-black text-slate-400 uppercase block tracking-wider leading-none mt-0.5">
+                            Extensão
+                          </span>
+
+                          {/* Historical Force (Below Force) */}
+                          {previousData && (
+                            <span className="text-[7.5px] font-bold text-slate-400 block leading-tight mt-1">
+                              Anterior:<br />{previousData.quadricepsL.toFixed(1)} kg
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+ 
+                    {/* Back View (Posterior) */}
+                    <div className="flex flex-col items-center w-full">
+                      {/* Title & Side letters row */}
+                      <div className="w-full flex justify-between items-center px-1 mb-2">
+                        <span className="font-sans font-black text-[11px] text-slate-300">E</span>
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Posterior</span>
+                        <span className="font-sans font-black text-[11px] text-slate-300">D</span>
+                      </div>
+                      
+                      {/* 3-column Layout for Label (E) - SVG - Label (D) */}
+                      <div className="flex items-center justify-between w-full gap-2">
+                        {/* Left Ham label (E, on left side of image in back view) */}
+                        <div className="w-24 flex flex-col items-end text-right shrink-0 select-none">
+                          {/* Evolution Data (Above Force) */}
+                          {previousData && (
+                            <div className={`text-[7.5px] font-black leading-tight mb-1 ${
+                              data.hamstringsL - previousData.hamstringsL > 0 
+                                ? "text-emerald-600" 
+                                : data.hamstringsL - previousData.hamstringsL === 0 
+                                  ? "text-slate-500" 
+                                  : "text-rose-600"
+                            }`}>
+                              <span className="block">{data.hamstringsL - previousData.hamstringsL > 0 ? "▲" : data.hamstringsL - previousData.hamstringsL === 0 ? "•" : "▼"} {Math.abs(((data.hamstringsL - previousData.hamstringsL) / previousData.hamstringsL) * 100).toFixed(0)}%</span>
+                              <span className="block opacity-75 font-bold text-[6.5px]">({data.hamstringsL - previousData.hamstringsL > 0 ? "+" : ""}{(data.hamstringsL - previousData.hamstringsL).toFixed(1)} kg)</span>
+                            </div>
+                          )}
+
+                          {/* Current Force (Middle) */}
+                          <span className="text-[10px] font-black text-slate-800 block leading-tight">
+                            {data.hamstringsL.toFixed(1)} kgf
+                          </span>
+                          <span className="text-[6.5px] font-black text-slate-400 uppercase block tracking-wider leading-none mt-0.5">
+                            Flexão
+                          </span>
+
+                          {/* Historical Force (Below Force) */}
+                          {previousData && (
+                            <span className="text-[7.5px] font-bold text-slate-400 block leading-tight mt-1">
+                              Anterior:<br />{previousData.hamstringsL.toFixed(1)} kg
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Back Outline SVG */}
+                        <div className="flex-grow flex justify-center">
+                          <svg viewBox="0 0 100 240" className="w-20 h-52 select-none">
+                            <g fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="50" cy="18" r="9" />
+                              <path d="M48,27 L52,27 L52,32 L48,32 Z" />
+                              <path d="M36,32 L64,32 L60,88 L40,88 Z" />
+                              <path d="M50,32 L50,88" fill="none" stroke="#cbd5e1" strokeWidth="0.5" strokeDasharray="2 2" />
+                              <path d="M64,32 L74,75 L71,110 L66,110 L68,75 L60,38" />
+                              <path d="M36,32 L26,75 L29,110 L34,110 L32,75 L40,38" />
+                              <path d="M40,88 L60,88 L58,105 L42,105 Z" />
+                              <path d="M40,95 Q50,102 60,95" fill="none" stroke="#cbd5e1" strokeWidth="0.5" />
+                              <path d="M57,155 L61,215 L56,215 L53,155" />
+                              <path d="M43,155 L39,215 L44,215 L47,155" />
+                              <path d="M56,215 L62,222 L54,222 Z" />
+                              <path d="M44,215 L38,222 L46,222 Z" />
+                            </g>
+                            
+                            {/* Hamstring Left (Esq - on the left of drawing in back view) */}
+                            <path 
+                              d="M49,105 L42,105 C42,110 41,125 43,155 L49,155 C48,125 49,110 49,105 Z" 
+                              fill={hamColors.fill} 
+                              fillOpacity="0.8" 
+                              stroke={hamColors.stroke} 
+                              strokeWidth="1" 
+                              className="transition-all duration-500 cursor-pointer hover:fill-opacity-100"
+                            />
+                            
+                            {/* Hamstring Right (Dir - on the right of drawing in back view) */}
+                            <path 
+                              d="M51,105 L58,105 C58,110 59,125 57,155 L51,155 C52,125 51,110 51,105 Z" 
+                              fill={hamColors.fill} 
+                              fillOpacity="0.8" 
+                              stroke={hamColors.stroke} 
+                              strokeWidth="1" 
+                              className="transition-all duration-500 cursor-pointer hover:fill-opacity-100"
+                            />
+                          </svg>
+                        </div>
+
+                        {/* Right Ham label (D, on right side of image in back view) */}
+                        <div className="w-24 flex flex-col items-start text-left shrink-0 select-none">
+                          {/* Evolution Data (Above Force) */}
+                          {previousData && (
+                            <div className={`text-[7.5px] font-black leading-tight mb-1 ${
+                              data.hamstringsR - previousData.hamstringsR > 0 
+                                ? "text-emerald-600" 
+                                : data.hamstringsR - previousData.hamstringsR === 0 
+                                  ? "text-slate-500" 
+                                  : "text-rose-600"
+                            }`}>
+                              <span className="block">{data.hamstringsR - previousData.hamstringsR > 0 ? "▲" : data.hamstringsR - previousData.hamstringsR === 0 ? "•" : "▼"} {Math.abs(((data.hamstringsR - previousData.hamstringsR) / previousData.hamstringsR) * 100).toFixed(0)}%</span>
+                              <span className="block opacity-75 font-bold text-[6.5px]">({data.hamstringsR - previousData.hamstringsR > 0 ? "+" : ""}{(data.hamstringsR - previousData.hamstringsR).toFixed(1)} kg)</span>
+                            </div>
+                          )}
+
+                          {/* Current Force (Middle) */}
+                          <span className="text-[10px] font-black text-slate-800 block leading-tight">
+                            {data.hamstringsR.toFixed(1)} kgf
+                          </span>
+                          <span className="text-[6.5px] font-black text-slate-400 uppercase block tracking-wider leading-none mt-0.5">
+                            Flexão
+                          </span>
+
+                          {/* Historical Force (Below Force) */}
+                          {previousData && (
+                            <span className="text-[7.5px] font-bold text-slate-400 block leading-tight mt-1">
+                              Anterior:<br />{previousData.hamstringsR.toFixed(1)} kg
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+ 
+                  </div>
+                </div>
+              </div>
           </ReportPage>
 
           {/* Page 2: Asymmetries and I/Q Ratio */}
