@@ -5,7 +5,7 @@ import {
   Settings, AlertCircle, Check, Heart, History, 
   X, ChevronRight, Grid, HelpCircle, Info, Brain, 
   Cpu, Sliders, Layers, Award, ShieldAlert, CheckCircle2,
-  TrendingUp, RefreshCw, Eye, BookOpen, Target
+  TrendingUp, RefreshCw, Eye, BookOpen, Target, Save, Bookmark
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "react-hot-toast";
@@ -84,6 +84,98 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
 
   // Progression Studio States
   const [progressionMethod, setProgressionMethod] = useState<"linear" | "undulating" | "accumulation" | "deload" | "tapering">("linear");
+
+  // Custom Exercises saved from AI or user customization to the library
+  const [customLibraryExercises, setCustomLibraryExercises] = useState<EnrichedExercise[]>(() => {
+    try {
+      const stored = localStorage.getItem("LB_CUSTOM_LIBRARY_EXERCISES");
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Erro ao carregar exercícios customizados:", e);
+      return [];
+    }
+  });
+
+  const combinedLibrary = useMemo(() => {
+    return [...ENRICHED_LIBRARY, ...customLibraryExercises];
+  }, [customLibraryExercises]);
+
+  const saveExerciseToLibrary = (ex: Partial<EnrichedExercise>) => {
+    if (!ex.name) {
+      toast.error("Nome do exercício é obrigatório para salvar.");
+      return;
+    }
+
+    const nameLower = ex.name.toLowerCase().trim();
+    const isDuplicate = ENRICHED_LIBRARY.some(x => x.name.toLowerCase().trim() === nameLower) ||
+                        customLibraryExercises.some(x => x.name.toLowerCase().trim() === nameLower);
+
+    if (isDuplicate) {
+      toast.error(`"${ex.name}" já existe na sua biblioteca.`);
+      return;
+    }
+
+    const newExercise: EnrichedExercise = {
+      id: ex.id || `custom-lib-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name: ex.name,
+      category: ex.category || "ALL",
+      muscleGroup: ex.muscleGroup || "Geral",
+      defaultReps: ex.defaultReps || "10",
+      defaultWeight: ex.defaultWeight || "BW",
+      isFavorite: false,
+      physicalQuality: ex.physicalQuality || "Geral",
+      kineticChain: ex.kineticChain || "Fechada",
+      movementPlane: ex.movementPlane || "Sagital",
+      equipment: ex.equipment || "Geral",
+      difficulty: ex.difficulty || "Intermediário",
+      sports: ex.sports || [aiFocusModality || "Geral"],
+      physiologicalGoal: ex.physiologicalGoal || "Foco no desenvolvimento neuromuscular, força e controle de padrão de movimento.",
+      scientificEvidence: ex.scientificEvidence || "Diretrizes baseadas em evidências científicas de ciência esportiva.",
+      benefits: ex.benefits || ["Aumento da eficiência neuromuscular", "Melhora de força específica", "Prevenção de lesões"],
+      contraindications: ex.contraindications || ["Limitação severa ou dor aguda no padrão de movimento."],
+      commonErrors: ex.commonErrors || ["Desalinhamento postural", "Fase excêntrica sem controle"],
+      progressions: ex.progressions || ["Aumento de carga", "Variação de velocidade"],
+      regressions: ex.regressions || ["Execução adaptada", "Menor amplitude"],
+      musclesInvolved: ex.musclesInvolved || [ex.muscleGroup || "Geral"],
+      tags: ex.tags || ["#Customizado", "#IA"],
+      imageUrl: ex.imageUrl
+    };
+
+    const updated = [newExercise, ...customLibraryExercises];
+    setCustomLibraryExercises(updated);
+    localStorage.setItem("LB_CUSTOM_LIBRARY_EXERCISES", JSON.stringify(updated));
+    toast.success(`"${ex.name}" salvo na biblioteca com sucesso! 📚`);
+  };
+
+  const saveAllAiSuggestedExercises = () => {
+    if (aiSuggestedExercises.length === 0) return;
+    let addedCount = 0;
+    const updated = [...customLibraryExercises];
+
+    aiSuggestedExercises.forEach(sug => {
+      const nameLower = sug.name.toLowerCase().trim();
+      const isDuplicate = ENRICHED_LIBRARY.some(x => x.name.toLowerCase().trim() === nameLower) ||
+                          updated.some(x => x.name.toLowerCase().trim() === nameLower);
+
+      if (!isDuplicate) {
+        const newExercise: EnrichedExercise = {
+          ...sug,
+          id: sug.id.startsWith("virtual-") ? `custom-lib-${Date.now()}-${Math.random().toString(36).substr(2, 4)}` : sug.id,
+          tags: ["#IA-Salvo", "#Prescrição", ...(sug.tags || [])]
+        };
+        updated.unshift(newExercise);
+        addedCount++;
+      }
+    });
+
+    if (addedCount > 0) {
+      setCustomLibraryExercises(updated);
+      localStorage.setItem("LB_CUSTOM_LIBRARY_EXERCISES", JSON.stringify(updated));
+      toast.success(`${addedCount} exercícios da IA salvos na sua biblioteca! 📚`);
+    } else {
+      toast.error("Todos os exercícios já estão na biblioteca.");
+    }
+  };
 
   // Persist favorites
   useEffect(() => {
@@ -244,7 +336,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
 
   // Advanced filtration
   const filteredLibrary = useMemo(() => {
-    return ENRICHED_LIBRARY.filter(item => {
+    return combinedLibrary.filter(item => {
       // 1. Text Search
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             item.muscleGroup.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -258,6 +350,8 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
         if (!favorites.includes(item.id)) return false;
       } else if (activeCategory === "RECENTS") {
         if (!recentAdds.includes(item.id)) return false;
+      } else if (activeCategory === "CUSTOM") {
+        if (!customLibraryExercises.some(x => x.id === item.id)) return false;
       } else if (activeCategory !== "ALL") {
         if (item.category !== activeCategory) return false;
       }
@@ -274,34 +368,34 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
 
       return true;
     });
-  }, [searchQuery, activeCategory, favorites, recentAdds, filterDifficulty, filterQuality, filterEquipment, filterMuscleGroup, filterSport, aiSearchIds]);
+  }, [searchQuery, activeCategory, favorites, recentAdds, filterDifficulty, filterQuality, filterEquipment, filterMuscleGroup, filterSport, aiSearchIds, combinedLibrary, customLibraryExercises]);
 
   // Unique list of qualities, difficulties, and equipments for filters
   const uniqueQualities = useMemo(() => {
     const set = new Set<string>();
-    ENRICHED_LIBRARY.forEach(x => {
+    combinedLibrary.forEach(x => {
       if (x.physicalQuality) set.add(x.physicalQuality);
     });
     return Array.from(set);
-  }, []);
+  }, [combinedLibrary]);
 
   const uniqueMuscleGroups = useMemo(() => {
     const set = new Set<string>();
-    ENRICHED_LIBRARY.forEach(x => {
+    combinedLibrary.forEach(x => {
       if (x.muscleGroup) set.add(x.muscleGroup);
     });
     return Array.from(set);
-  }, []);
+  }, [combinedLibrary]);
 
   const uniqueSports = useMemo(() => {
     const set = new Set<string>();
-    ENRICHED_LIBRARY.forEach(x => {
+    combinedLibrary.forEach(x => {
       if (x.sports) {
         x.sports.forEach(s => set.add(s));
       }
     });
     return Array.from(set);
-  }, []);
+  }, [combinedLibrary]);
 
   const uniqueEquipments = [
     "Barra", "Halter", "Kettlebell", "Peso Corporal", "Elástico", "Força", "Máquina", "BOSU", "Cones", "Corda", "Trenó"
@@ -410,7 +504,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
     } catch (err) {
       console.warn("AI Prescriber failed or key not set, using science-backed offline engine:", err);
       // Pick dynamic suggestions based on selections
-      const suggestions = ENRICHED_LIBRARY.filter(ex => {
+      const suggestions = combinedLibrary.filter(ex => {
         if (aiFocusGoal.toLowerCase().includes("potência") || aiFocusGoal.toLowerCase().includes("explosão")) {
           return ex.category === "Potência" || (ex.physicalQuality || "").includes("Potência");
         }
@@ -420,7 +514,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
         return ex.category === "MMII" || ex.category === "Potência";
       });
 
-      setAiSuggestedExercises(suggestions.length > 0 ? suggestions : ENRICHED_LIBRARY.slice(0, 3));
+      setAiSuggestedExercises(suggestions.length > 0 ? suggestions : combinedLibrary.slice(0, 3));
       setAiThoughts(prev => [...prev, "⚠️ [OFF-LINE] Chave de API não ativa. Carregadas diretrizes de ciência esportiva off-line."]);
       toast.success("Prescrição alternativa (Off-line) carregada.");
     } finally {
@@ -673,6 +767,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
             <div className="flex gap-1.5 overflow-x-auto pb-2 shrink-0 no-scrollbar border-b border-slate-900">
               {[
                 { id: "ALL", label: "TUDO" },
+                { id: "CUSTOM", label: "Salvos 💾" },
                 { id: "MMII", label: "Membros Inf." },
                 { id: "MMSS", label: "Membros Sup." },
                 { id: "Potência", label: "Potência" },
@@ -981,15 +1076,25 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                     SUGESTÃO GERADA ({aiSuggestedExercises.length} EXERCÍCIOS)
                   </span>
-                  <button
-                    onClick={injectAiSuggestedExercises}
-                    className="text-[9px] font-black text-[#39FF14] hover:underline uppercase tracking-wider flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3 stroke-[3]" />
-                    Injetar Tudo
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveAllAiSuggestedExercises}
+                      className="text-[9px] font-black text-blue-400 hover:underline uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                      title="Salvar todos no acervo permanente da Biblioteca"
+                    >
+                      <Save className="w-3 h-3 stroke-[3]" />
+                      Salvar na Biblioteca 📚
+                    </button>
+                    <button
+                      onClick={injectAiSuggestedExercises}
+                      className="text-[9px] font-black text-[#39FF14] hover:underline uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3 stroke-[3]" />
+                      Injetar Tudo
+                    </button>
+                  </div>
                 </div>
-
+ 
                 <div className="flex-1 overflow-y-auto no-scrollbar space-y-2 pr-1">
                   {aiSuggestedExercises.map((sug, i) => (
                     <div 
@@ -1001,12 +1106,22 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                           <span className="text-[11px] font-black text-slate-100">{sug.name}</span>
                           <p className="text-[7.5px] text-[#39FF14] font-black uppercase tracking-wider mt-0.5">{sug.physicalQuality}</p>
                         </div>
-                        <button
-                          onClick={() => addExFromLib(sug)}
-                          className="w-5 h-5 bg-[#39FF14]/10 hover:bg-[#39FF14]/20 text-[#39FF14] rounded-md border border-[#39FF14]/20 flex items-center justify-center transition-all"
-                        >
-                          <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                        </button>
+                        <div className="flex gap-1 shrink-0">
+                          <button
+                            onClick={() => saveExerciseToLibrary(sug)}
+                            className="w-5 h-5 bg-blue-500/10 hover:bg-blue-500/25 text-blue-400 rounded-md border border-blue-500/20 flex items-center justify-center transition-all cursor-pointer"
+                            title="Salvar no acervo permanente da Biblioteca 💾"
+                          >
+                            <Bookmark className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => addExFromLib(sug)}
+                            className="w-5 h-5 bg-[#39FF14]/10 hover:bg-[#39FF14]/20 text-[#39FF14] rounded-md border border-[#39FF14]/20 flex items-center justify-center transition-all cursor-pointer"
+                            title="Adicionar ao Treino Ativo ➕"
+                          >
+                            <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                          </button>
+                        </div>
                       </div>
                       <p className="text-[9px] text-slate-400 font-bold leading-normal mt-1.5">{sug.physiologicalGoal}</p>
                     </div>
@@ -1310,6 +1425,13 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                         title="Mover para baixo"
                       >
                         <ChevronDown className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); saveExerciseToLibrary(ex); }}
+                        className="bg-slate-950 text-slate-400 w-7 h-7 sm:w-8 sm:h-8 rounded-lg border border-slate-850 shadow-md hover:text-blue-400 flex items-center justify-center transition-all cursor-pointer"
+                        title="Salvar na Biblioteca para acervo 💾"
+                      >
+                        <Bookmark className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); duplicateBlock(ex); }}
