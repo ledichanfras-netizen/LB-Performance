@@ -22,6 +22,242 @@ interface WorkoutEditorPremiumProps {
   athleteName?: string;
 }
 
+export function detectCategoryFromName(name: string, activeTab: string): string {
+  if (["MMII", "MMSS", "Potência", "Velocidade", "Preventivo", "Core"].includes(activeTab)) {
+    return activeTab;
+  }
+  const lower = (name || "").toLowerCase().trim();
+  if (
+    lower.includes("sprint") ||
+    lower.includes("tiro") ||
+    lower.includes("velocidade") ||
+    lower.includes("corrida") ||
+    lower.includes("agilidade") ||
+    lower.includes("cone") ||
+    lower.includes("tempo run") ||
+    lower.includes("acelera") ||
+    lower.includes("deslocamento")
+  ) {
+    return "Velocidade";
+  }
+  if (
+    lower.includes("potência") ||
+    lower.includes("pliometria") ||
+    lower.includes("salto") ||
+    lower.includes("jump") ||
+    lower.includes("kettlebell") ||
+    lower.includes("lpo") ||
+    lower.includes("medicine") ||
+    lower.includes("arremesso")
+  ) {
+    return "Potência";
+  }
+  if (
+    lower.includes("agachamento") ||
+    lower.includes("squat") ||
+    lower.includes("leg press") ||
+    lower.includes("stiff") ||
+    lower.includes("rdl") ||
+    lower.includes("quadríceps") ||
+    lower.includes("posterior") ||
+    lower.includes("panturrilha") ||
+    lower.includes("coice") ||
+    lower.includes("mmii") ||
+    lower.includes("gêmeos")
+  ) {
+    return "MMII";
+  }
+  if (
+    lower.includes("supino") ||
+    lower.includes("press") ||
+    lower.includes("puxada") ||
+    lower.includes("remada") ||
+    lower.includes("flexão") ||
+    lower.includes("biceps") ||
+    lower.includes("triceps") ||
+    lower.includes("ombro") ||
+    lower.includes("membros sup") ||
+    (!lower.includes("mmii") && (lower.includes("braço") || lower.includes("peito") || lower.includes("costas")))
+  ) {
+    return "MMSS";
+  }
+  if (
+    lower.includes("core") ||
+    lower.includes("abdominal") ||
+    lower.includes("plank") ||
+    lower.includes("prancha") ||
+    lower.includes("rotacional") ||
+    lower.includes("estabilidade") ||
+    lower.includes("infra") ||
+    lower.includes("supra") ||
+    lower.includes("lombar")
+  ) {
+    return "Core";
+  }
+  if (
+    lower.includes("preventivo") ||
+    lower.includes("mobilidade") ||
+    lower.includes("manguito") ||
+    lower.includes("alongamento") ||
+    lower.includes("copenhagen") ||
+    lower.includes("liberação") ||
+    lower.includes("prevenção") ||
+    lower.includes("reab") ||
+    lower.includes("recuperação")
+  ) {
+    return "Preventivo";
+  }
+  return "Geral";
+}
+
+export function isExerciseInActiveCategory(
+  item: EnrichedExercise,
+  activeCategory: string,
+  favorites: string[],
+  recentAdds: string[],
+  customLibraryExercises: EnrichedExercise[]
+): boolean {
+  if (activeCategory === "ALL") return true;
+  if (activeCategory === "FAVORITES") return favorites.includes(item.id);
+  if (activeCategory === "RECENTS") return recentAdds.includes(item.id);
+  if (activeCategory === "CUSTOM") return customLibraryExercises.some(x => x.id === item.id);
+
+  const cat = (item.category || "").toLowerCase();
+  const name = (item.name || "").toLowerCase();
+  const subcat = (item.subcategory || "").toLowerCase();
+  const physQual = (item.physicalQuality || "").toLowerCase();
+  const mGroup = (item.muscleGroup || "").toLowerCase();
+
+  switch (activeCategory) {
+    case "MMII":
+      return (
+        cat.includes("mmii") ||
+        cat.includes("agachamento") ||
+        cat.includes("dobradiça") ||
+        cat.includes("extensora") ||
+        cat.includes("flexora") ||
+        cat.includes("panturrilha") ||
+        cat.includes("unilateral") ||
+        cat.includes("agachamentos") ||
+        mGroup.includes("mmii") ||
+        mGroup.includes("glúteo") ||
+        mGroup.includes("quadríceps") ||
+        mGroup.includes("posterior") ||
+        mGroup.includes("isquiotibiais") ||
+        mGroup.includes("adutor") ||
+        subcat.includes("agachamento") ||
+        subcat.includes("mmii") ||
+        name.includes("agachamento") ||
+        name.includes("squat") ||
+        name.includes("leg press") ||
+        name.includes("panturrilha") ||
+        name.includes("stiff") ||
+        name.includes("rdl")
+      );
+
+    case "MMSS":
+      return (
+        cat.includes("mmss") ||
+        cat.includes("empurrar horizontal") ||
+        cat.includes("empurrar vertical") ||
+        cat.includes("puxar horizontal") ||
+        cat.includes("puxar vertical") ||
+        cat.includes("cotovelo") ||
+        mGroup.includes("mmss") ||
+        mGroup.includes("peito") ||
+        mGroup.includes("costas") ||
+        mGroup.includes("ombro") ||
+        mGroup.includes("bíceps") ||
+        mGroup.includes("tríceps") ||
+        subcat.includes("mmss") ||
+        name.includes("supino") ||
+        name.includes("puxada") ||
+        name.includes("remada") ||
+        name.includes("biceps") ||
+        name.includes("triceps") ||
+        name.includes("ombro") ||
+        name.includes("desenvolvimento")
+      );
+
+    case "Potência":
+      return (
+        cat.includes("potência") ||
+        cat.includes("pliometria") ||
+        cat.includes("kettlebell") ||
+        cat.includes("lpo") ||
+        cat.includes("medicine ball") ||
+        cat.includes("arremesso") ||
+        physQual.includes("potência") ||
+        physQual.includes("pliometria") ||
+        subcat.includes("pliometria") ||
+        subcat.includes("arremesso") ||
+        name.includes("pliometria") ||
+        name.includes("salto") ||
+        name.includes("jump") ||
+        name.includes("potência") ||
+        name.includes("lpo")
+      );
+
+    case "Velocidade":
+      return (
+        cat.includes("velocidade") ||
+        cat.includes("agilidade") ||
+        cat.includes("sprint") ||
+        cat.includes("aceleração") ||
+        cat.includes("mudança de direção") ||
+        cat.includes("deslocamento") ||
+        cat.includes("desaceleração") ||
+        physQual.includes("velocidade") ||
+        physQual.includes("aceleração") ||
+        physQual.includes("agilidade") ||
+        subcat.includes("velocidade") ||
+        subcat.includes("agilidade") ||
+        name.includes("velocidade") ||
+        name.includes("sprint") ||
+        name.includes("tiro") ||
+        name.includes("corrida") ||
+        name.includes("agilidade")
+      );
+
+    case "Preventivo":
+      return (
+        cat.includes("preventivo") ||
+        cat.includes("prevenção") ||
+        cat.includes("mobilidade") ||
+        cat.includes("recuperação") ||
+        cat.includes("equilíbrio") ||
+        physQual.includes("prevenção") ||
+        physQual.includes("mobilidade") ||
+        subcat.includes("prevenção") ||
+        subcat.includes("mobilidade") ||
+        subcat.includes("recuperação") ||
+        name.includes("preventivo") ||
+        name.includes("mobilidade") ||
+        name.includes("alongamento") ||
+        name.includes("prevenção")
+      );
+
+    case "Core":
+      return (
+        cat.includes("core") ||
+        cat.includes("estabilidade") ||
+        cat.includes("rotacional") ||
+        cat.includes("flexão de tronco") ||
+        mGroup.includes("core") ||
+        mGroup.includes("abdômen") ||
+        subcat.includes("core") ||
+        subcat.includes("estabilidade") ||
+        name.includes("core") ||
+        name.includes("abdominal") ||
+        name.includes("prancha") ||
+        name.includes("plank")
+      );
+
+    default:
+      return cat === activeCategory.toLowerCase();
+  }
+}
+
 export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   workout,
   onSave,
@@ -115,11 +351,13 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       return;
     }
 
+    const detectedCategory = detectCategoryFromName(ex.name, activeCategory);
+
     const newExercise: EnrichedExercise = {
       id: ex.id || `custom-lib-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       name: ex.name,
-      category: ex.category || "ALL",
-      muscleGroup: ex.muscleGroup || "Geral",
+      category: detectedCategory,
+      muscleGroup: ex.muscleGroup || detectedCategory,
       defaultReps: ex.defaultReps || "10",
       defaultWeight: ex.defaultWeight || "BW",
       isFavorite: false,
@@ -278,10 +516,11 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       toast.error("Insira o nome do exercício customizado.");
       return;
     }
+    const detectedCategory = detectCategoryFromName(customExerciseName.trim(), activeCategory);
     const newEx: PrescribedExercise = {
       id: `ex-custom-${Date.now()}`,
       name: customExerciseName.trim(),
-      muscleGroup: "Geral",
+      muscleGroup: detectedCategory !== "Geral" ? detectedCategory : "Geral",
       sets: 3,
       reps: "10",
       weight: "BW",
@@ -292,7 +531,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
     setEdited({ ...edited, exercises: [...(edited.exercises || []), newEx] });
     setExpandedExerciseId(newEx.id); // auto-expand newly custom exercise
     setCustomExerciseName("");
-    toast.success(`Customizado adicionado: ${newEx.name}`);
+    toast.success(`Customizado adicionado (${detectedCategory}): ${newEx.name}`);
   };
 
   const updateExField = (id: string, field: keyof PrescribedExercise, value: any) => {
@@ -346,14 +585,8 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       if (!matchesSearch) return false;
 
       // 2. Tab Categories
-      if (activeCategory === "FAVORITES") {
-        if (!favorites.includes(item.id)) return false;
-      } else if (activeCategory === "RECENTS") {
-        if (!recentAdds.includes(item.id)) return false;
-      } else if (activeCategory === "CUSTOM") {
-        if (!customLibraryExercises.some(x => x.id === item.id)) return false;
-      } else if (activeCategory !== "ALL") {
-        if (item.category !== activeCategory) return false;
+      if (!isExerciseInActiveCategory(item, activeCategory, favorites, recentAdds, customLibraryExercises)) {
+        return false;
       }
 
       // 3. Metadata Filters

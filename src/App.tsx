@@ -2803,8 +2803,9 @@ const EliteHubApp: FC<{
                             })
                             .sort(
                               (a, b) =>
-                                getSafeDateTime(a.date) -
-                                getSafeDateTime(b.date),
+                                workoutStatusFilter === "completed"
+                                  ? getSafeDateTime(b.date) - getSafeDateTime(a.date)
+                                  : getSafeDateTime(a.date) - getSafeDateTime(b.date),
                             )
                             .map((w, index) => (
                               <Card

@@ -68,6 +68,10 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const [totalElapsedTime, setTotalElapsedTime] = useState(0); // in seconds
+  const [sessionDate, setSessionDate] = useState<string>(
+    workout.date?.split("T")[0] || new Date().toISOString().split("T")[0]
+  );
+  const [manualDurationMinutes, setManualDurationMinutes] = useState<string>("");
   
   // Rest Timer states
   const [restSecondsRemaining, setRestSecondsRemaining] = useState(0);
@@ -84,6 +88,17 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
   // Active workout stats
   const activeEx = session.exercises[currentExerciseIndex];
   const nextEx = session.exercises[currentExerciseIndex + 1];
+
+  const incompleteExercisesCount = useMemo(() => {
+    return session.exercises.filter(ex => 
+      !(ex.performedSets || []).every(s => (s as any).isCompleted)
+    ).length;
+  }, [session.exercises]);
+
+  const isCurrentExCompleted = useMemo(() => {
+    if (!activeEx || !activeEx.performedSets || activeEx.performedSets.length === 0) return false;
+    return activeEx.performedSets.every(s => (s as any).isCompleted);
+  }, [activeEx]);
 
   // Initialize total stopwatch
   useEffect(() => {
@@ -317,13 +332,16 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
     speakText("Treino concluído com maestria. Parabéns pelo desempenho elite!", isVoiceEnabled);
     
     // Save state
-    const elapsedMinutes = Math.max(1, Math.round(totalElapsedTime / 60));
+    const finalDuration = manualDurationMinutes !== "" 
+      ? parseInt(manualDurationMinutes) || 1 
+      : Math.max(1, Math.round(totalElapsedTime / 60));
     
     // Auto map values to match standard types
     const completedSession: Workout = {
       ...session,
       status: "completed",
-      durationMinutes: elapsedMinutes,
+      date: sessionDate,
+      durationMinutes: finalDuration,
       rpe: overallRpe,
       feedback: feedbackNotes || session.feedback || "Treino concluído com biofeedback de alta performance.",
       totalLoad: session.exercises.reduce((acc, ex) => {
@@ -361,10 +379,24 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
 
         {/* CLOCKS & TOGGLES */}
         <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
-          <div className="flex items-center gap-2 bg-[#0c111d] px-4 py-2 rounded-xl border border-slate-900 shadow-md">
-            <Clock className="w-4 h-4 text-amber-400 animate-spin-slow" />
-            <span className="text-sm font-black text-white font-mono">{formatTime(totalElapsedTime)}</span>
-          </div>
+          <button
+            onClick={() => {
+              if (manualDurationMinutes === "") {
+                setManualDurationMinutes(Math.max(1, Math.round(totalElapsedTime / 60)).toString());
+              }
+              setShowFinishModal(true);
+            }}
+            className="flex items-center gap-2 bg-[#0c111d] hover:bg-slate-900 px-4 py-2 rounded-xl border border-slate-900 hover:border-slate-800 shadow-md group transition-all cursor-pointer text-left"
+            title="Ajustar data/tempo total de execução"
+          >
+            <Clock className="w-4 h-4 text-amber-400 animate-spin-slow group-hover:text-[#39FF14] transition-colors" />
+            <div className="flex flex-col leading-none">
+              <span className="text-[7px] font-black text-[#39FF14] uppercase tracking-wider select-none opacity-80 group-hover:opacity-100 transition-all">Ajustar</span>
+              <span className="text-xs font-black text-white font-mono mt-0.5">
+                {manualDurationMinutes !== "" ? `${manualDurationMinutes} min` : formatTime(totalElapsedTime)}
+              </span>
+            </div>
+          </button>
 
           <button
             onClick={toggleVoice}
@@ -421,10 +453,16 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                     <span className="text-[10px] font-black bg-[#39FF14]/15 border border-[#39FF14]/25 text-[#39FF14] px-3 py-1 rounded-full uppercase tracking-wider">
                       {activeEx.muscleGroup || "GERAL"}
                     </span>
-                    {activeEx.performedSets && (
-                      <span className="text-[10px] font-black bg-amber-500/15 border border-amber-500/25 text-amber-400 px-3 py-1 rounded-full uppercase tracking-wider">
-                        ⚡ Série em execução: {currentSetIndexForActiveEx + 1 > activeEx.performedSets.length ? "Concluída ✨" : `Série ${currentSetIndexForActiveEx + 1} de ${activeEx.performedSets.length}`}
+                    {isCurrentExCompleted ? (
+                      <span className="text-[10px] font-black bg-[#39FF14]/15 border border-[#39FF14]/25 text-[#39FF14] px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                        ✔️ EXERCÍCIO CONCLUÍDO
                       </span>
+                    ) : (
+                      activeEx.performedSets && (
+                        <span className="text-[10px] font-black bg-amber-500/15 border border-amber-500/25 text-amber-400 px-3 py-1 rounded-full uppercase tracking-wider">
+                          ⚡ Série em execução: {currentSetIndexForActiveEx + 1 > activeEx.performedSets.length ? "Concluída ✨" : `Série ${currentSetIndexForActiveEx + 1} de ${activeEx.performedSets.length}`}
+                        </span>
+                      )
                     )}
                   </div>
                   <h3 className="text-2xl md:text-3xl font-black uppercase italic text-white tracking-tight mt-2.5">
@@ -557,36 +595,58 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                     </div>
                   </div>
 
-                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-900 flex flex-col justify-center">
-                    <button
-                      onClick={() => {
-                        (activeEx.performedSets || []).forEach(set => {
-                          updateSetField(activeEx.id, set.id, "isCompleted", true);
-                        });
-                        toast.success("Todas as séries marcadas como concluídas!");
-                        
-                        const restValue = activeEx?.rest || "90s";
-                        const secondsMatch = restValue.match(/\d+/);
-                        const restSecs = secondsMatch ? parseInt(secondsMatch[0]) : 90;
-                        startRestTimer(restSecs);
+                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-900 flex flex-col justify-center items-center gap-2">
+                    {isCurrentExCompleted ? (
+                      <>
+                        <button
+                          disabled
+                          className="w-full bg-slate-900 text-slate-500 border border-slate-800/60 font-black text-xs uppercase py-3.5 px-4 rounded-xl tracking-wider select-none cursor-not-allowed opacity-50 flex items-center justify-center gap-1.5"
+                        >
+                          EXERCÍCIO CONCLUÍDO ✔️
+                        </button>
+                        <button
+                          onClick={() => {
+                            (activeEx.performedSets || []).forEach(set => {
+                              updateSetField(activeEx.id, set.id, "isCompleted", false);
+                            });
+                            toast.success("Exercício reaberto para edição!");
+                          }}
+                          className="text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-colors cursor-pointer"
+                        >
+                          DESMARCAR CONCLUSÃO 🔄
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          (activeEx.performedSets || []).forEach(set => {
+                            updateSetField(activeEx.id, set.id, "isCompleted", true);
+                          });
+                          toast.success("Todas as séries marcadas como concluídas!");
+                          
+                          const restValue = activeEx?.rest || "90s";
+                          const secondsMatch = restValue.match(/\d+/);
+                          const restSecs = secondsMatch ? parseInt(secondsMatch[0]) : 90;
+                          startRestTimer(restSecs);
 
-                        const nextIndex = currentExerciseIndex + 1;
-                        if (nextIndex < session.exercises.length) {
-                          setTimeout(() => {
-                            navigateToExercise(nextIndex);
-                            toast.success(`Avançando para o próximo exercício: ${session.exercises[nextIndex].name}!`, { icon: "➡️" });
-                          }, 1500);
-                        } else {
-                          setTimeout(() => {
-                            setShowFinishModal(true);
-                            toast.success("Todos os exercícios concluídos! Defina sua percepção de esforço (PSE) para finalizar. 🏆", { duration: 5000 });
-                          }, 1500);
-                        }
-                      }}
-                      className="w-full bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase py-3.5 px-4 rounded-xl tracking-wider transition-colors shadow-lg shadow-[#39FF14]/10"
-                    >
-                      CONCLUIR EXERCÍCIO ✅
-                    </button>
+                          const nextIndex = currentExerciseIndex + 1;
+                          if (nextIndex < session.exercises.length) {
+                            setTimeout(() => {
+                              navigateToExercise(nextIndex);
+                              toast.success(`Avançando para o próximo exercício: ${session.exercises[nextIndex].name}!`, { icon: "➡️" });
+                            }, 1500);
+                          } else {
+                            setTimeout(() => {
+                              setShowFinishModal(true);
+                              toast.success("Todos os exercícios concluídos! Defina sua percepção de esforço (PSE) para finalizar. 🏆", { duration: 5000 });
+                            }, 1500);
+                          }
+                        }}
+                        className="w-full bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase py-3.5 px-4 rounded-xl tracking-wider transition-colors shadow-lg shadow-[#39FF14]/10 cursor-pointer"
+                      >
+                        CONCLUIR EXERCÍCIO ✅
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -703,31 +763,22 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
         {/* FEEDBACK & OVERALL RPE INPUT EXPANSION PANEL */}
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
           
-          {/* Post-Workout Assessment Slider */}
-          <div className="w-full sm:w-60 bg-[#0c111d] p-3 rounded-2xl border border-slate-900 flex flex-col gap-1.5">
-            <div className="flex justify-between items-center text-[9px] font-black text-slate-400 uppercase">
-              <span>RPE DA SESSÃO</span>
-              <span className="text-amber-400">{overallRpe}/10 {rpeDetails.emoji}</span>
-            </div>
-            <input
-              type="range"
-              min="1"
-              max="10"
-              value={overallRpe}
-              onChange={(e) => setOverallRpe(parseInt(e.target.value))}
-              className="w-full accent-brand-primary"
-            />
-            <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider text-center block">
-              {rpeDetails.text}
-            </span>
-          </div>
-
-          <button
-            onClick={() => setShowFinishModal(true)}
-            className="w-full sm:w-auto px-8 py-4.5 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-[#39FF14]/20 flex items-center justify-center gap-2 cursor-pointer shrink-0"
-          >
-            FINALIZAR TREINO 🏆
-          </button>
+          {currentExerciseIndex === session.exercises.length - 1 ? (
+            <button
+              onClick={() => setShowFinishModal(true)}
+              className="w-full sm:w-auto px-8 py-4.5 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-[#39FF14]/20 flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            >
+              FINALIZAR TREINO 🏆
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowFinishModal(true)}
+              className="w-full sm:w-auto px-5 py-3.5 bg-slate-900/40 hover:bg-slate-900 border border-slate-900 hover:border-slate-800 text-slate-400 hover:text-white font-black text-[9px] uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              title="Finalizar treino antes de concluir os exercícios restantes"
+            >
+              CONCLUIR ANTECIPADAMENTE ⏱️
+            </button>
+          )}
 
           <button
             onClick={onCancel}
@@ -760,6 +811,58 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                 >
                   <X className="w-5 h-5" />
                 </button>
+              </div>
+
+              {incompleteExercisesCount > 0 && (
+                <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3.5 rounded-2xl flex items-start gap-2.5 text-xs">
+                  <ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="font-black uppercase tracking-wider text-[10px]">Atenção: Exercícios Incompletos ⚠️</p>
+                    <p className="font-semibold text-[10px] text-slate-400 mt-0.5">
+                      Você possui <strong className="text-amber-400">{incompleteExercisesCount}</strong> {incompleteExercisesCount === 1 ? "exercício incompleto" : "exercícios incompletos"} neste treino. Tem certeza de que deseja encerrar o treino agora?
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* EDIT DATE & TIME SECTION */}
+              <div className="bg-slate-950/50 border border-slate-900 p-4 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                    📅 DATA DE EXECUÇÃO
+                  </label>
+                  <input
+                    type="date"
+                    value={sessionDate}
+                    onChange={(e) => setSessionDate(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-900 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:border-[#39FF14] transition-all cursor-pointer"
+                  />
+                  <p className="text-[8px] text-slate-500 font-semibold leading-normal">
+                    Caso tenha treinado em outro dia ou queira corrigir a data.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                    ⏱️ TEMPO TOTAL DO TREINO
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="1"
+                      max="480"
+                      value={manualDurationMinutes}
+                      onChange={(e) => setManualDurationMinutes(e.target.value)}
+                      placeholder={`${Math.max(1, Math.round(totalElapsedTime / 60))} (timer atual)`}
+                      className="w-full bg-slate-950 border border-slate-900 rounded-xl pl-3 pr-16 py-2 text-xs font-bold text-white outline-none focus:border-[#39FF14] transition-all cursor-pointer"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-500 uppercase tracking-wider select-none pointer-events-none">
+                      MINUTOS
+                    </span>
+                  </div>
+                  <p className="text-[8px] text-slate-500 font-semibold leading-normal">
+                    Edite ou digite o tempo exato para não depender do cronômetro da página.
+                  </p>
+                </div>
               </div>
 
               {/* PSE (RPE) SELECTOR */}
