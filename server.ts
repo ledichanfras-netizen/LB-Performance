@@ -481,7 +481,15 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
             cognitiveLoad: w.cognitive_load,
             readinessScore: w.readiness_score,
             travelFatigue: w.travel_fatigue,
-            sleepQuality: w.sleep_quality
+            sleepQuality: w.sleep_quality,
+            menstrualPhase: w.menstrual_phase || "Nenhuma",
+            menstrualSymptoms: Array.isArray(w.menstrual_symptoms)
+              ? w.menstrual_symptoms
+              : typeof w.menstrual_symptoms === 'string'
+              ? JSON.parse(w.menstrual_symptoms)
+              : [],
+            hrv: w.hrv,
+            sleepHoursFormatted: w.sleep_hours_formatted
           })),
           externalSessions: (a.external_sessions || []).map((es: any) => ({
             ...es,
@@ -497,7 +505,10 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
               muscleGroup: ex.muscle_group,
               painLevel: ex.pain_level,
               repsType: ex.reps_type || 'reps',
-              performedSets: (ex.performed_sets || [])
+              performedSets: (ex.performed_sets || []).map((s: any) => ({
+                ...s,
+                isCompleted: s.is_completed ?? false
+              }))
             })).sort((x: any, y: any) => (x.order_index || 0) - (y.order_index || 0))
           })),
           assessments: {
@@ -680,7 +691,15 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
         cognitiveLoad: w.cognitive_load,
         readinessScore: w.readiness_score,
         travelFatigue: w.travel_fatigue,
-        sleepQuality: w.sleep_quality
+        sleepQuality: w.sleep_quality,
+        menstrualPhase: w.menstrual_phase || "Nenhuma",
+        menstrualSymptoms: Array.isArray(w.menstrual_symptoms)
+          ? w.menstrual_symptoms
+          : typeof w.menstrual_symptoms === 'string'
+          ? JSON.parse(w.menstrual_symptoms)
+          : [],
+        hrv: w.hrv,
+        sleepHoursFormatted: w.sleep_hours_formatted
       })),
       externalSessions: (externalByAth[a.id] || []).map((es: any) => ({
         ...es,
@@ -698,7 +717,10 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
           rest: ex.rest,
           notes: ex.notes,
           repsType: ex.reps_type || 'reps',
-          performedSets: (setsByEx[ex.id] || [])
+          performedSets: (setsByEx[ex.id] || []).map((s: any) => ({
+            ...s,
+            isCompleted: s.is_completed ?? false
+          }))
         })).sort((x: any, y: any) => (x.order_index || 0) - (y.order_index || 0))
       })),
       assessments: {
@@ -970,7 +992,11 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
                cognitive_load: w.cognitiveLoad ?? 0,
                readiness_score: w.readinessScore ?? 0,
                travel_fatigue: w.travelFatigue ?? 0,
-               sleep_quality: w.sleepQuality ?? 0
+               sleep_quality: w.sleepQuality ?? 0,
+                menstrual_phase: w.menstrualPhase || 'Nenhuma',
+                menstrual_symptoms: w.menstrualSymptoms || [],
+                hrv: w.hrv ?? null,
+                sleep_hours_formatted: w.sleepHoursFormatted || null
              })));
              if (upErr) throw upErr;
            }
@@ -1087,7 +1113,8 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
                        exercise_id: ex.id,
                        reps: s.reps ?? 0,
                        weight: s.weight ?? 0,
-                       rpe: s.rpe ?? 0
+                       rpe: s.rpe ?? 0,
+                        is_completed: s.isCompleted ?? false
                      })));
                      if (setUpErr) throw setUpErr;
                    }
@@ -1343,8 +1370,25 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
       for (const w of (athlete.wellness || [])) {
         if (!w.id) w.id = `wl-${Date.now()}-${Math.random()}`;
         await client.query(
-          'INSERT INTO wellness (id, athlete_id, date, fatigue, sleep, stress, soreness, mood, cognitive_load, readiness_score, travel_fatigue, sleep_quality) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) ON CONFLICT (id) DO UPDATE SET date = $3, fatigue = $4, sleep = $5, stress = $6, soreness = $7, mood = $8, cognitive_load = $9, readiness_score = $10, travel_fatigue = $11, sleep_quality = $12',
-          [w.id, athlete.id, w.date, w.fatigue ?? 0, w.sleep ?? 0, w.stress ?? 0, w.soreness ?? 0, w.mood ?? 0, w.cognitiveLoad ?? 0, w.readinessScore ? Math.round(w.readinessScore) : 0, w.travelFatigue ?? 0, w.sleepQuality ?? 0]
+          'INSERT INTO wellness (id, athlete_id, date, fatigue, sleep, stress, soreness, mood, cognitive_load, readiness_score, travel_fatigue, sleep_quality, menstrual_phase, menstrual_symptoms, hrv, sleep_hours_formatted) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) ON CONFLICT (id) DO UPDATE SET date = $3, fatigue = $4, sleep = $5, stress = $6, soreness = $7, mood = $8, cognitive_load = $9, readiness_score = $10, travel_fatigue = $11, sleep_quality = $12, menstrual_phase = $13, menstrual_symptoms = $14, hrv = $15, sleep_hours_formatted = $16',
+          [
+            w.id,
+            athlete.id,
+            w.date,
+            w.fatigue ?? 0,
+            w.sleep ?? 0,
+            w.stress ?? 0,
+            w.soreness ?? 0,
+            w.mood ?? 0,
+            w.cognitiveLoad ?? 0,
+            w.readinessScore ? Math.round(w.readinessScore) : 0,
+            w.travelFatigue ?? 0,
+            w.sleepQuality ?? 0,
+            w.menstrualPhase || 'Nenhuma',
+            w.menstrualSymptoms ? JSON.stringify(w.menstrualSymptoms) : '[]',
+            w.hrv ?? null,
+            w.sleepHoursFormatted || null
+          ]
         );
       }
 
@@ -1418,8 +1462,8 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
           for (const s of (ex.performedSets || [])) {
               if (!s.id) s.id = `s-${Date.now()}-${Math.random()}`;
               await client.query(
-                'INSERT INTO performed_sets (id, exercise_id, reps, weight, rpe) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET reps = $3, weight = $4, rpe = $5',
-                [s.id, ex.id, s.reps ?? null, s.weight ?? null, s.rpe ?? null]
+                'INSERT INTO performed_sets (id, exercise_id, reps, weight, rpe, is_completed) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET reps = $3, weight = $4, rpe = $5, is_completed = $6',
+                [s.id, ex.id, s.reps ?? null, s.weight ?? null, s.rpe ?? null, s.isCompleted ?? false]
               );
           }
         }
@@ -2473,6 +2517,10 @@ async function runSetup(retries = 1) {
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS readiness_score INTEGER;`);
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS travel_fatigue INTEGER;`);
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS sleep_quality INTEGER;`);
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS menstrual_phase TEXT;`).catch(() => {});
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS menstrual_symptoms JSONB;`).catch(() => {});
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS hrv REAL;`).catch(() => {});
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS sleep_hours_formatted TEXT;`).catch(() => {});
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`);
 
     await client.query(`CREATE TABLE IF NOT EXISTS workouts (
@@ -2530,6 +2578,7 @@ async function runSetup(retries = 1) {
         weight REAL,
         rpe INTEGER
     );`);
+    await client.query(`ALTER TABLE performed_sets ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT FALSE;`).catch(() => {});
 
     await client.query(`CREATE TABLE IF NOT EXISTS external_sessions (
         id TEXT PRIMARY KEY,
