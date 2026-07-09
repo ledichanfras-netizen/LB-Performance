@@ -44,16 +44,30 @@ function calculateAge(dobString: string): number {
   }
 }
 
+function getNewestThree(arr: any[]): any[] {
+  if (!arr || !Array.isArray(arr)) return [];
+  return [...arr]
+    .sort((a, b) => {
+      const timeA = a.date ? new Date(a.date).getTime() : 0;
+      const timeB = b.date ? new Date(b.date).getTime() : 0;
+      return timeB - timeA;
+    })
+    .slice(0, 3);
+}
+
 export async function generateAIModeling(athlete: Athlete): Promise<PerformanceModeling | null> {
   const token = getSessionToken();
 
   // Filter and prepare data to be concise for token usage
+  // We sort in descending order (newest first) and slice(0, 3) to get the 3 most recent assessments
   const assessmentsSummary = {
-    bioimpedance: athlete.assessments.bioimpedance.slice(-3),
-    isometricStrength: athlete.assessments.isometricStrength.slice(-3),
-    cmj: athlete.assessments.cmj.slice(-3),
-    vo2max: athlete.assessments.vo2max.slice(-3),
-    speed: athlete.assessments.speed.slice(-3),
+    bioimpedance: getNewestThree(athlete.assessments?.bioimpedance),
+    isometricStrength: getNewestThree(athlete.assessments?.isometricStrength),
+    imtp: getNewestThree(athlete.assessments?.imtp),
+    cmj: getNewestThree(athlete.assessments?.cmj),
+    dropJump: getNewestThree(athlete.assessments?.dropJump),
+    vo2max: getNewestThree(athlete.assessments?.vo2max),
+    speed: getNewestThree(athlete.assessments?.speed),
   };
 
   const prompt = `
