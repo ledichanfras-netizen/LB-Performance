@@ -28,6 +28,8 @@ export interface Athlete {
   periodizationStart?: string; 
   periodizationEnd?: string;
   trainingDays?: number[]; // [0, 1, 2, 3, 4, 5, 6] for Sun-Sat
+  academyDays?: number[]; // [0, 1, 2, 3, 4, 5, 6] for Sun-Sat (academia)
+  courtDays?: number[]; // [0, 1, 2, 3, 4, 5, 6] for Sun-Sat (campo/quadra)
   modality: string; 
   team?: string;
   competitiveLevel?: 'amador' | 'competitivo' | 'elite';

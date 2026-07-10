@@ -605,6 +605,7 @@ const EliteHubApp: FC<{
   const [searchTerm, setSearchTerm] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSidebarAthletes, setShowSidebarAthletes] = useState(false);
+  const [isPeriodizationExpanded, setIsPeriodizationExpanded] = useState(false);
 
   const featuredAthletesList = useMemo(() => {
     const today = getLocalDateString();
@@ -2511,6 +2512,57 @@ const EliteHubApp: FC<{
                                 </h5>
                               </div>
 
+                              {/* SANFONA RETRÁTIL PARA CONFIGURAÇÃO DE PERIODIZAÇÃO */}
+                              <div className="mb-6 border border-slate-800 rounded-3xl bg-slate-900/10 overflow-hidden relative z-10 hover:border-slate-700/60 transition-colors">
+                                <button
+                                  type="button"
+                                  onClick={() => setIsPeriodizationExpanded(!isPeriodizationExpanded)}
+                                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-900/30 transition-colors"
+                                >
+                                  <div className="flex items-center gap-3.5">
+                                    <div className="w-8 h-8 rounded-xl bg-slate-800/40 flex items-center justify-center border border-slate-700/40">
+                                      <Calendar className="w-4 h-4 text-brand-primary" />
+                                    </div>
+                                    <div>
+                                      <span className="text-[11px] font-black text-white uppercase tracking-wider block">
+                                        Período e Dias de Treino da Periodização
+                                      </span>
+                                      <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
+                                        {selected.periodizationStart && selected.periodizationEnd 
+                                          ? `${formatDate(selected.periodizationStart)} a ${formatDate(selected.periodizationEnd)} • ${(selected.trainingDays || []).length}x na semana`
+                                          : "Toque para definir datas de início/fim e dias de treino semanais"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <ChevronRight
+                                    className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${
+                                      isPeriodizationExpanded ? "rotate-90" : "rotate-0"
+                                    }`}
+                                  />
+                                </button>
+
+                                {isPeriodizationExpanded && (
+                                  <div className="px-6 pb-6 pt-2 border-t border-slate-800/40 bg-slate-950/60">
+                                    <PeriodizationConfig
+                                      start={selected.periodizationStart}
+                                      end={selected.periodizationEnd}
+                                      days={selected.trainingDays || []}
+                                      academyDays={selected.academyDays || []}
+                                      courtDays={selected.courtDays || []}
+                                      onChange={(data) => {
+                                        updateAthlete(selected.id, {
+                                          periodizationStart: data.start,
+                                          periodizationEnd: data.end,
+                                          trainingDays: data.days,
+                                          academyDays: data.academyDays,
+                                          courtDays: data.courtDays,
+                                        });
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+
                               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10 w-full items-center">
                                 <div className="lg:col-span-2 relative group/input">
                                   <textarea
@@ -2526,23 +2578,14 @@ const EliteHubApp: FC<{
                                   </div>
                                 </div>
                                 <div className="flex flex-col gap-3 justify-center">
-                                  <Button
-                                    onClick={handleAiAnalysis}
-                                    disabled={aiLoading}
-                                    variant="primary"
-                                    className="w-full py-4 sm:py-5 text-[10px] md:text-[11px] font-black tracking-widest relative overflow-hidden group shadow-[0_20px_40px_rgba(57,255,20,0.15)] rounded-[1.25rem] sm:rounded-2xl"
-                                  >
-                                    <Sparkles className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 opacity-50 group-hover:scale-125 transition-transform" />
-                                    {aiLoading
-                                      ? "PROCESSANDO..."
-                                      : "RELATÓRIO PREDITIVO"}
-                                  </Button>
+
                                   <Button
                                     onClick={handleGenerateIAWorkouts}
                                     disabled={iaWorkoutsLoading}
-                                    variant="secondary"
-                                    className="w-full py-4 sm:py-5 text-[10px] md:text-[11px] font-black tracking-widest border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-brand-primary transition-all rounded-[1.25rem] sm:rounded-2xl bg-slate-950/60"
+                                    variant="primary"
+                                    className="w-full py-5 text-[11px] font-black tracking-widest relative overflow-hidden group shadow-[0_20px_40px_rgba(57,255,20,0.25)] rounded-[1.25rem] sm:rounded-2xl"
                                   >
+                                    <Sparkles className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 opacity-60 group-hover:scale-125 transition-transform text-brand-dark animate-pulse" />
                                     {iaWorkoutsLoading
                                       ? "PERIODIZANDO..."
                                       : "SISTEMA DE PERIODIZAÇÃO"}
@@ -2683,32 +2726,105 @@ const EliteHubApp: FC<{
                     {activeTab === "info" && <AthleteGuide />}
 
                     {activeTab === "ai-modeling" && selected && (
-                      <div className="space-y-6">
+                      <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
                         {aiModelingResult ? (
-                          <AIModelingReport
-                            athlete={selected}
-                            modeling={aiModelingResult}
-                            onBack={() => setAiModelingResult(null)}
-                            role={user.role}
-                          />
-                        ) : (
-                          <div className="text-center py-20 px-6 bg-slate-900/50 border border-slate-800 rounded-[2.5rem] flex flex-col items-center justify-center gap-6">
-                            <div className="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-400 border border-purple-500/20">
-                              <Brain className="w-8 h-8" />
+                          <div className="space-y-6">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-950/40 p-6 rounded-[2rem] border border-slate-800">
+                              <div>
+                                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest leading-none mb-1">
+                                  Gerenciador de Inteligência
+                                </h3>
+                                <h2 className="text-sm font-black text-white uppercase italic tracking-tight">
+                                  Modelagem Preditiva de {selected.name.toUpperCase()}
+                                </h2>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                                <Button
+                                  onClick={handleAiAnalysis}
+                                  disabled={aiLoading}
+                                  variant="primary"
+                                  className="px-6 py-2.5 text-[9px] font-black tracking-wider uppercase rounded-xl flex items-center gap-2"
+                                >
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                  {aiLoading ? "PROCESSANDO..." : "GERAR RELATÓRIO PREDITIVO"}
+                                </Button>
+                                <Button
+                                  onClick={() => setAiModelingResult(null)}
+                                  variant="secondary"
+                                  className="px-6 py-2.5 text-[9px] font-black tracking-wider uppercase rounded-xl border-slate-800 bg-slate-950 text-slate-400"
+                                >
+                                  Escolher Outra Ferramenta
+                                </Button>
+                              </div>
                             </div>
-                            <div className="max-w-md">
-                              <h3 className="text-sm font-black text-white uppercase tracking-widest mb-2">GERAR MODELAGEM PREDITIVA ELITE</h3>
-                              <p className="text-xs text-slate-400 leading-relaxed font-bold">
-                                Analise o histórico completo de testes, treinos e lesões de do atleta {selected.name.toUpperCase()} para gerar insights de alta performance guiados por inteligência artificial.
+                            <AIModelingReport
+                              athlete={selected}
+                              modeling={aiModelingResult}
+                              onBack={() => setAiModelingResult(null)}
+                              role={user.role}
+                            />
+                          </div>
+                        ) : (
+                          <div className="space-y-8">
+                            <div className="bg-slate-950/30 border border-slate-800 rounded-[2rem] p-6 text-left">
+                              <h3 className="text-xs font-black uppercase text-slate-500 tracking-[0.2em] mb-2">
+                                Centro de Inteligência Artificial LBSports
+                              </h3>
+                              <p className="text-xs text-slate-400 font-bold leading-relaxed max-w-3xl">
+                                Selecione uma das ferramentas inteligentes abaixo para avaliar e projetar a performance do atleta <span className="text-brand-primary">{selected.name}</span>. Ambos os relatórios utilizam inteligência avançada baseada em dados reais inseridos no sistema.
                               </p>
                             </div>
-                            <Button
-                              onClick={() => handleGenerateAIModeling(false)}
-                              disabled={aiModelingLoading}
-                              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 border border-purple-500/20 text-white font-black uppercase tracking-wider rounded-xl shadow-lg shadow-purple-950/40 hover:brightness-110 active:scale-95 transition-all text-[10px]"
-                            >
-                              {aiModelingLoading ? "PROCESSANDO MODELAGEM..." : "CONFIRMAR E GERAR AGORA"}
-                            </Button>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* FERRAMENTA 1: MODELAGEM PREDITIVA */}
+                              <div className="bg-slate-900/50 border border-slate-800 rounded-[2.5rem] p-8 flex flex-col justify-between gap-6 hover:border-slate-700/50 transition-all relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-purple-500/10 transition-colors"></div>
+                                <div className="space-y-4 relative z-10">
+                                  <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-400 border border-purple-500/20">
+                                    <Brain className="w-6 h-6" />
+                                  </div>
+                                  <div>
+                                    <h3 className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1 leading-none">Mapeamento</h3>
+                                    <h4 className="text-base font-black text-white uppercase tracking-tight">MODELAGEM PREDITIVA (BIO-PROFILE)</h4>
+                                    <p className="text-xs text-slate-400 leading-relaxed font-bold mt-3">
+                                      Desenha o DNA e perfil neurofisiológico completo do atleta. Analisa a consistência dos testes físicos, evolução histórica de cargas, e mapeia fraquezas (gaps) para sugerir direcionamentos de alta performance.
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  onClick={() => handleGenerateAIModeling(false)}
+                                  disabled={aiModelingLoading}
+                                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 border border-purple-500/20 text-white font-black uppercase tracking-wider rounded-xl shadow-lg shadow-purple-950/40 hover:brightness-110 active:scale-95 transition-all text-[10px] relative z-10"
+                                >
+                                  {aiModelingLoading ? "PROCESSANDO MODELAGEM..." : "CONFIRMAR E GERAR AGORA"}
+                                </Button>
+                              </div>
+
+                              {/* FERRAMENTA 2: RELATÓRIO PREDITIVO COMPLETO */}
+                              <div className="bg-slate-900/50 border border-slate-800 rounded-[2.5rem] p-8 flex flex-col justify-between gap-6 hover:border-slate-700/50 transition-all relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-emerald-500/10 transition-colors"></div>
+                                <div className="space-y-4 relative z-10">
+                                  <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                                    <Sparkles className="w-6 h-6" />
+                                  </div>
+                                  <div>
+                                    <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1 leading-none">Diagnóstico Dinâmico</h3>
+                                    <h4 className="text-base font-black text-white uppercase tracking-tight">RELATÓRIO PREDITIVO COMPLETO</h4>
+                                    <p className="text-xs text-slate-400 leading-relaxed font-bold mt-3">
+                                      Consolida o prontuário de saúde, bem-estar diário, sono, fadiga de viagens e sintomas relatados. Gera um laudo em formato de impressão (PDF) com percentual de prontidão física e recomendações táticas preventivas.
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  onClick={handleAiAnalysis}
+                                  disabled={aiLoading}
+                                  variant="primary"
+                                  className="w-full py-4 text-[10px] font-black tracking-widest uppercase rounded-xl relative z-10"
+                                >
+                                  {aiLoading ? "PROCESSANDO RELATÓRIO..." : "CONFIRMAR E GERAR RELATÓRIO"}
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -3183,85 +3299,38 @@ const EliteHubApp: FC<{
                           <>
                             {/* PÁGINA 1: CAPA E INDICADORES PRINCIPAIS */}
                             <ReportPage pageNumber={1} totalPages={totalPages}>
-                              <div className="bg-brand-primary -mx-[20mm] -mt-[20mm] p-12 mb-12 flex justify-between items-end relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-                                <div className="relative z-10">
-                                  <div className="flex items-center gap-4 mb-6">
-                                    <img
-                                      src="/192x192.png"
-                                      className="w-14 h-14 rounded-2xl shadow-2xl object-contain bg-white"
-                                      alt="Logo"
-                                    />
-                                    <div>
-                                      <h4 className="text-[11px] font-black text-white/60 uppercase tracking-[0.3em] leading-none mb-1">
-                                        Elite Performance Lab
-                                      </h4>
-                                      <h3 className="text-2xl md:text-3xl font-black text-white italic uppercase tracking-tighter leading-none">
-                                        Relatório de Inteligência
-                                      </h3>
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                      <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter italic leading-none">
-                                        {selected?.name}
-                                      </h2>
-                                      <span className="px-2 py-1 bg-red-500 text-white text-[8px] font-black uppercase tracking-widest rounded-md">
-                                        Confidencial
-                                      </span>
-                                    </div>
-                                    <p className="text-[12px] font-black text-white/80 uppercase tracking-[0.2em] flex items-center gap-2">
-                                      {selected?.modality}
-                                      {selected?.position && (
-                                        <>
-                                          <span className="w-1 h-1 bg-white/40 rounded-full"></span>{" "}
-                                          {selected.position}
-                                        </>
-                                      )}
-                                      {selected?.competitiveLevel && (
-                                        <>
-                                          <span className="w-1 h-1 bg-white/40 rounded-full"></span>{" "}
-                                          {formatCompetitiveLevel(selected.competitiveLevel, selected.modality)}
-                                        </>
-                                      )}
-                                      <span className="w-1 h-1 bg-white/40 rounded-full"></span>
-                                      {new Date().toLocaleDateString("pt-BR")}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="text-right hidden sm:block relative z-10">
-                                  <div className="inline-block px-6 py-3 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl">
-                                    <p className="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] mb-1">
-                                      Status de Performance
-                                    </p>
-                                    <p className="text-2xl font-black text-white italic uppercase tracking-tighter">
-                                      {data.status || "Análise Concluída"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
+                              <ReportHeader
+                                title="RELATÓRIO PREDITIVO COMPLETO"
+                                subTitle="DIAGNÓSTICO DINÂMICO & PRONTIDÃO FÍSICA"
+                                athlete={selected!}
+                                date={new Date().toLocaleDateString("pt-BR")}
+                                extraStats={[
+                                  { label: "IPG GERAL", value: `${data.performanceScore || 0}%` },
+                                  { label: "STATUS", value: data.status || "ANÁLISE" }
+                                ]}
+                              />
 
-                              <div className="space-y-10">
+                              <div className="space-y-8 mt-6">
                                 <div className="relative">
-                                  <div className="absolute -left-6 top-0 bottom-0 w-1 bg-brand-primary/20 rounded-full"></div>
-                                  <h5 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
-                                    <span className="w-2 h-2 bg-brand-primary rounded-full"></span>
+                                  <div className="absolute -left-4 top-0 bottom-0 w-1 bg-brand-primary/20 rounded-full"></div>
+                                  <h5 className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] mb-2 flex items-center gap-2 pl-2">
+                                    <span className="w-1.5 h-1.5 bg-brand-primary rounded-full"></span>
                                     Resumo Executivo
                                   </h5>
-                                  <p className="text-lg text-slate-800 font-medium leading-relaxed italic pl-2">
+                                  <p className="text-[11px] text-slate-800 font-medium leading-relaxed italic pl-2">
                                     "{data.summary}"
                                   </p>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-6">
-                                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 text-center">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                <div className="grid grid-cols-3 gap-4">
+                                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                                       Performance Geral
                                     </p>
-                                    <p className="text-4xl font-black text-brand-primary italic">
-                                      {data.performanceScore || 0}
+                                    <p className="text-3xl font-black text-brand-primary italic">
+                                      {data.performanceScore || 0}%
                                     </p>
-                                    <div className="w-full bg-slate-200 h-1.5 rounded-full mt-3 overflow-hidden">
+                                    <div className="w-full bg-slate-200 h-1 rounded-full mt-2 overflow-hidden">
                                       <div
                                         className="bg-brand-primary h-full rounded-full"
                                         style={{
@@ -3270,14 +3339,14 @@ const EliteHubApp: FC<{
                                       ></div>
                                     </div>
                                   </div>
-                                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 text-center">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                                       Score de Prontidão
                                     </p>
-                                    <p className="text-4xl font-black text-emerald-600 italic">
-                                      {data.readinessScore || 0}
+                                    <p className="text-3xl font-black text-emerald-600 italic">
+                                      {data.readinessScore || 0}%
                                     </p>
-                                    <div className="w-full bg-slate-200 h-1.5 rounded-full mt-3 overflow-hidden">
+                                    <div className="w-full bg-slate-200 h-1 rounded-full mt-2 overflow-hidden">
                                       <div
                                         className="bg-emerald-500 h-full rounded-full"
                                         style={{
@@ -3286,14 +3355,14 @@ const EliteHubApp: FC<{
                                       ></div>
                                     </div>
                                   </div>
-                                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 text-center">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                                       Risco de Lesão
                                     </p>
-                                    <p className="text-4xl font-black text-red-600 italic">
-                                      {data.injuryRiskScore || 0}
+                                    <p className="text-3xl font-black text-red-650 italic">
+                                      {data.injuryRiskScore || 0}%
                                     </p>
-                                    <div className="w-full bg-slate-200 h-1.5 rounded-full mt-3 overflow-hidden">
+                                    <div className="w-full bg-slate-200 h-1 rounded-full mt-2 overflow-hidden">
                                       <div
                                         className="bg-red-500 h-full rounded-full"
                                         style={{
@@ -3304,8 +3373,8 @@ const EliteHubApp: FC<{
                                   </div>
                                 </div>
 
-                                <div className="h-[400px] w-full bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100">
-                                  <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 text-center">
+                                <div className="h-[280px] w-full bg-slate-50 rounded-[2rem] p-6 border border-slate-100">
+                                  <h5 className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center">
                                     Radar de Capacidades Físicas
                                   </h5>
                                   <ResponsiveContainer
@@ -3315,13 +3384,13 @@ const EliteHubApp: FC<{
                                     <RadarChart
                                       cx="50%"
                                       cy="50%"
-                                      outerRadius="70%"
+                                      outerRadius="65%"
                                       data={data.radarData || []}
                                       margin={{
-                                        top: 20,
-                                        right: 40,
-                                        bottom: 20,
-                                        left: 40,
+                                        top: 10,
+                                        right: 30,
+                                        bottom: 10,
+                                        left: 30,
                                       }}
                                     >
                                       <PolarGrid stroke="#e2e8f0" />
@@ -3329,7 +3398,7 @@ const EliteHubApp: FC<{
                                         dataKey="subject"
                                         tick={{
                                           fill: "#64748b",
-                                          fontSize: 10,
+                                          fontSize: 9,
                                           fontWeight: 800,
                                         }}
                                       />
@@ -3342,9 +3411,9 @@ const EliteHubApp: FC<{
                                       <Radar
                                         name="Atleta"
                                         dataKey="A"
-                                        stroke="#2D7A74"
-                                        fill="#2D7A74"
-                                        fillOpacity={0.5}
+                                        stroke="#10b981"
+                                        fill="#10b981"
+                                        fillOpacity={0.4}
                                       />
                                     </RadarChart>
                                   </ResponsiveContainer>
@@ -3354,51 +3423,58 @@ const EliteHubApp: FC<{
 
                             {/* PÁGINA 2: ANÁLISE DETALHADA */}
                             <ReportPage pageNumber={2} totalPages={totalPages}>
-                              <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center font-black text-white text-xs">
-                                    LB
-                                  </div>
-                                  <h3 className="text-sm font-black text-slate-900 uppercase italic">
-                                    Análise Técnica • {selected?.name}
-                                  </h3>
+                              <ReportHeader
+                                title="RELATÓRIO PREDITIVO COMPLETO"
+                                subTitle="ANÁLISE NEUROFISIOLÓGICA & TÉCNICA DETALHADA"
+                                athlete={selected!}
+                                date={new Date().toLocaleDateString("pt-BR")}
+                                extraStats={[{ label: "PÁGINA", value: "02 DE 03" }]}
+                              />
+
+                              <div className="mt-4 space-y-4 font-sans text-left">
+                                <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                                  <Brain className="w-4 h-4 text-brand-primary" />
+                                  <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                                    Parecer Técnico de Inteligência Esportiva
+                                  </h4>
                                 </div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                  {new Date().toLocaleDateString("pt-BR")}
-                                </p>
-                              </div>
-                              <h5 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
-                                <span className="w-2 h-2 bg-brand-primary rounded-full"></span>
-                                Análise Técnica Detalhada
-                              </h5>
-                              <div className="prose prose-slate max-w-none prose-sm prose-headings:font-black prose-headings:uppercase prose-headings:tracking-widest prose-headings:text-brand-primary prose-th:bg-slate-100 prose-th:p-2 prose-td:p-2 prose-td:border prose-td:border-slate-100">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                  {data.detailedAnalysis}
-                                </ReactMarkdown>
+                                <div className="text-slate-700 leading-relaxed max-w-none">
+                                  <ReactMarkdown
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                      h1: ({ children }) => <h1 className="text-[11px] font-black text-emerald-700 uppercase tracking-wider mt-4 mb-2 pb-1 border-b border-slate-100 leading-none">{children}</h1>,
+                                      h2: ({ children }) => <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-wider mt-4 mb-2 leading-none">{children}</h2>,
+                                      h3: ({ children }) => <h3 className="text-[9px] font-black text-slate-800 uppercase tracking-wider mt-3 mb-1.5 leading-none">{children}</h3>,
+                                      p: ({ children }) => <p className="text-[9.5px] font-medium text-slate-600 leading-relaxed mb-2.5">{children}</p>,
+                                      ul: ({ children }) => <ul className="list-disc pl-4 space-y-1 mb-2.5 text-[9.5px] font-medium text-slate-600">{children}</ul>,
+                                      ol: ({ children }) => <ol className="list-decimal pl-4 space-y-1 mb-2.5 text-[9.5px] font-medium text-slate-600">{children}</ol>,
+                                      li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                                      strong: ({ children }) => <strong className="font-extrabold text-slate-900">{children}</strong>,
+                                      blockquote: ({ children }) => <blockquote className="border-l-2 border-emerald-600 pl-3 italic text-slate-500 my-2 text-[9.5px]">{children}</blockquote>
+                                    }}
+                                  >
+                                    {data.detailedAnalysis}
+                                  </ReactMarkdown>
+                                </div>
                               </div>
                             </ReportPage>
 
                             {/* PÁGINA 3: ALERTAS E RECOMENDAÇÕES */}
                             <ReportPage pageNumber={3} totalPages={totalPages}>
-                              <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-100">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center font-black text-white text-xs">
-                                    LB
-                                  </div>
-                                  <h3 className="text-sm font-black text-slate-900 uppercase italic">
-                                    Prescrição e Riscos • {selected?.name}
-                                  </h3>
-                                </div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                  {new Date().toLocaleDateString("pt-BR")}
-                                </p>
-                              </div>
-                              <div className="space-y-12">
+                              <ReportHeader
+                                title="RELATÓRIO PREDITIVO COMPLETO"
+                                subTitle="ALERTAS, RECOMENDAÇÕES E DIRETRIZES DE RETORNO"
+                                athlete={selected!}
+                                date={new Date().toLocaleDateString("pt-BR")}
+                                extraStats={[{ label: "PÁGINA", value: "03 DE 03" }]}
+                              />
+
+                              <div className="space-y-6 mt-4">
                                 {data.alerts && data.alerts.length > 0 && (
-                                  <div className="bg-red-50 border border-red-100 p-8 rounded-[2.5rem]">
-                                    <h5 className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                  <div className="bg-red-50 border border-red-100 p-5 rounded-2xl">
+                                    <h5 className="text-[9px] font-black text-red-600 uppercase tracking-widest mb-3 flex items-center gap-2">
                                       <svg
-                                        className="w-5 h-5"
+                                        className="w-4 h-4"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         stroke="currentColor"
@@ -3410,16 +3486,16 @@ const EliteHubApp: FC<{
                                           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                                         />
                                       </svg>
-                                      Alertas de Segurança e Riscos
+                                      Alertas Críticos de Risco e Saúde
                                     </h5>
-                                    <ul className="space-y-4">
+                                    <ul className="space-y-2">
                                       {data.alerts.map(
                                         (alert: string, i: number) => (
                                           <li
                                             key={i}
-                                            className="text-sm font-bold text-red-700 flex items-start gap-3"
+                                            className="text-[9px] font-bold text-red-700 flex items-start gap-2"
                                           >
-                                            <span className="mt-1.5 w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
+                                            <span className="mt-1.5 w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0"></span>
                                             {alert}
                                           </li>
                                         ),
@@ -3428,23 +3504,22 @@ const EliteHubApp: FC<{
                                   </div>
                                 )}
 
-                                <div className="bg-brand-primary/5 border border-brand-primary/10 p-10 rounded-[3rem] relative overflow-hidden">
-                                  <div className="absolute bottom-0 right-0 w-48 h-48 bg-brand-primary/5 rounded-full -mr-24 -mb-24 blur-3xl"></div>
-                                  <h5 className="text-[11px] font-black text-brand-primary uppercase tracking-[0.2em] mb-8 flex items-center gap-3 relative z-10">
-                                    <div className="w-2 h-2 bg-brand-primary rounded-full"></div>
-                                    Prescrição de Ajuste Imediato
+                                <div className="bg-emerald-50/40 border border-emerald-100 p-5 rounded-2xl relative overflow-hidden">
+                                  <h5 className="text-[9px] font-black text-emerald-800 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10">
+                                    <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full"></div>
+                                    Prescrição de Ajuste Imediato (Treino/Recuperação)
                                   </h5>
-                                  <div className="grid grid-cols-1 gap-4 relative z-10">
+                                  <div className="grid grid-cols-1 gap-2 relative z-10">
                                     {data.recommendations?.map(
                                       (r: string, i: number) => (
                                         <div
                                           key={i}
-                                          className="flex items-center gap-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm"
+                                          className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm"
                                         >
-                                          <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary font-black text-sm">
+                                          <div className="w-6 h-6 bg-emerald-50 text-emerald-700 rounded-lg flex items-center justify-center font-black text-xs shrink-0">
                                             {i + 1}
                                           </div>
-                                          <span className="text-sm text-slate-900 font-bold leading-tight">
+                                          <span className="text-[9px] text-slate-800 font-bold leading-tight">
                                             {r}
                                           </span>
                                         </div>
@@ -3453,11 +3528,11 @@ const EliteHubApp: FC<{
                                   </div>
                                 </div>
 
-                                <div className="pt-10 border-t border-slate-100">
-                                  <h5 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">
+                                <div className="pt-4 border-t border-slate-100">
+                                  <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 leading-none">
                                     Conclusão Técnica Final
                                   </h5>
-                                  <p className="text-base text-slate-600 leading-relaxed font-bold italic">
+                                  <p className="text-[10px] text-slate-600 leading-relaxed font-bold italic">
                                     {data.conclusion}
                                   </p>
                                 </div>
@@ -3468,7 +3543,13 @@ const EliteHubApp: FC<{
                       } catch (e) {
                         return (
                           <ReportPage pageNumber={1} totalPages={1}>
-                            <div className="prose prose-slate max-w-none text-sm md:text-base text-slate-700 space-y-6">
+                            <ReportHeader
+                              title="RELATÓRIO PREDITIVO COMPLETO"
+                              subTitle="DIAGNÓSTICO DINÂMICO & INSIGHTS ESPORTIVOS"
+                              athlete={selected!}
+                              date={new Date().toLocaleDateString("pt-BR")}
+                            />
+                            <div className="mt-6 text-slate-700 space-y-4 text-[10px] font-medium leading-relaxed">
                               {aiInsight?.split("\n").map((line, i) => (
                                 <p key={i} className="leading-relaxed">
                                   {line}
@@ -15198,8 +15279,10 @@ const PeriodizationConfig: FC<{
   start?: string;
   end?: string;
   days: number[];
-  onChange: (data: { start?: string; end?: string; days: number[] }) => void;
-}> = ({ start, end, days, onChange }) => {
+  academyDays?: number[];
+  courtDays?: number[];
+  onChange: (data: { start?: string; end?: string; days: number[]; academyDays: number[]; courtDays: number[] }) => void;
+}> = ({ start, end, days, academyDays = [], courtDays = [], onChange }) => {
   const weekDays = [
     { id: 0, label: "Dom" },
     { id: 1, label: "Seg" },
@@ -15210,18 +15293,29 @@ const PeriodizationConfig: FC<{
     { id: 6, label: "Sab" },
   ];
 
-  const toggleDay = (id: number) => {
-    const newDays = days.includes(id)
-      ? days.filter((d) => d !== id)
-      : [...days, id].sort();
-    onChange({ start, end, days: newDays });
+  const toggleAcademyDay = (id: number) => {
+    const newAcademy = academyDays.includes(id)
+      ? academyDays.filter((d) => d !== id)
+      : [...academyDays, id].sort();
+    
+    const unionDays = Array.from(new Set([...newAcademy, ...courtDays])).sort();
+    onChange({ start, end, days: unionDays, academyDays: newAcademy, courtDays });
+  };
+
+  const toggleCourtDay = (id: number) => {
+    const newCourt = courtDays.includes(id)
+      ? courtDays.filter((d) => d !== id)
+      : [...courtDays, id].sort();
+    
+    const unionDays = Array.from(new Set([...academyDays, ...newCourt])).sort();
+    onChange({ start, end, days: unionDays, academyDays, courtDays: newCourt });
   };
 
   return (
     <div className="space-y-6 bg-slate-950/50 p-6 rounded-3xl border border-slate-800">
       <h3 className="text-xs font-black uppercase text-brand-primary tracking-widest flex items-center gap-2">
         <Calendar className="w-4 h-4" />
-        Configuração de Periodização
+        Configuração de Periodização Inteligente
       </h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -15229,35 +15323,61 @@ const PeriodizationConfig: FC<{
           label="Data Início"
           type="date"
           value={start || ""}
-          onChange={(v) => onChange({ start: v, end, days })}
+          onChange={(v) => onChange({ start: v, end, days, academyDays, courtDays })}
         />
         <Field
           label="Data Término"
           type="date"
           value={end || ""}
-          onChange={(v) => onChange({ start, end: v, days })}
+          onChange={(v) => onChange({ start, end: v, days, academyDays, courtDays })}
         />
       </div>
 
-      <div>
-        <label className="text-[10px] font-black text-slate-600 uppercase block mb-3 px-1">
-          Dias de Treino na Semana
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {weekDays.map((day) => (
-            <button
-              key={day.id}
-              type="button"
-              onClick={() => toggleDay(day.id)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${
-                days.includes(day.id)
-                  ? "bg-brand-primary border-brand-primary text-brand-dark"
-                  : "bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-600"
-              }`}
-            >
-              {day.label}
-            </button>
-          ))}
+      <div className="space-y-5">
+        <div>
+          <label className="text-[10px] font-black text-brand-primary uppercase flex items-center gap-1.5 mb-2.5 px-1 tracking-wider">
+            <Dumbbell className="w-3.5 h-3.5 text-brand-primary" />
+            Dias de Treino na Academia (Fortalecimento & Força)
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {weekDays.map((day) => (
+              <button
+                key={day.id}
+                type="button"
+                onClick={() => toggleAcademyDay(day.id)}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${
+                  academyDays.includes(day.id)
+                    ? "bg-brand-primary border-brand-primary text-brand-dark shadow-[0_0_15px_rgba(57,255,20,0.15)]"
+                    : "bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-600"
+                }`}
+              >
+                {day.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="text-[10px] font-black text-brand-secondary uppercase flex items-center gap-1.5 mb-2.5 px-1 tracking-wider">
+            <Target className="w-3.5 h-3.5 text-brand-secondary" />
+            Dias de Treino em Campo/Quadra (Técnico & Tático)
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {weekDays.map((day) => (
+              <button
+                key={day.id}
+                type="button"
+                onClick={() => toggleCourtDay(day.id)}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all border ${
+                  courtDays.includes(day.id)
+                    ? "bg-brand-secondary border-brand-secondary text-brand-dark shadow-[0_0_15px_rgba(57,255,20,0.15)]"
+                    : "bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-600"
+                }`}
+              >
+                {day.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -15309,8 +15429,8 @@ const AthleteForm: FC<{
       title="Bio-Profile Atleta Elite"
     >
       <form onSubmit={handleSubmit} className="space-y-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-6">
+        <div className="space-y-6">
+          <div className="space-y-6 bg-slate-950/30 p-6 rounded-3xl border border-slate-800">
             <h3 className="text-xs font-black uppercase text-slate-500 tracking-[0.2em] mb-4">
               Dados Básicos
             </h3>
@@ -15409,21 +15529,6 @@ const AthleteForm: FC<{
                 type="text"
               />
             </div>
-          </div>
-
-          <div className="space-y-8">
-            <PeriodizationConfig
-              start={formData.periodizationStart}
-              end={formData.periodizationEnd}
-              days={formData.trainingDays || []}
-              onChange={(data) =>
-                update({
-                  periodizationStart: data.start,
-                  periodizationEnd: data.end,
-                  trainingDays: data.days,
-                })
-              }
-            />
           </div>
         </div>
 

@@ -877,27 +877,41 @@ export const useAthletes = (token?: string | null) => {
         endStr = endDateVal.toISOString().split('T')[0];
       }
 
-      // Find all matching dates between start and end str
-      const trainingDates: string[] = [];
+      // Find all matching dates between start and end str with their training type meta
+      const trainingDatesMeta: { date: string; type: "academia" | "quadra" | "ambos" }[] = [];
       let currentDate = new Date(startStr + "T12:00:00");
       const endDateVal = new Date(endStr + "T12:00:00");
       let safetyCounter = 0;
-      const maxWorkouts = 12; // Maintain safety boundaries (12 workouts fits perfectly under the Gemini token limit)
+      const maxWorkouts = 12; // Maintain safety boundaries
 
-      while (currentDate <= endDateVal && safetyCounter < 180 && trainingDates.length < maxWorkouts) {
+      while (currentDate <= endDateVal && safetyCounter < 180 && trainingDatesMeta.length < maxWorkouts) {
         const dayOfWeek = currentDate.getDay();
         if (targetDays.includes(dayOfWeek)) {
-          trainingDates.push(currentDate.toISOString().split('T')[0]);
+          const isAcademy = Array.isArray(athlete.academyDays) && athlete.academyDays.includes(dayOfWeek);
+          const isCourt = Array.isArray(athlete.courtDays) && athlete.courtDays.includes(dayOfWeek);
+          let type: "academia" | "quadra" | "ambos" = "academia";
+          if (isAcademy && isCourt) {
+            type = "ambos";
+          } else if (isCourt) {
+            type = "quadra";
+          }
+          trainingDatesMeta.push({
+            date: currentDate.toISOString().split('T')[0],
+            type
+          });
         }
         currentDate.setDate(currentDate.getDate() + 1);
         safetyCounter++;
       }
 
       // Ultimate fallback if dates are out of bounds or none generated
-      if (trainingDates.length === 0) {
+      if (trainingDatesMeta.length === 0) {
         let fallbackDate = new Date();
         for (let i = 0; i < 6; i++) {
-          trainingDates.push(fallbackDate.toISOString().split('T')[0]);
+          trainingDatesMeta.push({
+            date: fallbackDate.toISOString().split('T')[0],
+            type: i % 2 === 0 ? "academia" : "quadra"
+          });
           fallbackDate.setDate(fallbackDate.getDate() + 2);
         }
       }
@@ -911,6 +925,8 @@ export const useAthletes = (token?: string | null) => {
         periodizationStart: startStr,
         periodizationEnd: endStr,
         trainingDays: athlete.trainingDays,
+        academyDays: athlete.academyDays,
+        courtDays: athlete.courtDays,
         lastAssessments: {
           bioimpedance: athlete.assessments.bioimpedance?.[0],
           strength: athlete.assessments.isometricStrength?.[0],
@@ -934,10 +950,14 @@ export const useAthletes = (token?: string | null) => {
         - Objetivo Principal: ${context.goal || 'Performance de Elite'}
         - Histórico de Lesões (ATENÇÃO CRÍTICA): ${JSON.stringify(context.injuries)}
         
-        CRONOGRAMA DE DATAS DA PERIODIZAÇÃO (MUITO IMPORTANTE):
-        Você DEVE criar exatamente ${trainingDates.length} sessões de treino, combinando cada treino com uma data exclusiva do cronograma fornecido.
-        Lista de datas cronológicas para gerar treinos:
-        ${trainingDates.map(d => `- ${d}`).join('\n')}
+        CRONOGRAMA DE DATAS DA PERIODIZAÇÃO E FOCO DOS TREINOS (MUITO IMPORTANTE):
+        Você DEVE criar exatamente ${trainingDatesMeta.length} sessões de treino, combinando cada treino com uma data exclusiva do cronograma fornecido e respeitando rigorosamente o foco especificado para cada dia:
+        - Dias rotulados como ACADEMIA: Elabore rotinas de musculação, fortalecimento, força máxima, RFD (taxa de desenvolvimento de força), potência muscular, força explosiva, estabilidade articular, core ou exercícios resistidos específicos.
+        - Dias rotulados como CAMPO/QUADRA: Elabore rotinas específicas da modalidade (${context.modality}) como treinos de agilidade, aceleração/desaceleração, potência aeróbica/anaeróbica, táticos ou técnicos, gestos esportivos e corrida/movimentação específica na quadra ou campo.
+        - Dias rotulados como AMBOS: Treinos mistos de transição ou sessões integradas de força e campo.
+        
+        Lista de datas cronológicas e focos para gerar treinos:
+        ${trainingDatesMeta.map(d => `- Data: ${d.date} | Foco do Treino: ${d.type === 'academia' ? 'ACADEMIA' : d.type === 'quadra' ? 'CAMPO/QUADRA' : 'MISTO / AMBOS'}`).join('\n')}
 
         DADOS DE PERFORMANCE (USE PARA INDIVIDUALIZAR CARGAS E INTENSIDADES):
         - Força/Potência: ${JSON.stringify(context.lastAssessments.strength)} | Salto CMJ: ${JSON.stringify(context.lastAssessments.cmj)}
@@ -952,7 +972,7 @@ export const useAthletes = (token?: string | null) => {
         3. FASE DE POLIMENTO / TAPERING (Últimos treinos próximos ao fim da periodização): Redução acentuada de volume (menos séries e exercícios), mantendo a intensidade alta para aumentar os índices de prontidão física ("Readiness") e explosão reativa.
 
         INSTRUÇÕES ADICIONAIS:
-        - Cada sessão de treino deve ser única, progressiva e conter nome técnico descritivo (ex: "Fase de Preparação Geral - Força de Base", "Fase Específica - Taxa de Desenvolvimento de Força").
+        - Cada sessão de treino deve ser única, progressiva e conter nome técnico descritivo de acordo com seu foco (ex: "Fase de Preparação Geral - ACADEMIA: Força de Base", "Fase Específica - CAMPO/QUADRA: Taxa de Desenvolvimento de Velocidade").
         - Se houver lesão ativa, inclua exercícios específicos de reabilitação estruturada no aquecimento.
 
         FORMATO DE SAÍDA:

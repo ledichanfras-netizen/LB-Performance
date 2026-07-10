@@ -20,6 +20,8 @@ const parseBackupAthleteFields = (a: any) => {
   let injuryHistory = a.injury_history || '';
   let injuries = safeParse(a.injuries, []);
   let trainingDays = safeParse(a.training_days, [1, 3, 5]);
+  let academyDays = safeParse(a.training_days, [1, 3, 5]); // default/fallback
+  let courtDays = [2, 4]; // default/fallback
   let dropJumpBackup = [];
   let imtpBackup = [];
 
@@ -36,6 +38,14 @@ const parseBackupAthleteFields = (a: any) => {
             trainingDays = parsed.trainingDays || [1, 3, 5];
           }
         }
+        if (parsed.hasOwnProperty('academyDays') && Array.isArray(parsed.academyDays)) {
+          academyDays = parsed.academyDays;
+        } else if (parsed.hasOwnProperty('trainingDays') && Array.isArray(parsed.trainingDays)) {
+          academyDays = parsed.trainingDays;
+        }
+        if (parsed.hasOwnProperty('courtDays') && Array.isArray(parsed.courtDays)) {
+          courtDays = parsed.courtDays;
+        }
         if (parsed.hasOwnProperty('dropJumpBackup') && Array.isArray(parsed.dropJumpBackup)) {
           dropJumpBackup = parsed.dropJumpBackup;
         }
@@ -48,7 +58,7 @@ const parseBackupAthleteFields = (a: any) => {
     }
   }
   
-  return { injuryHistory, injuries, trainingDays, dropJumpBackup, imtpBackup };
+  return { injuryHistory, injuries, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup };
 };
 
 const serializeBackupAthleteFields = (athlete: any) => {
@@ -58,6 +68,8 @@ const serializeBackupAthleteFields = (athlete: any) => {
     legacy: athlete.injuryHistory || '',
     injuries: athlete.injuries || [],
     trainingDays: athlete.trainingDays || [1, 3, 5],
+    academyDays: athlete.academyDays || [],
+    courtDays: athlete.courtDays || [],
     dropJumpBackup: dropJump,
     imtpBackup: imtp
   });
@@ -240,6 +252,8 @@ export const supabaseService = {
           periodizationStart: a.periodization_start,
           periodizationEnd: a.periodization_end,
           trainingDays: parsedFields.trainingDays,
+          academyDays: parsedFields.academyDays,
+          courtDays: parsedFields.courtDays,
           injuries: parsedFields.injuries,
           wellness: (a.wellness || []).map((w: any) => ({
             ...w,
