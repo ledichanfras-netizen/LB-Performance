@@ -29,6 +29,32 @@ const MOTIVATIONAL_QUOTES = [
   "Execução cirúrgica. Continue quebrando recordes pessoais!",
 ];
 
+// Helper functions to parse reps and weights from arbitrary strings
+const parseReps = (repsStr: string | number | undefined | null): number => {
+  if (repsStr === undefined || repsStr === null) return 10;
+  if (typeof repsStr === "number") return repsStr;
+  const cleaned = repsStr.trim();
+  const match = cleaned.match(/\d+/);
+  if (match) {
+    const val = parseInt(match[0], 10);
+    return isNaN(val) ? 10 : val;
+  }
+  return 10;
+};
+
+const parseWeight = (weightStr: string | number | undefined | null): number => {
+  if (weightStr === undefined || weightStr === null) return 0;
+  if (typeof weightStr === "number") return weightStr;
+  const cleaned = weightStr.trim();
+  const withDot = cleaned.replace(",", ".");
+  const match = withDot.match(/\d+(\.\d+)?/);
+  if (match) {
+    const val = parseFloat(match[0]);
+    return isNaN(val) ? 0 : val;
+  }
+  return 0;
+};
+
 interface SessionTrackerPremiumProps {
   workout: Workout;
   onFinish: (w: Workout) => void;
@@ -46,21 +72,31 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
     date: workout.date?.split("T")[0] || new Date().toISOString().split("T")[0],
     durationMinutes: workout.durationMinutes || 60,
     exercises: (Array.isArray(workout.exercises) ? workout.exercises : []).map(
-      (ex) => ({
-        ...ex,
-        isSimpleEntry: ex.isSimpleEntry !== undefined ? ex.isSimpleEntry : true,
-        painLevel: ex.painLevel || 0,
-        performedSets:
-          ex.performedSets && ex.performedSets.length > 0
-            ? ex.performedSets
-            : Array.from({ length: ex.sets || 3 }).map((_, i) => ({
-                id: `s-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
-                reps: parseInt(ex.reps) || 10,
-                weight: parseFloat(ex.weight) || 0,
-                rpe: 0,
-                isCompleted: false // New flag for state tracking
-              })),
-      }),
+      (ex) => {
+        const targetReps = parseReps(ex.reps);
+        const targetWeight = parseWeight(ex.weight);
+        const initialSets = ex.performedSets && ex.performedSets.length > 0
+          ? ex.performedSets.map((s) => ({
+              ...s,
+              reps: (s.reps === 0 || !s.reps) ? targetReps : s.reps,
+              weight: (s.weight === 0 || !s.weight) ? targetWeight : s.weight,
+              isCompleted: (s as any).isCompleted || false
+            }))
+          : Array.from({ length: ex.sets || 3 }).map((_, i) => ({
+              id: `s-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+              reps: targetReps,
+              weight: targetWeight,
+              rpe: 0,
+              isCompleted: false // New flag for state tracking
+            }));
+
+        return {
+          ...ex,
+          isSimpleEntry: ex.isSimpleEntry !== undefined ? ex.isSimpleEntry : true,
+          painLevel: ex.painLevel || 0,
+          performedSets: initialSets,
+        };
+      }
     ),
   });
 
@@ -651,34 +687,75 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                 </div>
               ) : (
                 // DETAILED ROW BY ROW SET RECORDING
-                <div className="space-y-2">
-                  {(activeEx.performedSets || []).map((set, index) => {
-                    const isCompleted = (set as any).isCompleted;
-                    return (
-                      <div
-                        key={set.id}
-                        className={`grid grid-cols-12 gap-3 items-center p-3.5 rounded-xl border transition-all ${
-                          isCompleted 
-                            ? "bg-[#39FF14]/5 border-[#39FF14]/20 shadow-inner" 
-                            : "bg-[#0c111d] border-slate-900"
-                        }`}
-                      >
-                        {/* Checkbox button */}
-                        <div className="col-span-2 flex items-center gap-3">
-                          <button
-                            onClick={() => toggleSetCompletion(activeEx.id, set.id)}
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
-                              isCompleted 
-                                ? "bg-[#39FF14] text-slate-950 border-[#39FF14] shadow-lg shadow-[#39FF14]/20" 
-                                : "bg-slate-950 border border-slate-800 text-slate-600 hover:border-slate-500"
-                            }`}
-                          >
-                            <Check className={`w-5 h-5 stroke-[3] transition-transform duration-200 ${isCompleted ? "scale-100" : "scale-0"}`} />
-                          </button>
-                          <span className={`text-sm font-black uppercase tracking-wider ${isCompleted ? "text-[#39FF14]" : "text-slate-400"}`}>
-                            S{index + 1}
+                <div className="space-y-4">
+                  {/* SMART ACTIVE SET CONTROLLER FOR QUICK RECORDING & REST TIMER TRIGGERS */}
+                  {currentSetIndexForActiveEx < (activeEx.performedSets || []).length && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-slate-950/80 border border-[#39FF14]/30 rounded-2xl p-5 shadow-[0_15px_30px_rgba(57,255,20,0.06)] flex flex-col sm:flex-row items-center justify-between gap-4"
+                    >
+                      <div className="text-center sm:text-left">
+                        <div className="flex items-center gap-2 justify-center sm:justify-start">
+                          <span className="inline-block w-2 h-2 rounded-full bg-[#39FF14] animate-ping" />
+                          <span className="text-[9px] font-black text-[#39FF14] uppercase tracking-widest">
+                            Série Atual em Execução
                           </span>
                         </div>
+                        <h3 className="text-base font-black text-white uppercase mt-1 leading-tight">
+                          Série {currentSetIndexForActiveEx + 1} de {(activeEx.performedSets || []).length}
+                        </h3>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5 tracking-wider">
+                          Meta: {activeEx.repsType === "time" ? `${activeEx.reps}s` : activeEx.reps} Reps • Carga: {activeEx.performedSets?.[currentSetIndexForActiveEx]?.weight || activeEx.weight || 0} kg
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          const activeSet = activeEx.performedSets?.[currentSetIndexForActiveEx];
+                          if (activeSet) {
+                            toggleSetCompletion(activeEx.id, activeSet.id);
+                          }
+                        }}
+                        className="w-full sm:w-auto bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase py-3.5 px-6 rounded-xl tracking-widest transition-all shadow-[0_10px_20px_rgba(57,255,20,0.15)] flex items-center justify-center gap-2 group cursor-pointer"
+                      >
+                        <Check className="w-4 h-4 stroke-[3] group-hover:scale-115 transition-transform" />
+                        CONCLUIR SÉRIE {currentSetIndexForActiveEx + 1} & INICIAR DESCANSO ⏱️
+                      </button>
+                    </motion.div>
+                  )}
+
+                  <div className="space-y-2">
+                    {(activeEx.performedSets || []).map((set, index) => {
+                      const isCompleted = (set as any).isCompleted;
+                      const isActive = index === currentSetIndexForActiveEx && !isCompleted;
+                      return (
+                        <div
+                          key={set.id}
+                          className={`grid grid-cols-12 gap-3 items-center p-3.5 rounded-xl border transition-all ${
+                            isCompleted 
+                              ? "bg-[#39FF14]/5 border-[#39FF14]/20 shadow-inner" 
+                              : isActive
+                                ? "bg-slate-900 border-[#39FF14]/40 shadow-[0_0_15px_rgba(57,255,20,0.05)] ring-1 ring-[#39FF14]/20"
+                                : "bg-[#0c111d] border-slate-900"
+                          }`}
+                        >
+                          {/* Checkbox button */}
+                          <div className="col-span-2 flex items-center gap-3">
+                            <button
+                              onClick={() => toggleSetCompletion(activeEx.id, set.id)}
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                                isCompleted 
+                                  ? "bg-[#39FF14] text-slate-950 border-[#39FF14] shadow-lg shadow-[#39FF14]/20" 
+                                  : "bg-slate-950 border border-slate-800 text-slate-600 hover:border-slate-500"
+                              }`}
+                            >
+                              <Check className={`w-5 h-5 stroke-[3] transition-transform duration-200 ${isCompleted ? "scale-100" : "scale-0"}`} />
+                            </button>
+                            <span className={`text-sm font-black uppercase tracking-wider ${isCompleted ? "text-[#39FF14]" : isActive ? "text-white font-extrabold" : "text-slate-400"}`}>
+                              S{index + 1}
+                            </span>
+                          </div>
 
                         {/* Weight input */}
                         <div className="col-span-3 flex items-center gap-1.5">
@@ -723,7 +800,8 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                     );
                   })}
                 </div>
-              )}
+              </div>
+            )}
             </div>
 
           </div>

@@ -89,6 +89,15 @@ export const TrainingLoadReport: React.FC<TrainingLoadReportProps> = ({ athlete,
     ];
   }
 
+  // Build wellness map for matching dates
+  const wellnessMap = new Map<string, number>();
+  (athlete.wellness || []).forEach((w) => {
+    if (w.date && w.readinessScore !== undefined) {
+      const dateStr = w.date.split('T')[0];
+      wellnessMap.set(dateStr, w.readinessScore);
+    }
+  });
+
   // Combine and sort sessions to show recent trends in graph
   const allSessions = [
     ...workouts.filter((w) => w.status === "completed" && w.rpe).map((w) => ({
@@ -101,10 +110,15 @@ export const TrainingLoadReport: React.FC<TrainingLoadReportProps> = ({ athlete,
     }))
   ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const recentSessionsWithLoad = allSessions.slice(-8).map((s) => ({
-    date: new Date(s.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
-    load: s.load,
-  }));
+  const recentSessionsWithLoad = allSessions.slice(-8).map((s) => {
+    const sDateOnly = s.date.split('T')[0];
+    const readiness = wellnessMap.get(sDateOnly) || null;
+    return {
+      date: new Date(s.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+      load: s.load,
+      readiness: readiness,
+    };
+  });
 
   const blocks: ReportBlock[] = [
     {
@@ -129,14 +143,14 @@ export const TrainingLoadReport: React.FC<TrainingLoadReportProps> = ({ athlete,
     },
     {
       id: "load_chart_block",
-      section: "Tendências de Carga",
+      section: "Tendências de Carga e Prontidão",
       content: (
         <div className="grid grid-cols-12 gap-5 text-left mt-4">
           {/* Load trends graph */}
           <div className="col-span-8 bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between">
             <div>
-              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5 font-sans">Visão de Ciclagem</span>
-              <p className="text-[10px] font-bold text-slate-500 font-sans">Tendência de Carga nas Últimas Sessões (Unidades Arbitrárias)</p>
+              <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5 font-sans">Visão de Ciclagem e Recuperação</span>
+              <p className="text-[10px] font-bold text-slate-500 font-sans">Carga Externa vs. Prontidão Física (% de 100) nas Últimas Sessões</p>
             </div>
 
             {/* Custom SVG line-and-bar load trend chart */}
@@ -152,7 +166,9 @@ export const TrainingLoadReport: React.FC<TrainingLoadReportProps> = ({ athlete,
                   {(() => {
                     const maxLoad = Math.max(...recentSessionsWithLoad.map((d) => d.load), 600);
                     const points: string[] = [];
+                    const readinessPoints: string[] = [];
                     const renderedElements: React.ReactNode[] = [];
+                    const readinessDots: React.ReactNode[] = [];
 
                     recentSessionsWithLoad.forEach((d, idx) => {
                       const x = 50 + idx * (410 / (recentSessionsWithLoad.length - 1 || 1));
@@ -172,33 +188,76 @@ export const TrainingLoadReport: React.FC<TrainingLoadReportProps> = ({ athlete,
                             height={120 - y} 
                             rx="3" 
                             fill="#10b981" 
-                            fillOpacity="0.15" 
+                            fillOpacity="0.12" 
                             stroke="#10b981"
-                            strokeWidth="1.5"
+                            strokeWidth="1.2"
                           />
                           <text x={x} y="136" className="fill-slate-600 font-sans text-[8px] font-black" textAnchor="middle">
                             {d.date}
                           </text>
-                          <text x={x} y={y - 6} className="fill-slate-900 font-mono text-[8px] font-black" textAnchor="middle">
+                          <text x={x} y={y - 5} className="fill-emerald-700 font-mono text-[8px] font-black" textAnchor="middle">
                             {d.load}
                           </text>
                         </g>
                       );
+
+                      // Calculate and prepare readiness dot/point
+                      if (d.readiness !== null) {
+                        const yReadiness = 120 - (d.readiness / 100) * 90;
+                        readinessPoints.push(`${x},${yReadiness}`);
+                        
+                        readinessDots.push(
+                          <g key={`readiness-dot-${idx}`}>
+                            <circle 
+                              cx={x} 
+                              cy={yReadiness} 
+                              r="4" 
+                              fill="#f43f5e" 
+                              stroke="#ffffff"
+                              strokeWidth="1.5"
+                            />
+                            <text 
+                              x={x} 
+                              y={yReadiness - 6} 
+                              className="fill-rose-650 font-mono text-[8px] font-black" 
+                              textAnchor="middle"
+                            >
+                              {d.readiness}%
+                            </text>
+                          </g>
+                        );
+                      }
                     });
 
-                    // Draw connect line
+                    // Draw connect line for load
                     if (points.length > 1) {
                       renderedElements.unshift(
                         <polyline 
                           key="line" 
                           fill="none" 
                           stroke="#10b981" 
-                          strokeWidth="2.5" 
+                          strokeWidth="2" 
                           strokeDasharray="4 2"
                           points={points.join(" ")} 
                         />
                       );
                     }
+
+                    // Draw connect line for readiness
+                    if (readinessPoints.length > 1) {
+                      renderedElements.push(
+                        <polyline 
+                          key="readiness-line" 
+                          fill="none" 
+                          stroke="#f43f5e" 
+                          strokeWidth="2.5" 
+                          points={readinessPoints.join(" ")} 
+                        />
+                      );
+                    }
+
+                    // Add readiness dots on top
+                    renderedElements.push(...readinessDots);
 
                     return renderedElements;
                   })()}
@@ -210,9 +269,19 @@ export const TrainingLoadReport: React.FC<TrainingLoadReportProps> = ({ athlete,
               )}
             </div>
 
-            <div className="border-t border-slate-100 pt-3 flex gap-4 text-[7.5px] font-black text-slate-400 uppercase tracking-wider justify-center font-mono">
-              <span>• BARRAS (CARGA TOTAL / SESSÃO)</span>
-              <span>• LINHA DASHED (TENDÊNCIA CINÉTICA)</span>
+            <div className="border-t border-slate-100 pt-3 flex flex-wrap gap-x-5 gap-y-1 text-[7.5px] font-black text-slate-400 uppercase tracking-wider justify-center font-mono">
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 bg-emerald-500/15 border border-emerald-500 rounded-sm inline-block"></span>
+                BARRAS (CARGA TOTAL / SESSÃO)
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-0.5 border-t border-dashed border-emerald-500 inline-block"></span>
+                TRACEJADA (TENDÊNCIA DE CARGA)
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-rose-500 inline-block"></span>
+                LINHA ROSA (PRONTIDÃO DO DIA %)
+              </span>
             </div>
           </div>
 

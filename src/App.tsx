@@ -5651,11 +5651,17 @@ const DashboardView: FC<{
           const chronicAvg = chronicLoadSum / 28;
           const acwrRatio = chronicAvg > 0 ? parseFloat((acuteAvg / chronicAvg).toFixed(2)) : 1.0;
           
+          const wellnessOnDate = (athlete.wellness || []).find(
+            (well) => well.date && well.date.split("T")[0] === dStr
+          );
+          const readinessVal = wellnessOnDate ? wellnessOnDate.readinessScore || null : null;
+
           movingLoadHistory.push({
             dateLabel: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
             "Carga Aguda": Math.round(acuteLoadSum),
             "Carga Crônica": Math.round(chronicLoadSum / 4), // 7-day normalized
-            "ACWR": acwrRatio
+            "ACWR": acwrRatio,
+            "Prontidão": readinessVal,
           });
         }
 
@@ -5757,17 +5763,20 @@ const DashboardView: FC<{
                 <div className="flex justify-between items-start border-b border-slate-900 pb-4">
                   <div>
                     <h4 className="text-xs font-black uppercase text-white tracking-widest flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-amber-500" />
-                      ACWR: ZONA DE SEGURANÇA
+                      <TrendingUp className="w-4 h-4 text-brand-primary" />
+                      ACWR: CARGA E PRONTIDÃO EM TEMPO REAL
                     </h4>
-                    <p className="text-[9px] font-bold text-amber-500 uppercase tracking-wider mt-0.5">Relação entre Carga de Trabalho Aguda (7d) e Crônica (28d)</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Relação entre Carga Aguda/Crônica e o Score de Prontidão Diária (% de 100)</p>
                   </div>
-                  <div className="flex items-center gap-4 animate-pulse">
+                  <div className="flex flex-wrap items-center gap-4">
                     <span className="text-[10px] font-extrabold text-white flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block animate-pulse" /> Carga Aguda
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> Carga Aguda
                     </span>
                     <span className="text-[10px] font-extrabold text-white flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" /> Carga Crônica
+                    </span>
+                    <span className="text-[10px] font-extrabold text-white flex items-center gap-1.5 animate-pulse">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" /> Prontidão (%)
                     </span>
                   </div>
                 </div>
@@ -5812,19 +5821,31 @@ const DashboardView: FC<{
                         dy={6}
                       />
                       <YAxis 
+                        yAxisId="left"
                         stroke="#475569" 
                         fontSize={9} 
                         tickLine={false} 
                         axisLine={false}
                         dx={-6}
                       />
+                      <YAxis 
+                        yAxisId="right"
+                        orientation="right"
+                        stroke="#f43f5e" 
+                        fontSize={9} 
+                        tickLine={false} 
+                        axisLine={false}
+                        dx={6}
+                        domain={[0, 100]}
+                      />
                       <Tooltip
                         contentStyle={{ backgroundColor: "#0e1322", border: "1px solid #1e293b", borderRadius: "1rem" }}
                         labelStyle={{ fontSize: "10px", fontWeight: "bold", textTransform: "uppercase", color: "#f59e0b" }}
                         itemStyle={{ fontSize: "10px", color: "#fff", fontWeight: "bold" }}
                       />
-                      <Area type="monotone" dataKey="Carga Aguda" stroke="#3b82f6" strokeWidth={2.5} fillOpacity={1} fill="url(#acuteGrad)" />
-                      <Line type="monotone" dataKey="Carga Crônica" stroke="#f59e0b" strokeWidth={2.5} strokeDasharray="5 5" dot={false} />
+                      <Area yAxisId="left" type="monotone" dataKey="Carga Aguda" stroke="#3b82f6" strokeWidth={2.5} fillOpacity={1} fill="url(#acuteGrad)" />
+                      <Line yAxisId="left" type="monotone" dataKey="Carga Crônica" stroke="#f59e0b" strokeWidth={2.5} strokeDasharray="5 5" dot={false} />
+                      <Line yAxisId="right" type="monotone" dataKey="Prontidão" stroke="#f43f5e" strokeWidth={2.5} dot={{ r: 3.5, stroke: '#ffffff', strokeWidth: 1.5 }} name="Prontidão (%)" connectNulls />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
@@ -6057,6 +6078,32 @@ const AsymmetryCard: FC<{
   </div>
 );
 
+// Helper functions to parse reps and weights from arbitrary strings
+const parseTrackerReps = (repsStr: string | number | undefined | null): number => {
+  if (repsStr === undefined || repsStr === null) return 10;
+  if (typeof repsStr === "number") return repsStr;
+  const cleaned = repsStr.trim();
+  const match = cleaned.match(/\d+/);
+  if (match) {
+    const val = parseInt(match[0], 10);
+    return isNaN(val) ? 10 : val;
+  }
+  return 10;
+};
+
+const parseTrackerWeight = (weightStr: string | number | undefined | null): number => {
+  if (weightStr === undefined || weightStr === null) return 0;
+  if (typeof weightStr === "number") return weightStr;
+  const cleaned = weightStr.trim();
+  const withDot = cleaned.replace(",", ".");
+  const match = withDot.match(/\d+(\.\d+)?/);
+  if (match) {
+    const val = parseFloat(match[0]);
+    return isNaN(val) ? 0 : val;
+  }
+  return 0;
+};
+
 // --- SESSION TRACKER COMPONENT ---
 const SessionTracker: FC<{
   workout: Workout;
@@ -6069,19 +6116,28 @@ const SessionTracker: FC<{
     date: workout.date?.split("T")[0] || getLocalDateString(),
     durationMinutes: workout.durationMinutes || 60,
     exercises: (Array.isArray(workout.exercises) ? workout.exercises : []).map(
-      (ex) => ({
-        ...ex,
-        isSimpleEntry: true,
-        performedSets:
-          ex.performedSets && ex.performedSets.length > 0
-            ? ex.performedSets
-            : Array.from({ length: ex.sets || 3 }).map((_, i) => ({
-                id: `s-${Date.now()}-${i}`,
-                reps: 0,
-                weight: 0,
-                rpe: 0,
-              })),
-      }),
+      (ex) => {
+        const targetReps = parseTrackerReps(ex.reps);
+        const targetWeight = parseTrackerWeight(ex.weight);
+        const initialSets = ex.performedSets && ex.performedSets.length > 0
+          ? ex.performedSets.map((s) => ({
+              ...s,
+              reps: (s.reps === 0 || !s.reps) ? targetReps : s.reps,
+              weight: (s.weight === 0 || !s.weight) ? targetWeight : s.weight,
+            }))
+          : Array.from({ length: ex.sets || 3 }).map((_, i) => ({
+              id: `s-${Date.now()}-${i}`,
+              reps: targetReps,
+              weight: targetWeight,
+              rpe: 0,
+            }));
+
+        return {
+          ...ex,
+          isSimpleEntry: true,
+          performedSets: initialSets,
+        };
+      }
     ),
   });
 
