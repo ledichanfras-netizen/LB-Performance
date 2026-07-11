@@ -2926,7 +2926,7 @@ const EliteHubApp: FC<{
                             .map((w, index) => (
                               <Card
                                 key={w.id}
-                                className={`flex flex-col border-l-4 md:border-l-8 transition-all hover:scale-[1.02] relative group ${w.status === "completed" ? "border-emerald-500 opacity-70" : "border-brand-primary"}`}
+                                className={`flex flex-col border-l-4 md:border-l-8 transition-all hover:scale-[1.02] relative group ${w.status === "completed" ? "border-emerald-500 opacity-95 hover:opacity-100 duration-200" : "border-brand-primary"}`}
                               >
                                 <div className="flex justify-between items-start mb-6">
                                   <div>
@@ -3076,15 +3076,94 @@ const EliteHubApp: FC<{
                                   </div>
                                 </div>
                                 {w.status === "completed" ? (
-                                  <div className="mt-auto pt-5 border-t border-slate-200/60 flex flex-col gap-4">
-                                    <div className="flex justify-between items-center text-[10px] md:text-[11px] font-black uppercase text-slate-500 tracking-widest">
-                                      <span>
-                                        Vol: {w.totalLoad?.toLocaleString()}kg
-                                      </span>
-                                      <span className="text-slate-900 bg-slate-100 px-3 py-1 rounded-full border border-slate-200/50">
-                                        RPE: {w.rpe}/10
-                                      </span>
+                                  <div className="mt-auto pt-4 border-t border-slate-200/60 flex flex-col gap-3">
+                                    <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/50">
+                                      {/* Duration */}
+                                      <div className="flex flex-col p-2 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                                        <div className="flex items-center gap-1 text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">
+                                          <Clock className="w-3 h-3 text-slate-400" />
+                                          <span>Duração</span>
+                                        </div>
+                                        <span className="text-[11px] font-black text-slate-800">
+                                          {w.durationMinutes || '--'} min
+                                        </span>
+                                      </div>
+
+                                      {/* PSE (RPE) */}
+                                      <div className="flex flex-col p-2 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                                        <div className="flex items-center gap-1 text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">
+                                          <Activity className="w-3 h-3 text-slate-400" />
+                                          <span>PSE Atleta</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                          <span className="text-[11px] font-black text-slate-800">
+                                            {w.rpe || '--'}/10
+                                          </span>
+                                          {w.rpe && (
+                                            <span className={`text-[7px] font-bold px-1 py-0.5 rounded-md uppercase tracking-wider ${
+                                              w.rpe <= 3 ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
+                                              w.rpe <= 6 ? "bg-amber-50 text-amber-600 border border-amber-100" :
+                                              w.rpe <= 8 ? "bg-orange-50 text-orange-600 border border-orange-100" :
+                                              "bg-rose-50 text-rose-600 border border-rose-100"
+                                            }`}>
+                                              {w.rpe <= 3 ? "Leve" : w.rpe <= 6 ? "Mod." : w.rpe <= 8 ? "Int." : "Ext."}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Total Volume */}
+                                      <div className="flex flex-col p-2 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                                        <div className="flex items-center gap-1 text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">
+                                          <Dumbbell className="w-3 h-3 text-slate-400" />
+                                          <span>Volume</span>
+                                        </div>
+                                        <span className="text-[11px] font-black text-slate-800 truncate" title={`${w.totalLoad?.toLocaleString() || '0'} kg`}>
+                                          {w.totalLoad?.toLocaleString() || '0'} kg
+                                        </span>
+                                      </div>
+
+                                      {/* Internal Load (PSE * Time) */}
+                                      <div className="flex flex-col p-2 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                                        <div className="flex items-center gap-1 text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">
+                                          <Zap className="w-3 h-3 text-amber-500" />
+                                          <span>Carga Int.</span>
+                                        </div>
+                                        <span className="text-[11px] font-black text-slate-800" title={`${((w.durationMinutes || 0) * (w.rpe || 0)).toLocaleString()} u.a.`}>
+                                          {((w.durationMinutes || 0) * (w.rpe || 0)).toLocaleString()} u.a.
+                                        </span>
+                                      </div>
                                     </div>
+
+                                    {/* Peak Pain Warning */}
+                                    {(() => {
+                                      const maxPain = (w.exercises || []).reduce((max: number, ex: any) => Math.max(max, ex.painLevel || 0), 0) || 0;
+                                      if (maxPain > 0) {
+                                        return (
+                                          <div className={`flex items-center gap-2 p-2 rounded-xl border text-[9px] font-bold uppercase tracking-wider ${
+                                            maxPain <= 3 
+                                              ? "bg-amber-50/50 text-amber-600 border-amber-100" 
+                                              : "bg-rose-50/50 text-rose-600 border-rose-100"
+                                          }`}>
+                                            <span className="flex h-1.5 w-1.5 relative">
+                                              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${maxPain <= 3 ? "bg-amber-400" : "bg-rose-400"}`}></span>
+                                              <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${maxPain <= 3 ? "bg-amber-500" : "bg-rose-500"}`}></span>
+                                            </span>
+                                            <span>Dor Máxima Relatada: {maxPain}/10</span>
+                                          </div>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
+
+                                    {/* Subjective Biofeedback Text */}
+                                    {w.feedback && w.feedback !== "Treino concluído com biofeedback de alta performance." && (
+                                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/50 text-[10px] text-slate-500 font-medium italic leading-relaxed">
+                                        <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest not-italic mb-1">Feedback do Atleta</p>
+                                        "{w.feedback}"
+                                      </div>
+                                    )}
+
                                     <Button
                                       onClick={() =>
                                         setModalState({
