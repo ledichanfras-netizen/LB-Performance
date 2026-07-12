@@ -39,6 +39,7 @@ export interface EnrichedExercise {
   musclesInvolved?: string[]; 
   tags?: string[]; 
   imageUrl?: string;
+  videoUrl?: string;
 
   // International Standard Optional Fields
   nameEn?: string;
@@ -90,7 +91,9 @@ const STATIC_ENRICHED_LIBRARY: EnrichedExercise[] = [
     applicability: "Desenvolvimento da base de força absoluta em membros inferiores para atletas profissionais e adultos amadores.",
     evidenceLevel: "Nível I - Excelente (Recomendação Forte)",
     musclesInvolved: ["Glúteo Máximo", "Quadríceps Femoral", "Adutor Maior", "Eretores da Espinha"],
-    tags: ["#ForçaMáxima", "#EXOS", "#VBT", "#TripleExtension", "#Barbell", "#Academia"]
+    tags: ["#ForçaMáxima", "#EXOS", "#VBT", "#TripleExtension", "#Barbell", "#Academia"],
+    videoUrl: "https://www.youtube.com/watch?v=U0LgH7p28_E",
+    imageUrl: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=600"
   },
   {
     id: "lib-2",
@@ -128,7 +131,9 @@ const STATIC_ENRICHED_LIBRARY: EnrichedExercise[] = [
     applicability: "Exercício padrão-ouro para reabilitação e prevenção de lesões de isquiotibiais em atletas de corrida, futebol e handebol.",
     evidenceLevel: "Nível I - Padrão Ouro (Recomendação Forte)",
     musclesInvolved: ["Bíceps Femoral (cabeça longa)", "Semitendinoso", "Semimembranoso", "Gastrocnêmio"],
-    tags: ["#Excêntrico", "#PrevençãoLesão", "#FIFA11+", "#Desaceleração", "#Nordic", "#Bodyweight"]
+    tags: ["#Excêntrico", "#PrevençãoLesão", "#FIFA11+", "#Desaceleração", "#Nordic", "#Bodyweight"],
+    videoUrl: "https://www.youtube.com/watch?v=0k7yF0r5b_M",
+    imageUrl: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600"
   },
   {
     id: "lib-3",

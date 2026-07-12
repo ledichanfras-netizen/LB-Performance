@@ -5,7 +5,7 @@ import {
   Settings, AlertCircle, Check, Heart, History, 
   X, ChevronRight, Grid, HelpCircle, Info, Brain, 
   Cpu, Sliders, Layers, Award, ShieldAlert, CheckCircle2,
-  TrendingUp, RefreshCw, Eye, BookOpen, Target, Save, Bookmark
+  TrendingUp, RefreshCw, Eye, BookOpen, Target, Save, Bookmark, Video, Play, Image as ImageIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "react-hot-toast";
@@ -21,6 +21,16 @@ interface WorkoutEditorPremiumProps {
   athleteGoal?: string;
   athleteName?: string;
   athlete?: any;
+}
+
+export function getYouTubeEmbedUrl(url?: string): string | null {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  if (match && match[2].length === 11) {
+    return `https://www.youtube.com/embed/${match[2]}`;
+  }
+  return null;
 }
 
 export function detectCategoryFromName(name: string, activeTab: string): string {
@@ -2102,6 +2112,28 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                           </button>
                         </div>
 
+                        {/* Video and Image URLs */}
+                        <div className="md:col-span-12 mt-3 pt-3 border-t border-slate-900/40 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-blue-400 uppercase font-black tracking-widest shrink-0">VÍDEO URL:</span>
+                            <input 
+                              value={ex.videoUrl || ""}
+                              onChange={(e) => updateExField(ex.id, "videoUrl", e.target.value)}
+                              className="w-full flex-1 bg-slate-950/40 border border-slate-900 focus:border-blue-400/40 rounded-xl px-4 py-2 text-xs text-slate-300 focus:text-slate-100 placeholder-slate-700 outline-none transition-all"
+                              placeholder="YouTube, Vimeo ou vídeo de execução"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-purple-400 uppercase font-black tracking-widest shrink-0">IMAGEM URL:</span>
+                            <input 
+                              value={ex.imageUrl || ""}
+                              onChange={(e) => updateExField(ex.id, "imageUrl", e.target.value)}
+                              className="w-full flex-1 bg-slate-950/40 border border-slate-900 focus:border-purple-400/40 rounded-xl px-4 py-2 text-xs text-slate-300 focus:text-slate-100 placeholder-slate-700 outline-none transition-all"
+                              placeholder="Imagem de referência ou link de GIF"
+                            />
+                          </div>
+                        </div>
+
                       </div>
                     )}
                   </motion.div>
@@ -2220,6 +2252,104 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                       {selectedDetailsExercise.targetVelocity || "Máxima"}
                     </span>
                   </div>
+                </div>
+
+                {/* 🎥 DEMONSTRATION & MEDIA HUB (INTELIGENTE) */}
+                <div className="p-5 bg-gradient-to-b from-[#111622] to-slate-900/40 rounded-2xl border border-slate-900 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-850 pb-2">
+                    <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <Video className="w-4 h-4 text-blue-400" />
+                      Demonstração de Execução Técnica & Biomecânica
+                    </span>
+                    <span className="text-[8.5px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-950 px-2.5 py-1 rounded border border-slate-900">
+                      Mídia Ativa da LB Sports
+                    </span>
+                  </div>
+
+                  {(() => {
+                    const ytEmbedUrl = getYouTubeEmbedUrl(selectedDetailsExercise.videoUrl);
+                    const imageOrGifUrl = selectedDetailsExercise.imageUrl;
+
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        {/* Video player ou imagem / GIF */}
+                        <div className="md:col-span-7 flex flex-col justify-center bg-slate-950 rounded-xl border border-slate-850 overflow-hidden relative min-h-[220px]">
+                          {ytEmbedUrl ? (
+                            <div className="aspect-video w-full h-full">
+                              <iframe
+                                src={`${ytEmbedUrl}?autoplay=0&mute=1&rel=0`}
+                                className="w-full h-full border-0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                title={`Vídeo de Execução: ${selectedDetailsExercise.name}`}
+                              />
+                            </div>
+                          ) : imageOrGifUrl ? (
+                            <img
+                              src={imageOrGifUrl}
+                              alt={`Demonstração de ${selectedDetailsExercise.name}`}
+                              className="w-full h-full object-cover max-h-[300px] rounded-xl"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="p-6 flex flex-col items-center justify-center text-center space-y-2 h-full">
+                              <Video className="w-10 h-10 text-slate-700 animate-pulse" />
+                              <span className="text-xs font-black text-slate-500 uppercase">Vídeo Demonstrativo Personalizável</span>
+                              <p className="text-[10px] text-slate-600 font-bold max-w-sm leading-relaxed">
+                                Nenhum link de vídeo ou imagem direta foi cadastrado para este exercício personalizado. Mas não se preocupe! Você e seus atletas têm acesso ao nosso robô de demonstrações automatizadas ao lado.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Detalhes / Assistir e Automação */}
+                        <div className="md:col-span-5 flex flex-col justify-between space-y-3">
+                          <div className="space-y-2">
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Ações Disponíveis:</span>
+                            
+                            {selectedDetailsExercise.videoUrl ? (
+                              <a
+                                href={selectedDetailsExercise.videoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 w-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-black text-[10px] py-3 rounded-xl transition-all uppercase tracking-wider"
+                              >
+                                <Play className="w-3.5 h-3.5 fill-current" />
+                                Assistir no YouTube Externo
+                              </a>
+                            ) : null}
+
+                            {/* ROBÔ DE AUTOMAÇÃO: Busca direta e instantânea no YouTube */}
+                            <a
+                              href={`https://www.youtube.com/results?search_query=como+fazer+${encodeURIComponent(selectedDetailsExercise.name)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center gap-2 w-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-black text-[10px] py-3 rounded-xl transition-all uppercase tracking-wider"
+                              title="Pesquisa inteligente e direta no YouTube pela execução deste exercício"
+                            >
+                              <Search className="w-3.5 h-3.5" />
+                              🔍 Busca de Execução Técnica (YouTube)
+                            </a>
+                            
+                            <a
+                              href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(selectedDetailsExercise.name + " exercicio gif")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center gap-2 w-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-400 font-black text-[10px] py-3 rounded-xl transition-all uppercase tracking-wider"
+                              title="Pesquisa de GIFs demonstrativos no Google Imagens"
+                            >
+                              <ImageIcon className="w-3.5 h-3.5" />
+                              🖼️ Buscar Imagem/GIF Técnico (Google)
+                            </a>
+                          </div>
+
+                          <div className="bg-slate-950 p-3 rounded-xl border border-slate-900 text-[9px] text-slate-500 font-bold leading-relaxed uppercase">
+                            💡 <span className="text-slate-300">DICA DE ELITE:</span> Você pode cadastrar o link do seu próprio vídeo do YouTube ou GIF animado de preferência ao editar ou criar os exercícios da sua planilha de treinos!
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* ADVANCED BIOMECHANICAL & SCIENTIFIC ANALYTICS */}

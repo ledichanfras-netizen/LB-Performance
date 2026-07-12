@@ -147,6 +147,7 @@ CREATE TABLE IF NOT EXISTS cmj (
     rsi NUMERIC,
     flight_time NUMERIC,
     weight NUMERIC,
+    average_force NUMERIC DEFAULT 0,
     observations TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -302,3 +303,6 @@ CREATE POLICY "Allow anon update access" ON general_strength FOR UPDATE USING (t
 CREATE POLICY "Allow anon read access" ON users FOR SELECT USING (true);
 CREATE POLICY "Allow anon insert access" ON users FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anon update access" ON users FOR UPDATE USING (true);
+
+-- Migration to add average_force to cmj if not exists
+ALTER TABLE cmj ADD COLUMN IF NOT EXISTS average_force NUMERIC DEFAULT 0;

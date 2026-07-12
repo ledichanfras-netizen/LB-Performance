@@ -103,6 +103,8 @@ export interface PrescribedExercise {
   painLevel?: number; // 0-10
   isSimpleEntry?: boolean;
   order_index?: number;
+  videoUrl?: string;
+  imageUrl?: string;
 }
 
 export interface Workout {

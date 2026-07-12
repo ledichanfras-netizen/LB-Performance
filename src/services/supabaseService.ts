@@ -683,7 +683,7 @@ export const supabaseService = {
 
       if (cmj && cmj.length > 0) {
         assessmentPromises.push((async () => {
-          const { error } = await supabase.from('cmj').upsert(cmj.map(c => ({
+          const payload = cmj.map(c => ({
             id: c.id || `cmj-${Date.now()}-${Math.random()}`,
             athlete_id: athlete.id,
             date: c.date,
@@ -695,8 +695,14 @@ export const supabaseService = {
             weight: c.weight ?? 0,
             average_force: c.averageForce ?? 0,
             observations: c.observations || ''
-          })));
-          if (error) throw error;
+          }));
+          const { error } = await supabase.from('cmj').upsert(payload);
+          if (error) {
+            console.warn("Failing to upsert with average_force column, retrying without it:", error.message);
+            const fallbackPayload = payload.map(({ average_force, ...rest }) => rest);
+            const { error: fallbackError } = await supabase.from('cmj').upsert(fallbackPayload);
+            if (fallbackError) throw fallbackError;
+          }
         })());
       }
 

@@ -48,6 +48,9 @@ import {
   getAsymmetryStatus,
   getIQRatioStatus,
   calculateFlightTimeFromHeight,
+  calculateHeightFromFlightTime,
+  calculateCMJPakPower,
+  calculateCMJAverageForce,
   calculateRSI,
   calculateReadiness,
   getReadinessInsight,
@@ -77,6 +80,7 @@ import { AthleteGuide } from "./components/AthleteGuide";
 import { WorkoutEditorPremium } from "./components/WorkoutEditorPremium";
 import { SessionTrackerPremium } from "./components/SessionTrackerPremium";
 import { SPORTS_DATA, parseNormativeValue } from "./data/imtpNormatives";
+import { ENRICHED_LIBRARY } from "./data/exercises";
 import { InjuriesView } from "./components/InjuriesView";
 import { MenstrualCycleDashboard } from "./components/MenstrualCycleDashboard";
 import toast from "react-hot-toast";
@@ -6428,8 +6432,32 @@ const SessionTracker: FC<{
 
               <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-6 relative z-10">
                 <div>
-                  <h5 className="text-2xl md:text-3xl font-black uppercase text-white leading-tight tracking-tighter italic">
-                    {ex.name}
+                  <h5 className="text-2xl md:text-3xl font-black uppercase text-white leading-tight tracking-tighter italic flex flex-wrap items-center gap-3">
+                    <span>{ex.name}</span>
+                    
+                    {/* Botão de Demonstração de Vídeo Inteligente */}
+                    {(() => {
+                      const matchingLibEx = ENRICHED_LIBRARY.find((x: any) => x.name.toLowerCase().trim() === ex.name.toLowerCase().trim() || ex.name.toLowerCase().includes(x.name.toLowerCase()));
+                      const videoUrl = ex.videoUrl || matchingLibEx?.videoUrl || `https://www.youtube.com/results?search_query=como+fazer+${encodeURIComponent(ex.name)}`;
+                      const hasDirectVideo = !!(ex.videoUrl || matchingLibEx?.videoUrl);
+
+                      return (
+                        <a
+                          href={videoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 text-[9px] uppercase font-black tracking-wider rounded-lg transition-all ${
+                            hasDirectVideo 
+                              ? "bg-[#39FF14]/10 hover:bg-[#39FF14]/20 text-[#39FF14] border border-[#39FF14]/20" 
+                              : "bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800 hover:border-slate-700"
+                          }`}
+                          title={hasDirectVideo ? "Assistir ao vídeo técnico de execução técnica cadastrado pela LB Sports" : "Pesquisar vídeo de execução deste exercício de forma automatizada no YouTube"}
+                        >
+                          <span className="w-2 h-2 rounded-full bg-current animate-pulse shrink-0"></span>
+                          {hasDirectVideo ? "Ver Vídeo Técnico" : "Auto-Vídeo ⚡"}
+                        </a>
+                      );
+                    })()}
                   </h5>
                   <div className="flex flex-wrap items-center gap-3 mt-3">
                     <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest bg-brand-primary/10 px-3 py-1 rounded-full border border-brand-primary/20">
@@ -15815,7 +15843,7 @@ const AssessmentForm: FC<{
           weight: latestBio?.weight || 0,
           height: 0,
           power: 0,
-          depth: 0,
+          depth: 30,
           flightTime: 0,
           rsi: 0,
           averageForce: 0,
@@ -15871,8 +15899,8 @@ const AssessmentForm: FC<{
   const updateField = (field: string, val: any) => {
     setFormData((prev: any) => {
       let updated = { ...prev, [field]: val };
-      if (type === "cmj" && field === "height") {
-        // No automatic calculation for flight time and RSI in order to allow full manual entry as requested
+      if (type === "cmj") {
+        // No automatic calculation for any parameters to prevent differences with the professional assessment app
       }
       if (type === "dropJump") {
         // No automatic calculation for RSI and stiffness in order to allow full manual entry as requested
@@ -16393,7 +16421,7 @@ const AssessmentForm: FC<{
               />
             </>
           )}
-          {type === "cmj" && (
+           {type === "cmj" && (
             <>
               <div className="col-span-2">
                 <Field
@@ -16421,6 +16449,11 @@ const AssessmentForm: FC<{
                 label="Tempo de Voo (ms)"
                 value={formData.flightTime}
                 onChange={(v) => updateField("flightTime", parseFloat(v))}
+              />
+              <Field
+                label="Profundidade do Agachamento (cm)"
+                value={formData.depth}
+                onChange={(v) => updateField("depth", parseFloat(v))}
               />
             </>
           )}

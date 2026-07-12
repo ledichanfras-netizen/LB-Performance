@@ -331,6 +331,31 @@ export const calculateFlightTimeFromHeight = (heightCm: number): number => {
   return Math.round(timeS * 1000); 
 };
 
+export const calculateHeightFromFlightTime = (flightTimeMs: number): number => {
+  if (!flightTimeMs) return 0;
+  const t = flightTimeMs / 1000;
+  const g = 9.81;
+  const heightM = (g * t * t) / 8;
+  return parseFloat((heightM * 100).toFixed(2)); // height in cm
+};
+
+export const calculateCMJPakPower = (heightCm: number, weightKg: number): number => {
+  if (!heightCm || !weightKg) return 0;
+  // Sayers Peak Power Formula:
+  // Peak Power (W) = 60.7 * Height(cm) + 45.3 * Weight(kg) - 2055
+  const power = 60.7 * heightCm + 45.3 * weightKg - 2055;
+  return Math.max(0, Math.round(power));
+};
+
+export const calculateCMJAverageForce = (heightCm: number, weightKg: number, depthCm?: number): number => {
+  if (!heightCm || !weightKg) return 0;
+  const d = depthCm && depthCm > 0 ? depthCm : 35; // default to 35cm
+  // Linthorne / Work-Energy: F_mean = m * g * (1 + h/d)
+  const g = 9.81;
+  const force = weightKg * g * (1 + heightCm / d);
+  return Math.max(0, Math.round(force));
+};
+
 export const calculateRSI = (heightCm: number, flightTimeMs: number): number => {
     if (!heightCm || !flightTimeMs) return 0;
     const heightM = heightCm / 100;

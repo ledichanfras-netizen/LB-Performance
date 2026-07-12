@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS cmj (
   rsi REAL, 
   flight_time REAL, 
   weight REAL,
+  average_force REAL DEFAULT 0,
   observations TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -231,3 +232,6 @@ CREATE TABLE IF NOT EXISTS external_sessions (
 INSERT INTO users (id, username, password, role) 
 VALUES ('coach-1', 'Leandro', '1234', 'coach') 
 ON CONFLICT (username) DO NOTHING;
+
+-- Migration to add average_force to cmj if not exists
+ALTER TABLE cmj ADD COLUMN IF NOT EXISTS average_force REAL DEFAULT 0;
