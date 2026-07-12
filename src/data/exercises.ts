@@ -15,6 +15,8 @@ export interface EnrichedExercise {
   isFavorite?: boolean;
   
   // Rich NASA/EXOS/Hawkin Dynamics Metadata
+  movementPattern?: string; // e.g., Agachar (Squat), Dobradiça de Quadril (Hip Hinge), Passada (Lunge), etc.
+  lateralType?: "Unilateral" | "Bilateral" | "N/A" | string;
   physicalQuality?: string; 
   kineticChain?: string;
   movementPlane?: string;
@@ -814,6 +816,294 @@ const STATIC_ENRICHED_LIBRARY: EnrichedExercise[] = [
   }
 ];
 
+export function determineMovementPattern(exercise: EnrichedExercise): string {
+  if (exercise.movementPattern) return exercise.movementPattern;
+
+  const name = (exercise.name || "").toLowerCase();
+  const cat = (exercise.category || "").toLowerCase();
+  const subcat = (exercise.subcategory || "").toLowerCase();
+  const mGroup = (exercise.muscleGroup || "").toLowerCase();
+
+  // Panturrilha (Calf)
+  if (name.includes("panturrilha") || name.includes("calf") || name.includes("sóleo") || mGroup.includes("panturrilha")) {
+    return "Panturrilha";
+  }
+
+  // Agachar (Squat)
+  if (
+    (name.includes("agachamento") || name.includes("squat") || name.includes("leg press") || name.includes("hack")) &&
+    !name.includes("búlgaro") && !name.includes("bulgarian") && !name.includes("unilateral") && !name.includes("split") && !name.includes("lunge") && !name.includes("afundo") && !name.includes("avanço")
+  ) {
+    return "Agachar (Squat)";
+  }
+
+  // Dobradiça de Quadril (Hip Hinge)
+  if (
+    name.includes("deadlift") || name.includes("terra") || name.includes("rdl") || name.includes("romanian") ||
+    name.includes("stiff") || name.includes("good morning") || name.includes("swing") || name.includes("hinge")
+  ) {
+    return "Dobradiça de Quadril (Hip Hinge)";
+  }
+
+  // Passada (Lunge) & Unilateral/Split Squat
+  if (
+    name.includes("lunge") || name.includes("avanço") || name.includes("afundo") ||
+    name.includes("búlgaro") || name.includes("bulgarian") || name.includes("split") || name.includes("step-up") || name.includes("step up") || name.includes("step down") || name.includes("skater squat")
+  ) {
+    return "Passada (Lunge)";
+  }
+
+  // Dominância de Joelho
+  if (
+    name.includes("extensora") || name.includes("flexora") || name.includes("leg extension") || name.includes("leg curl") ||
+    name.includes("nórdic") || name.includes("nordic") || name.includes("copenhagen") || name.includes("copenhague") || name.includes("adutor") || name.includes("adutores") || name.includes("cossaco") || name.includes("cossack")
+  ) {
+    return "Dominância de Joelho";
+  }
+
+  // Dominância de Quadril
+  if (
+    name.includes("hip thrust") || name.includes("elevação pélvica") || name.includes("glute bridge") || name.includes("glúteo") || name.includes("glute")
+  ) {
+    return "Dominância de Quadril";
+  }
+
+  // MMSS - Empurrar
+  if (
+    cat.includes("mmss") && (
+      name.includes("supino") || name.includes("bench press") || name.includes("flexão") || name.includes("push-up") || name.includes("push up") ||
+      name.includes("desenvolvimento") || name.includes("press") || name.includes("tríceps") || name.includes("triceps") || name.includes("elevacao lateral") || name.includes("elevação lateral") || name.includes("paralelas") || name.includes("dips")
+    )
+  ) {
+    return "Membros Superiores - Empurrar";
+  }
+
+  // MMSS - Puxar
+  if (
+    cat.includes("mmss") && (
+      name.includes("remada") || name.includes("row") || name.includes("barra fixa") || name.includes("pull-up") || name.includes("pull up") ||
+      name.includes("puxada") || name.includes("pulley") || name.includes("face pull") || name.includes("bíceps") || name.includes("biceps") || name.includes("rosca") || name.includes("crucifixo inverso") || name.includes("y-raise")
+    )
+  ) {
+    return "Membros Superiores - Puxar";
+  }
+
+  // Core / Estabilidade
+  if (cat.includes("core") || subcat.includes("core") || name.includes("pallof") || name.includes("plank") || name.includes("prancha") || name.includes("abdominal") || name.includes("crunch") || name.includes("woodchop") || name.includes("farmer walk") || name.includes("caminhada do fazendeiro") || name.includes("suitcase") || name.includes("carry")) {
+    return "Core / Estabilidade";
+  }
+
+  // Velocidade / Desaceleração
+  if (cat.includes("velocidade") || subcat.includes("velocidade") || name.includes("sprint") || name.includes("corrida") || name.includes("backpedal") || name.includes("aceleração") || name.includes("desaceleração") || name.includes("stop") || name.includes("landing") || name.includes("drop") || name.includes("bounds")) {
+    return "Velocidade / Desaceleração";
+  }
+
+  // Agilidade / COD
+  if (cat.includes("agilidade") || subcat.includes("agilidade") || name.includes("shuttle") || name.includes("t-test") || name.includes("l-drill") || name.includes("star") || name.includes("zig-zag") || name.includes("shuffling") || name.includes("box agility") || name.includes("deslocamento lateral")) {
+    return "Agilidade / COD";
+  }
+
+  // Preventivo / Mobilidade
+  if (cat.includes("preventivo") || cat.includes("mobilidade") || subcat.includes("prevenção") || name.includes("alongamento") || name.includes("manguito") || name.includes("liberação") || name.includes("foam roller") || name.includes("slides") || name.includes("estabilização") || name.includes("dorsiflexão") || name.includes("monster walk")) {
+    return "Preventivo / Mobilidade";
+  }
+
+  // Fallbacks by category
+  if (cat.includes("mmii") || mGroup.includes("mmii") || mGroup.includes("quadríceps") || mGroup.includes("glúteo")) return "Agachar (Squat)";
+  if (cat.includes("mmss") || mGroup.includes("mmss")) return "Membros Superiores - Empurrar";
+  if (cat.includes("potencia") || cat.includes("potência")) return "Dominância de Quadril";
+  if (cat.includes("core")) return "Core / Estabilidade";
+
+  return "Outros";
+}
+
+export function determineLateralType(exercise: EnrichedExercise): "Unilateral" | "Bilateral" | "N/A" {
+  if (exercise.lateralType === "Unilateral" || exercise.lateralType === "Bilateral" || exercise.lateralType === "N/A") {
+    return exercise.lateralType;
+  }
+
+  const name = (exercise.name || "").toLowerCase();
+  const subcat = (exercise.subcategory || "").toLowerCase();
+  const cat = (exercise.category || "").toLowerCase();
+
+  // If upper body/core/preventive that doesn't usually emphasize uni/bi split:
+  if (cat.includes("core") || cat.includes("preventivo") || cat.includes("mobilidade")) {
+    if (name.includes("unilateral") || name.includes("single leg") || name.includes("suitcase") || name.includes("one arm") || name.includes("unilateralmente") || name.includes("serrote")) {
+      return "Unilateral";
+    }
+    return "Bilateral";
+  }
+
+  // Unilateral keywords
+  if (
+    name.includes("unilateral") || name.includes("single leg") || name.includes("one leg") || name.includes("revezado") ||
+    name.includes("búlgaro") || name.includes("bulgarian") || name.includes("split") || name.includes("lunge") ||
+    name.includes("afundo") || name.includes("avanço") || name.includes("serrote") || name.includes("lado") ||
+    name.includes("each leg") || name.includes("/lado") || name.includes("rear foot") || name.includes("step-up") ||
+    name.includes("step down") || name.includes("copenhague") || name.includes("copenhagen") || name.includes("skater")
+  ) {
+    return "Unilateral";
+  }
+
+  return "Bilateral";
+}
+
+export interface BiomechanicalDetails {
+  scientificStars: number;
+  evidenceLabel: string;
+  force: number;         // Força Máxima
+  rfd: number;           // Taxa de Produção de Força (RFD)
+  power: number;         // Potência Explosiva
+  hypertrophy: number;   // Estímulo de Hipertrofia
+  stability: number;     // Estabilidade/Co-contração
+  sportTransfer: number; // Índice de Transferência Esportiva
+  soccerIndex: number;
+  volleyIndex: number;
+  runningIndex: number;
+  basketballIndex: number;
+  tennisIndex: number;
+}
+
+export function getBiomechanicalDetails(exercise: EnrichedExercise): BiomechanicalDetails {
+  const name = (exercise.name || "").toLowerCase();
+  const cat = (exercise.category || "").toLowerCase();
+  const pattern = determineMovementPattern(exercise).toLowerCase();
+
+  // Initialize defaults
+  let d: BiomechanicalDetails = {
+    scientificStars: 4,
+    evidenceLabel: "Evidência Forte",
+    force: 7,
+    rfd: 6,
+    power: 6,
+    hypertrophy: 7,
+    stability: 6,
+    sportTransfer: 8,
+    soccerIndex: 8,
+    volleyIndex: 7,
+    runningIndex: 8,
+    basketballIndex: 7,
+    tennisIndex: 7,
+  };
+
+  // Specific high-level rules
+  if (name.includes("agachamento") || name.includes("squat") || name.includes("deadlift") || name.includes("terra") || name.includes("leg press")) {
+    d.scientificStars = 5;
+    d.evidenceLabel = "Evidência Muito Forte (Nível I)";
+    d.force = 10;
+    d.rfd = 7;
+    d.power = 8;
+    d.hypertrophy = 9;
+    d.stability = 8;
+    d.sportTransfer = 9;
+    d.soccerIndex = 9;
+    d.volleyIndex = 8;
+    d.runningIndex = 9;
+    d.basketballIndex = 8;
+    d.tennisIndex = 8;
+  } else if (name.includes("nordic") || name.includes("nórdico") || name.includes("copenhagen") || name.includes("copenhague")) {
+    d.scientificStars = 5;
+    d.evidenceLabel = "Evidência Muito Forte (Nível I - Prevenção)";
+    d.force = 9;
+    d.rfd = 8;
+    d.power = 8;
+    d.hypertrophy = 8;
+    d.stability = 9;
+    d.sportTransfer = 10;
+    d.soccerIndex = 10;
+    d.volleyIndex = 8;
+    d.runningIndex = 10;
+    d.basketballIndex = 8;
+    d.tennisIndex = 9;
+  } else if (name.includes("hip thrust") || name.includes("elevação pélvica")) {
+    d.scientificStars = 5;
+    d.evidenceLabel = "Evidência Muito Forte";
+    d.force = 9;
+    d.rfd = 8;
+    d.power = 9;
+    d.hypertrophy = 10;
+    d.stability = 7;
+    d.sportTransfer = 10;
+    d.soccerIndex = 10;
+    d.volleyIndex = 8;
+    d.runningIndex = 10;
+    d.basketballIndex = 8;
+    d.runningIndex = 10;
+  } else if (cat.includes("potencia") || cat.includes("potência") || name.includes("pliometria") || name.includes("salto") || name.includes("jump") || name.includes("clean") || name.includes("snatch")) {
+    d.scientificStars = 5;
+    d.evidenceLabel = "Evidência Excelente (Ciclo Alongamento-Encurtamento)";
+    d.force = 6;
+    d.rfd = 10;
+    d.power = 10;
+    d.hypertrophy = 4;
+    d.stability = 8;
+    d.sportTransfer = 10;
+    d.soccerIndex = 9;
+    d.volleyIndex = 10;
+    d.runningIndex = 9;
+    d.basketballIndex = 10;
+    d.tennisIndex = 9;
+  } else if (cat.includes("velocidade") || cat.includes("agilidade") || name.includes("sprint") || name.includes("cod") || name.includes("drills") || name.includes("corrida")) {
+    d.scientificStars = 5;
+    d.evidenceLabel = "Transferência Mecânica Direta";
+    d.force = 5;
+    d.rfd = 10;
+    d.power = 9;
+    d.hypertrophy = 3;
+    d.stability = 9;
+    d.sportTransfer = 10;
+    d.soccerIndex = 10;
+    d.volleyIndex = 8;
+    d.runningIndex = 10;
+    d.basketballIndex = 9;
+    d.tennisIndex = 9;
+  } else if (name.includes("bosu") || name.includes("instabilidade") || name.includes("bola suiça") || name.includes("disco de equilíbrio")) {
+    d.scientificStars = 2;
+    d.evidenceLabel = "Evidência Baixa para Força (Útil para reab)";
+    d.force = 2;
+    d.rfd = 1;
+    d.power = 1;
+    d.hypertrophy = 2;
+    d.stability = 10;
+    d.sportTransfer = 4;
+    d.soccerIndex = 4;
+    d.volleyIndex = 4;
+    d.runningIndex = 3;
+    d.basketballIndex = 4;
+    d.tennisIndex = 5;
+  } else if (cat.includes("core") || pattern.includes("core")) {
+    d.scientificStars = 4;
+    d.evidenceLabel = "Evidência Forte (Estabilidade de Tronco)";
+    d.force = 4;
+    d.rfd = 5;
+    d.power = 5;
+    d.hypertrophy = 5;
+    d.stability = 10;
+    d.sportTransfer = 8;
+    d.soccerIndex = 8;
+    d.volleyIndex = 9;
+    d.runningIndex = 8;
+    d.basketballIndex = 9;
+    d.tennisIndex = 9;
+  } else if (name.includes("rosca") || name.includes("biceps") || name.includes("triceps") || name.includes("elevação lateral") || name.includes("crucifixo") || name.includes("panturrilha em pé")) {
+    d.scientificStars = 3;
+    d.evidenceLabel = "Isolado (Baixa transferência funcional)";
+    d.force = 6;
+    d.rfd = 3;
+    d.power = 3;
+    d.hypertrophy = 9;
+    d.stability = 3;
+    d.sportTransfer = 5;
+    d.soccerIndex = 5;
+    d.volleyIndex = 5;
+    d.runningIndex = 5;
+    d.basketballIndex = 5;
+    d.tennisIndex = 6;
+  }
+
+  return d;
+}
+
 const ALL_RAW_EXERCISES: EnrichedExercise[] = [
   ...STATIC_ENRICHED_LIBRARY,
   ...MMII_EXERCISES,
@@ -825,7 +1115,7 @@ const ALL_RAW_EXERCISES: EnrichedExercise[] = [
 ];
 
 const seenNames = new Set<string>();
-export const ENRICHED_LIBRARY: EnrichedExercise[] = ALL_RAW_EXERCISES.filter(exercise => {
+const rawFiltered = ALL_RAW_EXERCISES.filter(exercise => {
   const normalized = (exercise.name || "").trim().toLowerCase();
   if (!normalized) return false;
   if (seenNames.has(normalized)) {
@@ -834,3 +1124,14 @@ export const ENRICHED_LIBRARY: EnrichedExercise[] = ALL_RAW_EXERCISES.filter(exe
   seenNames.add(normalized);
   return true;
 });
+
+export const ENRICHED_LIBRARY: EnrichedExercise[] = rawFiltered.map(ex => {
+  const movementPattern = determineMovementPattern(ex);
+  const lateralType = determineLateralType(ex);
+  return {
+    ...ex,
+    movementPattern,
+    lateralType
+  };
+});
+

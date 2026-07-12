@@ -3321,6 +3321,7 @@ const EliteHubApp: FC<{
                         }
                       : modalState.editingData
                   }
+                  athlete={selected}
                   athleteModality={selected?.modality}
                   athleteGoal={selected?.goal}
                   athleteName={selected?.name}

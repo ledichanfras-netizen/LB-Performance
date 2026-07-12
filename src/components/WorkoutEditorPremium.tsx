@@ -10,7 +10,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "react-hot-toast";
 import { Workout, PrescribedExercise } from "../types";
-import { ENRICHED_LIBRARY, EnrichedExercise } from "../data/exercises";
+import { ENRICHED_LIBRARY, EnrichedExercise, getBiomechanicalDetails, BiomechanicalDetails } from "../data/exercises";
 import { searchExercisesWithAi, prescribeWorkoutWithAi } from "../services/aiPerformanceService";
 
 interface WorkoutEditorPremiumProps {
@@ -20,6 +20,7 @@ interface WorkoutEditorPremiumProps {
   athleteModality?: string;
   athleteGoal?: string;
   athleteName?: string;
+  athlete?: any;
 }
 
 export function detectCategoryFromName(name: string, activeTab: string): string {
@@ -264,7 +265,8 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   onCancel,
   athleteModality = "Futebol",
   athleteGoal = "Explosão e Força",
-  athleteName = "Leandro Barbosa"
+  athleteName = "Leandro Barbosa",
+  athlete
 }) => {
   const [edited, setEdited] = useState<Workout>({
     id: workout.id || `wk-man-${Date.now()}`,
@@ -276,7 +278,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   });
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [sidebarTab, setSidebarTab] = useState<"library" | "ai" | "progression">("library");
+  const [sidebarTab, setSidebarTab] = useState<"library" | "ai" | "progression" | "deficit">("library");
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   
   // Advanced Filters State
@@ -285,6 +287,8 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   const [filterEquipment, setFilterEquipment] = useState<string>("ALL");
   const [filterMuscleGroup, setFilterMuscleGroup] = useState<string>("ALL");
   const [filterSport, setFilterSport] = useState<string>("ALL");
+  const [filterPattern, setFilterPattern] = useState<string>("ALL");
+  const [filterLateralType, setFilterLateralType] = useState<string>("ALL");
 
   // AI Search States
   const [isAiSearching, setIsAiSearching] = useState(false);
@@ -534,6 +538,41 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
     toast.success(`Customizado adicionado (${detectedCategory}): ${newEx.name}`);
   };
 
+  const addDeficitCorrectiveBlock = (deficitName: string, exerciseNames: string[]) => {
+    const toAdd: EnrichedExercise[] = [];
+    exerciseNames.forEach(name => {
+      const match = ENRICHED_LIBRARY.find(x => x.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(x.name.toLowerCase()));
+      if (match) toAdd.push(match);
+    });
+
+    if (toAdd.length === 0) {
+      toast.error("Nenhum exercício correspondente encontrado na biblioteca.");
+      return;
+    }
+
+    const newExs = toAdd.map((libEx, idx) => {
+      const newEx: PrescribedExercise = {
+        id: `ex-deficit-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`,
+        name: libEx.name,
+        muscleGroup: libEx.muscleGroup,
+        sets: 3,
+        reps: libEx.defaultReps,
+        weight: libEx.defaultWeight,
+        repsType: libEx.defaultReps.toLowerCase().includes("s") ? "time" : "reps",
+        rest: libEx.recommendedRest || "90s",
+        notes: `Bloco Corretivo IA: Foco em Corrigir ${deficitName} | VBT: Máxima Velocidade`
+      };
+      return newEx;
+    });
+
+    setEdited(prev => ({
+      ...prev,
+      exercises: [...(prev.exercises || []), ...newExs]
+    }));
+    toast.success(`Bloco de Correção (${deficitName}) com ${newExs.length} exercícios prescrito!`);
+  };
+
+
   const updateExField = (id: string, field: keyof PrescribedExercise, value: any) => {
     setEdited({
       ...edited,
@@ -595,13 +634,15 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       if (filterEquipment !== "ALL" && !(item.equipment || "").toLowerCase().includes(filterEquipment.toLowerCase())) return false;
       if (filterMuscleGroup !== "ALL" && item.muscleGroup !== filterMuscleGroup) return false;
       if (filterSport !== "ALL" && !(item.sports || []).some(s => s.toLowerCase() === filterSport.toLowerCase())) return false;
+      if (filterPattern !== "ALL" && item.movementPattern !== filterPattern) return false;
+      if (filterLateralType !== "ALL" && item.lateralType !== filterLateralType) return false;
 
       // 4. AI Search Filter
       if (aiSearchIds && !aiSearchIds.includes(item.id)) return false;
 
       return true;
     });
-  }, [searchQuery, activeCategory, favorites, recentAdds, filterDifficulty, filterQuality, filterEquipment, filterMuscleGroup, filterSport, aiSearchIds, combinedLibrary, customLibraryExercises]);
+  }, [searchQuery, activeCategory, favorites, recentAdds, filterDifficulty, filterQuality, filterEquipment, filterMuscleGroup, filterSport, filterPattern, filterLateralType, aiSearchIds, combinedLibrary, customLibraryExercises]);
 
   // Unique list of qualities, difficulties, and equipments for filters
   const uniqueQualities = useMemo(() => {
@@ -628,6 +669,14 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       }
     });
     return Array.from(set);
+  }, [combinedLibrary]);
+
+  const uniquePatterns = useMemo(() => {
+    const set = new Set<string>();
+    combinedLibrary.forEach(x => {
+      if (x.movementPattern) set.add(x.movementPattern);
+    });
+    return Array.from(set).sort();
   }, [combinedLibrary]);
 
   const uniqueEquipments = [
@@ -908,10 +957,10 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
         </div>
 
         {/* WORKSPACE SIDEBAR SUB-TABS */}
-        <div className="flex bg-slate-950 border border-slate-900/60 p-1 rounded-xl mb-5 shrink-0 gap-1">
+        <div className="flex bg-slate-950 border border-slate-900/60 p-1 rounded-xl mb-5 shrink-0 gap-1 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setSidebarTab("library")}
-            className={`flex-1 py-2 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all ${
+            className={`flex-1 py-2 px-1 text-[8px] md:text-[9px] font-black uppercase tracking-wider rounded-lg transition-all shrink-0 ${
               sidebarTab === "library"
                 ? "bg-[#39FF14]/10 text-[#39FF14] border border-[#39FF14]/20"
                 : "text-slate-400 hover:text-white"
@@ -921,7 +970,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
           </button>
           <button
             onClick={() => setSidebarTab("ai")}
-            className={`flex-1 py-2 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all ${
+            className={`flex-1 py-2 px-1 text-[8px] md:text-[9px] font-black uppercase tracking-wider rounded-lg transition-all shrink-0 ${
               sidebarTab === "ai"
                 ? "bg-[#39FF14]/10 text-[#39FF14] border border-[#39FF14]/20"
                 : "text-slate-400 hover:text-white"
@@ -931,13 +980,24 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
           </button>
           <button
             onClick={() => setSidebarTab("progression")}
-            className={`flex-1 py-2 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all ${
+            className={`flex-1 py-2 px-1 text-[8px] md:text-[9px] font-black uppercase tracking-wider rounded-lg transition-all shrink-0 ${
               sidebarTab === "progression"
                 ? "bg-[#39FF14]/10 text-[#39FF14] border border-[#39FF14]/20"
                 : "text-slate-400 hover:text-white"
             }`}
           >
             ⚙️ Progressão
+          </button>
+          <button
+            onClick={() => setSidebarTab("deficit")}
+            className={`flex-1 py-2 px-1 text-[8px] md:text-[9px] font-black uppercase tracking-wider rounded-lg transition-all shrink-0 ${
+              sidebarTab === "deficit"
+                ? "bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse"
+                : "text-slate-400 hover:text-white"
+            }`}
+            title="Sugerir treinos focados nos déficits das avaliações físicas"
+          >
+            🎯 Déficits IA
           </button>
         </div>
 
@@ -1037,6 +1097,8 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                     setFilterEquipment("ALL");
                     setFilterMuscleGroup("ALL");
                     setFilterSport("ALL");
+                    setFilterPattern("ALL");
+                    setFilterLateralType("ALL");
                     setSearchQuery("");
                     setAiSearchIds(null);
                     setAiSearchReasoning(null);
@@ -1102,6 +1164,33 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                     {uniqueSports.map(sp => <option key={sp} value={sp}>{sp}</option>)}
                   </select>
                 </div>
+
+                {/* Movement Pattern */}
+                <div className="space-y-1">
+                  <span className="text-[7.5px] font-black text-slate-500 uppercase block tracking-wider">Padrão de Movimento</span>
+                  <select
+                    value={filterPattern}
+                    onChange={(e) => setFilterPattern(e.target.value)}
+                    className="w-full bg-[#161b26] text-[8.5px] font-black uppercase text-slate-300 border border-slate-850 p-1.5 rounded-lg focus:border-[#39FF14]"
+                  >
+                    <option value="ALL">TODOS</option>
+                    {uniquePatterns.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+
+                {/* Lateral Type */}
+                <div className="space-y-1">
+                  <span className="text-[7.5px] font-black text-slate-500 uppercase block tracking-wider">Lateralidade</span>
+                  <select
+                    value={filterLateralType}
+                    onChange={(e) => setFilterLateralType(e.target.value)}
+                    className="w-full bg-[#161b26] text-[8.5px] font-black uppercase text-slate-300 border border-slate-850 p-1.5 rounded-lg focus:border-[#39FF14]"
+                  >
+                    <option value="ALL">AMBOS</option>
+                    <option value="Unilateral">UNILATERAL</option>
+                    <option value="Bilateral">BILATERAL</option>
+                  </select>
+                </div>
               </div>
 
               {/* Equipment */}
@@ -1134,9 +1223,17 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                       <h5 className="text-[11px] font-black text-slate-200 group-hover:text-white transition-colors tracking-tight leading-snug">
                         {item.name}
                       </h5>
-                      <div className="flex gap-1.5 mt-1 items-center">
+                      <div className="flex flex-wrap gap-1.5 mt-1 items-center">
                         <span className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 bg-[#39FF14]/10 text-[#39FF14] rounded">
                           {item.physicalQuality || "Geral"}
+                        </span>
+                        {item.movementPattern && (
+                          <span className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 bg-blue-500/10 text-blue-400 rounded">
+                            {item.movementPattern}
+                          </span>
+                        )}
+                        <span className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded">
+                          {item.lateralType || "Bilateral"}
                         </span>
                         <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-500">
                           {item.equipment ? item.equipment.split(" ")[0] : "BW"}
@@ -1428,6 +1525,182 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                 <RefreshCw className="w-3.5 h-3.5 stroke-[3]" />
                 APLICAR SISTEMA DE PROGRESSÃO
               </button>
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB CONTENT: ASSESSMENT DEFICITS CLINIC */}
+        {sidebarTab === "deficit" && (
+          <div className="flex-1 flex flex-col min-h-0 space-y-4 overflow-y-auto no-scrollbar pb-6 px-1">
+            
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-2 shrink-0">
+              <div className="flex items-center gap-2 text-amber-400">
+                <Brain className="w-4.5 h-4.5 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-wider">🎯 MOTOR CLÍNICO: PRESCRIÇÃO POR AVALIAÇÕES</span>
+              </div>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wide leading-relaxed">
+                Este painel sincroniza em tempo real as métricas de performance de {athleteName} com a biblioteca para identificar déficits e prescrever blocos de correção de elite.
+              </p>
+            </div>
+
+            {/* DEFICIT LIST */}
+            <div className="space-y-3">
+              {(() => {
+                // Get latest assessments safely
+                const cmjs = athlete?.assessments?.cmj || [];
+                const latestCmj = cmjs[cmjs.length - 1];
+                
+                const djs = athlete?.assessments?.dropJump || [];
+                const latestDrop = djs[djs.length - 1];
+                
+                const imtps = athlete?.assessments?.imtp || [];
+                const latestImtp = imtps[imtps.length - 1];
+                
+                const isometrics = athlete?.assessments?.isometricStrength || [];
+                const latestIso = isometrics[isometrics.length - 1];
+
+                // Criteria
+                const isCmjLow = !latestCmj || latestCmj.height < 36;
+                const isRsiLow = !latestDrop || latestDrop.rsi < 2.0;
+                const isImtpLow = !latestImtp || (latestImtp.relativePeakForce && latestImtp.relativePeakForce < 30) || (latestImtp.peakForce && latestImtp.peakForce < 200);
+                
+                let isAsymmetryHigh = false;
+                let asymmetryValue = 0;
+                if (latestIso) {
+                  const quadDiff = Math.abs(latestIso.quadricepsR - latestIso.quadricepsL);
+                  const quadMax = Math.max(latestIso.quadricepsR, latestIso.quadricepsL);
+                  if (quadMax > 0) {
+                    asymmetryValue = (quadDiff / quadMax) * 100;
+                    if (asymmetryValue > 10) isAsymmetryHigh = true;
+                  }
+                }
+
+                const isIqRatioLow = latestIso && ((latestIso.iqRatioR && latestIso.iqRatioR < 0.60) || (latestIso.iqRatioL && latestIso.iqRatioL < 0.60));
+
+                const deficits = [
+                  {
+                    id: "cmj",
+                    title: "Déficit de Extensão Tripla / Potência Vertical",
+                    status: isCmjLow ? "DEFICIT DETECTADO" : "LIVRE / OK",
+                    statusColor: isCmjLow ? "text-red-400 bg-red-400/5 border-red-500/20" : "text-emerald-400 bg-emerald-400/5 border-emerald-500/20",
+                    isDetected: isCmjLow,
+                    metric: latestCmj ? `Último CMJ: ${latestCmj.height}cm (Ref: >36cm)` : "Nenhum CMJ cadastrado (Sugerido preventivo)",
+                    desc: "Baixa produção de potência explosiva em saltos verticais, indicando necessidade de treinos de força-velocidade e pliometria vertical profunda.",
+                    exercises: ["Trap Bar Jump Squat", "Agachamento Traseiro", "Kettlebell Swing", "Hang Power Clean"],
+                  },
+                  {
+                    id: "rsi",
+                    title: "Déficit de Rigidez Ativa / Elasticidade (RSI)",
+                    status: isRsiLow ? "DEFICIT DETECTADO" : "LIVRE / OK",
+                    statusColor: isRsiLow ? "text-amber-400 bg-amber-400/5 border-amber-500/20" : "text-emerald-400 bg-emerald-400/5 border-emerald-500/20",
+                    isDetected: isRsiLow,
+                    metric: latestDrop ? `Último RSI: ${latestDrop.rsi} (Ref: >2.0)` : "Nenhum Drop Jump cadastrado (Sugerido preventivo)",
+                    desc: "Alto tempo de contato com o solo e baixa capacidade reativa (baixo RSI). Recomenda-se pliometria rápida de tornozelo (Fast SSC).",
+                    exercises: ["Pogo Jumps", "Drop Jump", "Salto sobre barreiras"],
+                  },
+                  {
+                    id: "imtp",
+                    title: "Déficit de Força Isométrica Máxima / RFD",
+                    status: isImtpLow ? "DEFICIT DETECTADO" : "LIVRE / OK",
+                    statusColor: isImtpLow ? "text-red-400 bg-red-400/5 border-red-500/20" : "text-emerald-400 bg-emerald-400/5 border-emerald-500/20",
+                    isDetected: isImtpLow,
+                    metric: latestImtp ? `Força Relativa: ${latestImtp.relativePeakForce || latestImtp.peakForce} KGF/kg` : "Nenhum IMTP cadastrado",
+                    desc: "Dificuldade em atingir altos picos de força em curtos intervalos de tempo. Recomenda-se isometria pesada multiarticular ou força pura.",
+                    exercises: ["Agachamento Traseiro", "Isometric Mid-Thigh Pull", "Spanish Squat"],
+                  },
+                  {
+                    id: "asymmetry",
+                    title: "Assimetria de Membros / Lateralidade (>10%)",
+                    status: isAsymmetryHigh ? "DÉFICIT CRÍTICO" : "DENTRO DO LIMITE",
+                    statusColor: isAsymmetryHigh ? "text-red-500 bg-red-500/5 border-red-500/20 font-black animate-pulse" : "text-emerald-400 bg-emerald-400/5 border-emerald-500/20",
+                    isDetected: isAsymmetryHigh,
+                    metric: asymmetryValue > 0 ? `Diferença atual: ${asymmetryValue.toFixed(1)}% (Ref: <10%)` : "Sem assimetria registrada",
+                    desc: "Desequilíbrio de força de quadríceps significativo entre os membros direito e esquerdo. Aumenta risco de lesão articular. Recomenda-se treino unilateral focado.",
+                    exercises: ["Agachamento Búlgaro", "Single Leg RDL", "Single Leg Hip Thrust"],
+                  },
+                  {
+                    id: "hamstring",
+                    title: "Falta de Resistência Excêntrica de Isquiotibiais",
+                    status: isIqRatioLow ? "ATENÇÃO / RISCO LESÃO" : "ESTÁVEL / SAUDÁVEL",
+                    statusColor: isIqRatioLow ? "text-amber-500 bg-amber-500/5 border-amber-500/20" : "text-emerald-400 bg-emerald-400/5 border-emerald-500/20",
+                    isDetected: isIqRatioLow,
+                    metric: latestIso ? `Relação I/Q: ${(latestIso.iqRatioR || 0.65).toFixed(2)} (Ref: >0.60)` : "Sem relação de força I/Q cadastrada",
+                    desc: "Déficit de força excêntrica ou fadiga severa nos isquiotibiais em relação ao quadríceps. Risco crítico de estiramento de posterior e lesão de LCA.",
+                    exercises: ["Flexão Nórdica", "Romanian Deadlift", "Copenhagen Plank"],
+                  }
+                ];
+
+                return deficits.map(def => (
+                  <div key={def.id} className="p-4 bg-slate-950/50 rounded-xl border border-slate-900/85 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-0.5 min-w-0 flex-1">
+                        <span className="text-[10px] font-extrabold text-white block leading-tight truncate">{def.title}</span>
+                        <span className="text-[8px] text-slate-500 font-bold block">{def.metric}</span>
+                      </div>
+                      <span className={`text-[7.5px] font-black px-2 py-0.5 rounded border uppercase shrink-0 ${def.statusColor}`}>
+                        {def.status}
+                      </span>
+                    </div>
+
+                    <p className="text-[9px] text-slate-400 font-bold uppercase leading-relaxed bg-[#0c111d]/50 p-2.5 rounded-lg border border-slate-900">
+                      {def.desc}
+                    </p>
+
+                    <div className="space-y-1.5">
+                      <span className="text-[7.5px] text-[#39FF14] font-black uppercase tracking-wider block">🛠️ Exercícios Corretivos de Elite:</span>
+                      
+                      <div className="grid grid-cols-1 gap-1">
+                        {def.exercises.map((exName, idx) => {
+                          const matchingEx = ENRICHED_LIBRARY.find(x => 
+                            x.name.toLowerCase().trim() === exName.toLowerCase().trim() ||
+                            x.name.toLowerCase().includes(exName.toLowerCase()) ||
+                            exName.toLowerCase().includes(x.name.toLowerCase())
+                          );
+
+                          if (matchingEx) {
+                            return (
+                              <div key={idx} className="flex items-center justify-between p-1.5 bg-slate-900/60 rounded-lg border border-slate-850 hover:border-[#39FF14]/20 transition-all">
+                                <span className="text-[10px] font-extrabold text-slate-300 truncate">{matchingEx.name}</span>
+                                <div className="flex items-center gap-1 shrink-0 ml-1">
+                                  <button
+                                    onClick={() => setSelectedDetailsExercise(matchingEx)}
+                                    className="p-1 text-slate-400 hover:text-[#39FF14] hover:bg-[#39FF14]/5 rounded transition-all cursor-pointer"
+                                    title="Ver Perfil Biomecânico"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => addExFromLib(matchingEx)}
+                                    className="p-1 text-[#39FF14] hover:bg-[#39FF14]/10 rounded transition-all cursor-pointer"
+                                    title="Prescrever de imediato"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div key={idx} className="p-1.5 bg-slate-900/20 text-slate-500 text-[10px] rounded border border-dashed border-slate-900 flex items-center justify-between">
+                              <span>{exName}</span>
+                              <span className="text-[8px] uppercase tracking-widest font-bold">Livre</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => addDeficitCorrectiveBlock(def.title, def.exercises)}
+                      className="w-full bg-[#39FF14]/10 hover:bg-[#39FF14]/20 border border-[#39FF14]/30 text-[#39FF14] font-black text-[9px] py-2.5 rounded-lg transition-all tracking-wider uppercase cursor-pointer"
+                    >
+                      ⚡ PRESCREVER BLOCO DE CORREÇÃO INTEGRAL
+                    </button>
+                  </div>
+                ));
+              })()}
             </div>
 
           </div>
@@ -1910,51 +2183,133 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
               <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 no-scrollbar">
                 
                 {/* GRID METADATA SUMMARY */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-slate-950 rounded-2xl border border-slate-900">
-                    <span className="text-[8px] font-black uppercase tracking-wider text-slate-500 block mb-1">CADEIA CINÉTICA</span>
-                    <span className="text-xs font-black text-white">{selectedDetailsExercise.kineticChain || "N/A"}</span>
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                  <div className="p-3 bg-slate-950 rounded-xl border border-slate-900">
+                    <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-500 block mb-0.5">Padrão de Movimento</span>
+                    <span className="text-[10px] font-black text-blue-400 block truncate" title={selectedDetailsExercise.movementPattern || "Geral"}>
+                      {selectedDetailsExercise.movementPattern || "Geral"}
+                    </span>
                   </div>
-                  <div className="p-4 bg-slate-950 rounded-2xl border border-slate-900">
-                    <span className="text-[8px] font-black uppercase tracking-wider text-slate-500 block mb-1">EQUIPAMENTO</span>
-                    <span className="text-xs font-black text-[#39FF14]">{selectedDetailsExercise.equipment || "BW"}</span>
+                  <div className="p-3 bg-slate-950 rounded-xl border border-slate-900">
+                    <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-500 block mb-0.5">Lateralidade</span>
+                    <span className="text-[10px] font-black text-purple-400 block truncate" title={selectedDetailsExercise.lateralType || "Bilateral"}>
+                      {selectedDetailsExercise.lateralType || "Bilateral"}
+                    </span>
                   </div>
-                  <div className="p-4 bg-slate-950 rounded-2xl border border-slate-900">
-                    <span className="text-[8px] font-black uppercase tracking-wider text-slate-500 block mb-1">RPE RECOMENDADO</span>
-                    <span className="text-xs font-black text-amber-400">{selectedDetailsExercise.recommendedRpe || "8-10"}</span>
+                  <div className="p-3 bg-slate-950 rounded-xl border border-slate-900">
+                    <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-500 block mb-0.5">Cadeia Cinética</span>
+                    <span className="text-[10px] font-black text-white block truncate" title={selectedDetailsExercise.kineticChain || "N/A"}>
+                      {selectedDetailsExercise.kineticChain || "N/A"}
+                    </span>
                   </div>
-                  <div className="p-4 bg-slate-950 rounded-2xl border border-slate-900">
-                    <span className="text-[8px] font-black uppercase tracking-wider text-slate-500 block mb-1">VELOCIDADE MÁX (VBT)</span>
-                    <span className="text-xs font-black text-blue-400">{selectedDetailsExercise.targetVelocity || "Máxima Explosiva"}</span>
+                  <div className="p-3 bg-slate-950 rounded-xl border border-slate-900">
+                    <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-500 block mb-0.5">Equipamento</span>
+                    <span className="text-[10px] font-black text-[#39FF14] block truncate" title={selectedDetailsExercise.equipment || "BW"}>
+                      {selectedDetailsExercise.equipment || "BW"}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-slate-950 rounded-xl border border-slate-900">
+                    <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-500 block mb-0.5">RPE Recomendado</span>
+                    <span className="text-[10px] font-black text-amber-400 block truncate" title={selectedDetailsExercise.recommendedRpe || "8-10"}>
+                      {selectedDetailsExercise.recommendedRpe || "8-10"}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-[#111622] rounded-xl border border-[#39FF14]/20">
+                    <span className="text-[7.5px] font-black uppercase tracking-wider text-[#39FF14] block mb-0.5">Velo. Alvo (VBT)</span>
+                    <span className="text-[10px] font-black text-emerald-400 block truncate" title={selectedDetailsExercise.targetVelocity || "Máxima"}>
+                      {selectedDetailsExercise.targetVelocity || "Máxima"}
+                    </span>
                   </div>
                 </div>
 
-                {/* BIOMECHANICAL/PHYSIOLOGICAL OBJECTIVE & SCIENCE */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
-                  {/* Physiological Goal Card */}
-                  <div className="p-5 bg-gradient-to-b from-[#111622] to-slate-900/50 rounded-2xl border border-slate-900 space-y-2">
-                    <h5 className="text-[10px] font-black uppercase text-[#39FF14] tracking-widest flex items-center gap-1.5">
-                      <Target className="w-4 h-4 text-[#39FF14]" />
-                      Objetivo Fisiológico
-                    </h5>
-                    <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                      {selectedDetailsExercise.physiologicalGoal || "Foco no desenvolvimento atlético de potência, controle motor e estabilização articular."}
-                    </p>
-                  </div>
+                {/* ADVANCED BIOMECHANICAL & SCIENTIFIC ANALYTICS */}
+                {(() => {
+                  const bio = getBiomechanicalDetails(selectedDetailsExercise);
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-slate-950/40 rounded-2xl border border-slate-900/80">
+                      
+                      {/* Biomechanical Profile Bars */}
+                      <div className="space-y-3.5">
+                        <span className="text-[9px] font-black text-[#39FF14] uppercase tracking-wider block border-b border-slate-900 pb-1.5 flex items-center justify-between">
+                          <span>📊 Perfil Biomecânico de Desempenho</span>
+                          <span className="text-slate-500 text-[8px]">Índice de Solicitação (0-10)</span>
+                        </span>
+                        
+                        <div className="space-y-2">
+                          {[
+                            { name: "Força Máxima", score: bio.force, color: "bg-red-500", desc: "Produção de força concêntrica/excêntrica" },
+                            { name: "RFD (Explosividade)", score: bio.rfd, color: "bg-amber-500", desc: "Taxa de desenvolvimento de força rápida" },
+                            { name: "Potência Mecânica", score: bio.power, color: "bg-[#39FF14]", desc: "Produção de watts sob carga ótima" },
+                            { name: "Hipertrofia Muscular", score: bio.hypertrophy, color: "bg-pink-500", desc: "Tensão mecânica e estímulo trófico" },
+                            { name: "Estabilidade Co-contração", score: bio.stability, color: "bg-blue-500", desc: "Estabilização ativa e controle articular" },
+                            { name: "Transferência Funcional", score: bio.sportTransfer, color: "bg-purple-500", desc: "Grau de transferência direta ao gesto esportivo" },
+                          ].map((bar, i) => (
+                            <div key={i} className="space-y-0.5">
+                              <div className="flex justify-between items-center text-[10px] font-extrabold text-slate-300">
+                                <span className="flex items-center gap-1">
+                                  <span>{bar.name}</span>
+                                  <span className="text-[7.5px] font-medium text-slate-500">({bar.desc})</span>
+                                </span>
+                                <span>{bar.score}/10</span>
+                              </div>
+                              <div className="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-850">
+                                <div className={`h-full ${bar.color}`} style={{ width: `${bar.score * 10}%` }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
 
-                  {/* Scientific Evidence Card */}
-                  <div className="p-5 bg-gradient-to-b from-[#111622] to-slate-900/50 rounded-2xl border border-slate-900 space-y-2">
-                    <h5 className="text-[10px] font-black uppercase text-blue-400 tracking-widest flex items-center gap-1.5">
-                      <BookOpen className="w-4 h-4 text-blue-400" />
-                      Evidências Científicas (Lit.)
-                    </h5>
-                    <p className="text-xs text-slate-300 leading-relaxed font-medium italic">
-                      {selectedDetailsExercise.scientificEvidence || "Protocolos recomendados pela literatura de treinamento neuromuscular baseada em velocidade (VBT)."}
-                    </p>
-                  </div>
+                      {/* Scientific Evidence and Sports Transfer */}
+                      <div className="space-y-4 flex flex-col justify-between">
+                        <div className="space-y-2.5">
+                          <span className="text-[9px] font-black text-blue-400 uppercase tracking-wider block border-b border-slate-900 pb-1.5">
+                            🔬 Nível de Evidência Científica
+                          </span>
+                          <div className="bg-slate-950 p-3 rounded-xl border border-slate-900/80 flex items-center gap-3">
+                            <div className="flex flex-col">
+                              <div className="flex gap-0.5 mb-1 text-amber-400">
+                                {Array.from({ length: 5 }).map((_, idx) => (
+                                  <span key={idx} className="text-sm">
+                                    {idx < bio.scientificStars ? "⭐" : "☆"}
+                                  </span>
+                                ))}
+                              </div>
+                              <span className="text-[10px] font-black text-white">{bio.evidenceLabel}</span>
+                              <p className="text-[9.5px] font-bold text-slate-400 leading-normal mt-1">
+                                {selectedDetailsExercise.scientificEvidence || "Prescrição validada cientificamente de acordo com diretrizes de treino de alta performance."}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
 
-                </div>
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-black text-purple-400 uppercase tracking-wider block border-b border-slate-900 pb-1.5">
+                            🏃 Índice de Transferência por Esporte (0-10)
+                          </span>
+                          <div className="grid grid-cols-5 gap-1.5">
+                            {[
+                              { label: "Futebol", val: bio.soccerIndex, emoji: "⚽" },
+                              { label: "Vôlei", val: bio.volleyIndex, emoji: "🏐" },
+                              { label: "Corrida", val: bio.runningIndex, emoji: "🏃" },
+                              { label: "Basquete", val: bio.basketballIndex, emoji: "🏀" },
+                              { label: "Tênis", val: bio.tennisIndex, emoji: "🎾" },
+                            ].map((sp, idx) => (
+                              <div key={idx} className="bg-slate-950 p-2 rounded-xl border border-slate-900 text-center space-y-1">
+                                <span className="text-xs block" title={sp.label}>{sp.emoji}</span>
+                                <span className="text-[8px] font-bold text-slate-400 block truncate leading-none">{sp.label}</span>
+                                <span className={`text-[10px] font-black leading-none block ${sp.val >= 9 ? "text-[#39FF14]" : sp.val >= 7 ? "text-blue-400" : "text-slate-400"}`}>
+                                  {sp.val}/10
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })()}
 
                 {/* MUSCLES INVOLVED PILLS */}
                 <div className="space-y-2 p-5 bg-slate-950/50 rounded-2xl border border-slate-900">
@@ -2022,28 +2377,80 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                   
                   {/* Progressions */}
-                  <div className="p-5 bg-slate-950 rounded-2xl border border-slate-900 space-y-2">
-                    <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest block">📈 Progressões Sugeridas</span>
-                    <div className="space-y-1.5">
-                      {(selectedDetailsExercise.progressions || ["Aumento da carga externa progressiva.", "Redução do tempo de transição ou aumento da velocidade de execução (VBT)."]).map((prog, i) => (
-                        <div key={i} className="text-xs font-bold text-slate-300 flex items-center gap-2">
-                          <ChevronUp className="w-4 h-4 text-emerald-400" />
-                          <span>{prog}</span>
-                        </div>
-                      ))}
+                  <div className="p-5 bg-slate-950 rounded-2xl border border-slate-900 space-y-2.5">
+                    <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest block border-b border-slate-900 pb-1.5">📈 Progressões Inteligentes</span>
+                    <div className="space-y-2">
+                      {(selectedDetailsExercise.progressions || ["Aumento da carga externa progressiva.", "Redução do tempo de transição ou aumento da velocidade de execução (VBT)."]).map((prog, i) => {
+                        // Find matching exercise in library
+                        const matchingEx = ENRICHED_LIBRARY.find(x => 
+                          x.name.toLowerCase().trim() === prog.toLowerCase().trim() ||
+                          x.name.toLowerCase().includes(prog.toLowerCase()) || 
+                          prog.toLowerCase().includes(x.name.toLowerCase())
+                        );
+
+                        if (matchingEx) {
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => setSelectedDetailsExercise(matchingEx)}
+                              className="w-full text-left text-xs font-extrabold text-slate-300 hover:text-emerald-400 hover:bg-[#39FF14]/5 p-2 rounded-xl border border-slate-900 hover:border-emerald-500/20 transition-all flex items-center justify-between cursor-pointer group/item"
+                              title={`Navegar para ${matchingEx.name}`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <ChevronUp className="w-4 h-4 text-emerald-400 shrink-0 group-hover/item:translate-y-[-1px] transition-transform" />
+                                <span className="truncate">{prog}</span>
+                              </div>
+                              <Eye className="w-3.5 h-3.5 text-slate-500 group-hover/item:text-[#39FF14] shrink-0 ml-1" />
+                            </button>
+                          );
+                        }
+
+                        return (
+                          <div key={i} className="text-xs font-bold text-slate-400 p-2 border border-dashed border-slate-900 rounded-xl flex items-center gap-2">
+                            <ChevronUp className="w-4 h-4 text-emerald-500/40 shrink-0" />
+                            <span>{prog}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {/* Regressions */}
-                  <div className="p-5 bg-slate-950 rounded-2xl border border-slate-900 space-y-2">
-                    <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest block">📉 Regressões Sugeridas</span>
-                    <div className="space-y-1.5">
-                      {(selectedDetailsExercise.regressions || ["Redução da amplitude do movimento.", "Execução assistida ou com peso corporal."]).map((reg, i) => (
-                        <div key={i} className="text-xs font-bold text-slate-300 flex items-center gap-2">
-                          <ChevronDown className="w-4 h-4 text-amber-400" />
-                          <span>{reg}</span>
-                        </div>
-                      ))}
+                  <div className="p-5 bg-slate-950 rounded-2xl border border-slate-900 space-y-2.5">
+                    <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest block border-b border-slate-900 pb-1.5">📉 Regressões Inteligentes</span>
+                    <div className="space-y-2">
+                      {(selectedDetailsExercise.regressions || ["Redução da amplitude do movimento.", "Execução assistida ou com peso corporal."]).map((reg, i) => {
+                        // Find matching exercise in library
+                        const matchingEx = ENRICHED_LIBRARY.find(x => 
+                          x.name.toLowerCase().trim() === reg.toLowerCase().trim() ||
+                          x.name.toLowerCase().includes(reg.toLowerCase()) || 
+                          reg.toLowerCase().includes(x.name.toLowerCase())
+                        );
+
+                        if (matchingEx) {
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => setSelectedDetailsExercise(matchingEx)}
+                              className="w-full text-left text-xs font-extrabold text-slate-300 hover:text-amber-400 hover:bg-amber-400/5 p-2 rounded-xl border border-slate-900 hover:border-amber-500/20 transition-all flex items-center justify-between cursor-pointer group/item"
+                              title={`Navegar para ${matchingEx.name}`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <ChevronDown className="w-4 h-4 text-amber-400 shrink-0 group-hover/item:translate-y-[1px] transition-transform" />
+                                <span className="truncate">{reg}</span>
+                              </div>
+                              <Eye className="w-3.5 h-3.5 text-slate-500 group-hover/item:text-[#39FF14] shrink-0 ml-1" />
+                            </button>
+                          );
+                        }
+
+                        return (
+                          <div key={i} className="text-xs font-bold text-slate-400 p-2 border border-dashed border-slate-900 rounded-xl flex items-center gap-2">
+                            <ChevronDown className="w-4 h-4 text-amber-500/40 shrink-0" />
+                            <span>{reg}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 

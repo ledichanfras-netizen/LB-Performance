@@ -2059,31 +2059,36 @@ apiRouter.post('/ai-search-exercises', authMiddleware, async (req, res) => {
     return res.status(500).json({ error: "Chave de API do Gemini não configurada no servidor." });
   }
 
-  const systemInstructions = `Você é um Cientista de Esporte e Preparador Olímpico. Sua tarefa é analisar o termo de busca em linguagem natural do usuário e retornar EXATAMENTE entre 6 e 8 IDs de exercícios que sejam os mais relevantes, adequados e cientificamente indicados de acordo com a nossa biblioteca interna.
+  const systemInstructions = `Você é um Cientista de Esporte de Elite, Biomecanista de Desempenho e Preparador Olímpico da LB Sports. Sua tarefa é analisar o termo de busca em linguagem natural do usuário e retornar EXATAMENTE entre 6 e 8 IDs de exercícios que sejam os mais relevantes, adequados e cientificamente indicados de acordo com a nossa biblioteca interna de alto rendimento.
 
-Biblioteca de exercícios disponíveis (ID e Nome/Objetivo):
-- "lib-1": Agachamento Traseiro (Back Squat) - Força Máxima, membros inferiores.
-- "lib-2": Flexão Nórdica (Nordic Hamstring) - Força Excêntrica posterior, prevenção de lesões.
-- "lib-3": Adução de Copenhagen (Copenhagen Adduction) - Estabilidade pélvica, adutores, prevenção de pubalgia.
-- "lib-4": Salto Contramovimento (CMJ) - Potência vertical, ciclo alongamento-encurtamento.
-- "lib-5": Sprints com Trenó de Resistência - Aceleração horizontal, força específica.
-- "lib-6": RDL (Romanian Deadlift) - Hipertrofia posterior de coxa, dobradiça de quadril.
-- "lib-7": Drop Jump (Foco em RSI) - Potência reativa, rigidez de tendão (Fast SSC).
-- "lib-8": Supino Reto com Barra - Força Máxima empurrão horizontal.
-- "lib-9": Remada Curvada Pronada - Força/Hipertrofia puxada horizontal, estabilidade escapular.
-- "lib-10": Pallof Press - Core antirrotação, estabilidade lombo-pélvica.
-- "lib-11": Leg Press 45º - Força geral de pernas, hipertrofia segura.
-- "lib-12": Clean & Jerk (Arremesso) - Potência balística global de extensão tripla.
-- "lib-13": Flexão de Braços (Push-Up) - Resistência de empurrar, serrátil anterior.
-- "lib-14": Barra Fixa Pronada (Pull-Up) - Força relativa vertical de puxar.
-- "lib-15": Corda Naval (Battle Rope Slams) - Resistência anaeróbia e potência de braços/tronco.
-- "lib-16": Kettlebell Swing - Potência de extensão de quadril balística.
-- "lib-17": Arremesso de Medicine Ball - Potência rotacional de core, transferência esportiva.
-- "lib-18": Caminhada do Fazendeiro (Farmer Walk) - Core, pegada, estabilidade lombo-pélvica dinâmica.
-- "lib-19": Agachamento Unilateral no BOSU - Equilíbrio proprioceptivo, estabilização de tornozelo/joelho.
-- "lib-20": Deslocamento Lateral com Cones - Agilidade lateral, velocidade de mudança de direção.
+Biblioteca principal de referência (IDs de Elite):
+- "lib-1": Agachamento Traseiro (Back Squat) - Força Máxima, membros inferiores, padrão de Agachar Bilateral.
+- "lib-2": Flexão Nórdica (Nordic Hamstring) - Força Excêntrica excêntrica do posterior, preventivo crítico para LCA e posterior de coxa.
+- "lib-3": Adução de Copenhagen (Copenhagen Adduction) - Estabilidade pélvica, adutores de quadril, preventivo de pubalgia.
+- "lib-4": Salto Contramovimento (CMJ) - Potência vertical, ciclo alongamento-encurtamento (Slow SSC).
+- "lib-5": Sprints com Trenó de Resistência - Aceleração horizontal, força específica de corrida, potência.
+- "lib-6": RDL (Romanian Deadlift) - Dobradiça de Quadril Bilateral, força e hipertrofia da cadeia posterior.
+- "lib-7": Drop Jump (Foco em RSI) - Potência reativa pura, rigidez de tendão (Fast SSC), monitoramento Hawkin Dynamics.
+- "lib-8": Supino Reto com Barra - Empurrar Horizontal Bilateral, força máxima e potência de membros superiores.
+- "lib-9": Remada Curvada Pronada - Puxar Horizontal Bilateral, força de costas, estabilidade escapular.
+- "lib-10": Pallof Press - Core Antirrotação, estabilização lombo-pélvica dinâmica.
+- "lib-11": Leg Press 45º - Força geral de membros inferiores, empurrar bilateral seguro.
+- "lib-12": Clean & Jerk (Arremesso) - Potência balística olímpica global, extensão tripla (tornozelo, joelho e quadril).
+- "lib-13": Flexão de Braços (Push-Up) - Empurrar Horizontal Bilateral de peso corporal, resistência de força, ativação de serrátil.
+- "lib-14": Barra Fixa Pronada (Pull-Up) - Puxar Vertical Bilateral de peso corporal, força relativa.
+- "lib-15": Corda Naval (Battle Rope Slams) - Resistência anaeróbia lática, potência de braços e core.
+- "lib-16": Kettlebell Swing - Dobradiça de quadril balística, potência e transferência dinâmica de extensão de quadril.
+- "lib-17": Arremesso de Medicine Ball - Potência rotacional de tronco e aceleração de core.
+- "lib-18": Caminhada do Fazendeiro (Farmer Walk) - Core Antiflexão Lateral, força de pegada, estabilidade postural dinâmica.
+- "lib-19": Agachamento Unilateral no BOSU - Instabilidade proprioceptiva, reabilitação inicial de tornozelo/joelho (Evidência baixa para força máxima).
+- "lib-20": Deslocamento Lateral com Cones - Agilidade lateral de mudança de direção (COD), desaceleração e velocidade de reação.
 
-Retorne uma lista JSON de IDs correspondentes baseada nas necessidades expressas (ex: "lib-2", "lib-3").`;
+Regras de Seleção:
+- Se a busca solicitar controle motor ou preventivo de joelho/LCA, priorize "lib-2".
+- Se solicitar preventivo de púbis ou adutores, priorize "lib-3".
+- Se solicitar potência reativa ou elasticidade, use "lib-7".
+- Se solicitar potência vertical pura, use "lib-4".
+- Retorne uma lista JSON de IDs correspondentes baseada nas necessidades expressas (ex: "lib-2", "lib-3").`;
 
   try {
     const response = await generateContentWithRetry({
@@ -2101,7 +2106,7 @@ Retorne uma lista JSON de IDs correspondentes baseada nas necessidades expressas
             },
             reasoning: {
               type: Type.STRING,
-              description: "Breve justificativa científica para a seleção geral baseada no termo pesquisado"
+              description: "Breve justificativa científica e biomecânica para a seleção geral baseada no termo pesquisado, focada na fisiologia esportiva da LB Sports"
             }
           },
           required: ["exerciseIds", "reasoning"]
@@ -2123,38 +2128,44 @@ apiRouter.post('/ai-prescribe-workout', authMiddleware, async (req, res) => {
     return res.status(500).json({ error: "Chave de API do Gemini não configurada no servidor." });
   }
 
-  const prompt = `Gere uma prescrição de treino altamente individualizada e baseada em evidências científicas.
-Fatores do Atleta:
-- Nome/Idade/Sexo/Nível: ${athleteData || 'Atleta geral'}
-- Objetivo: ${objective || 'Desenvolvimento atlético integral'}
+  const prompt = `Gere uma prescrição de treino técnico de altíssima performance para a LB Sports, baseada estritamente em evidências científicas biomecânicas de elite e na metodologia de Treinamento Baseado em Velocidade (VBT).
+
+Fatores Atuais do Atleta:
+- Perfil/Nível: ${athleteData || 'Atleta geral de rendimento'}
+- Objetivo de Performance: ${objective || 'Desenvolvimento atlético integral'}
 - Histórico de lesões/Restrições: ${restrictions || 'Nenhuma restrição relatada'}
-- Tempo disponível: ${timeAvailable || '60 minutos'}
-- Equipamentos disponíveis: ${equipment || 'Todos os equipamentos de academia'}
-- Fase de periodização: ${periodizationPhase || 'Preparação Geral'}
+- Tempo disponível para a sessão: ${timeAvailable || '60 minutos'}
+- Equipamentos disponíveis na sessão: ${equipment || 'Estrutura completa de academia'}
+- Fase de periodização recomendada: ${periodizationPhase || 'Preparação Geral'}
 
-Você deve sugerir de 5 a 8 exercícios estruturados de forma coerente. Dê preferência aos exercícios da nossa biblioteca de elite quando aplicável:
-- "Agachamento Traseiro (Back Squat)" (ID: lib-1)
-- "Flexão Nórdica (Nordic Hamstring)" (ID: lib-2)
-- "Adução de Copenhagen (Copenhagen Adduction)" (ID: lib-3)
-- "Salto Contramovimento (CMJ)" (ID: lib-4)
-- "Sprints com Trenó de Resistência" (ID: lib-5)
-- "RDL (Romanian Deadlift)" (ID: lib-6)
-- "Drop Jump (Foco em RSI)" (ID: lib-7)
-- "Supino Reto com Barra" (ID: lib-8)
-- "Remada Curvada Pronada" (ID: lib-9)
-- "Pallof Press" (ID: lib-10)
-- "Leg Press 45º" (ID: lib-11)
-- "Clean & Jerk (Arremesso)" (ID: lib-12)
-- "Flexão de Braços (Push-Up)" (ID: lib-13)
-- "Barra Fixa Pronada (Pull-Up)" (ID: lib-14)
-- "Corda Naval (Battle Rope Slams)" (ID: lib-15)
-- "Kettlebell Swing" (ID: lib-16)
-- "Arremesso de Medicine Ball" (ID: lib-17)
-- "Caminhada do Fazendeiro (Farmer Walk)" (ID: lib-18)
-- "Agachamento Unilateral no BOSU" (ID: lib-19)
-- "Deslocamento Lateral com Cones" (ID: lib-20)
+Você deve sugerir de 5 a 8 exercícios altamente específicos e estruturados de forma coerente. Dê preferência absoluta aos exercícios da nossa biblioteca de elite quando aplicável, especificando seus IDs:
+- "Agachamento Traseiro (Back Squat)" (ID: lib-1) - Usar para Força Máxima Bilateral. RPE 8-9.5, VBT: 0.45 - 0.60 m/s.
+- "Flexão Nórdica (Nordic Hamstring)" (ID: lib-2) - Usar para Força Excêntrica e prevenção de lesão de LCA/Posterior. 3-4 séries de 4-6 reps de alta qualidade.
+- "Adução de Copenhagen (Copenhagen Adduction)" (ID: lib-3) - Usar para pubalgia e estabilidade de adutores. Unilateral.
+- "Salto Contramovimento (CMJ)" (ID: lib-4) - Usar para Potência Vertical e Slow SSC. 3-4 séries de 4-5 saltos.
+- "Sprints com Trenó de Resistência" (ID: lib-5) - Usar para aceleração horizontal, potência de arrasto.
+- "RDL (Romanian Deadlift)" (ID: lib-6) - Usar para cadeia posterior e padrão de dobradiça.
+- "Drop Jump (Foco em RSI)" (ID: lib-7) - Usar para potência reativa, rigidez de tornozelo e Fast SSC.
+- "Supino Reto com Barra" (ID: lib-8) - Usar para empurrar horizontal bilateral.
+- "Remada Curvada Pronada" (ID: lib-9) - Usar para puxar horizontal bilateral.
+- "Pallof Press" (ID: lib-10) - Core antirrotação.
+- "Leg Press 45º" (ID: lib-11) - Empurrar bilateral seguro.
+- "Clean & Jerk (Arremesso)" (ID: lib-12) - Força explosiva global, extensão tripla.
+- "Flexão de Braços (Push-Up)" (ID: lib-13) - Empurrar horizontal.
+- "Barra Fixa Pronada (Pull-Up)" (ID: lib-14) - Puxar vertical.
+- "Corda Naval (Battle Rope Slams)" (ID: lib-15) - Potência e condicionamento anaeróbio de braços.
+- "Kettlebell Swing" (ID: lib-16) - Potência balística de quadril.
+- "Arremesso de Medicine Ball" (ID: lib-17) - Potência rotacional.
+- "Caminhada do Fazendeiro (Farmer Walk)" (ID: lib-18) - Estabilidade postural, core.
+- "Agachamento Unilateral no BOSU" (ID: lib-19) - Evitar para atletas de potência máxima (usar somente se houver reabilitação ativa).
+- "Deslocamento Lateral com Cones" (ID: lib-20) - Agilidade lateral e COD.
 
-Retorne o plano de treino estritamente em formato JSON estruturado com uma análise científica explicativa de cada decisão de prescrição.`;
+Critérios Científicos Exigidos:
+1. Ordem do Treino: Potência e Pliometria sempre primeiro (ex: CMJ, Drop Jumps), seguidos de Força Máxima (ex: Back Squat), seguidos por exercícios unilaterais ou isolados, e finalizando com preventivos/core (ex: Flexão Nórdica, Copenhagen, Pallof Press).
+2. Velocidade Alvo (VBT): Para exercícios de força principal (como Back Squat ou Supino), forneça a faixa de velocidade recomendada (ex: "0.45 - 0.60 m/s" para Força Máxima, "0.80 - 1.00 m/s" para Força-Velocidade).
+3. Notas de Execução: Forneça avisos de feedback biomecânico de elite (ex: contraindicar valgo dinâmico, focar na fase excêntrica controlada, aplicar máxima velocidade intencional).
+
+Retorne o plano de treino estritamente em formato JSON estruturado com uma análise científica explicativa de cada decisão de prescrição. Do NOT mention artificial intelligence, LLMs, or algorithms. Expose the results as a human Head Coach of elite performance.`;
 
   try {
     const response = await generateContentWithRetry({
