@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useMemo } from 'react';
 import { 
   Info, 
   LayoutDashboard, 
@@ -12,10 +12,19 @@ import {
   BookOpen,
   Award,
   FileText,
-  Search
+  Search,
+  ChevronDown,
+  ChevronUp,
+  Heart,
+  Filter,
+  CheckCircle2,
+  AlertCircle,
+  TrendingUp,
+  Sliders
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { IMTPNormativos } from './IMTPNormativos';
+import { ENRICHED_LIBRARY, EnrichedExercise } from '../data/exercises';
 
 const GuideCard: FC<{ 
   icon: any, 
@@ -45,14 +54,37 @@ const GuideCard: FC<{
 );
 
 export const AthleteGuide: FC = () => {
-  const [subTab, setSubTab] = useState<"guide" | "normatives" | "tables">("guide");
+  const [subTab, setSubTab] = useState<"guide" | "normatives" | "tables" | "library">("guide");
   const [normativeSearch, setNormativeSearch] = useState("");
   const [activeNormativeTab, setActiveNormativeTab] = useState<"all" | "imtp" | "cmj" | "speed" | "vo2">("all");
+
+  // Library State
+  const [libSearch, setLibSearch] = useState("");
+  const [libCategory, setLibCategory] = useState<string>("ALL");
+  const [libDifficulty, setLibDifficulty] = useState<string>("ALL");
+  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
+
+  // Filter exercises
+  const filteredExercises = useMemo(() => {
+    return ENRICHED_LIBRARY.filter(item => {
+      const matchesSearch = 
+        item.name.toLowerCase().includes(libSearch.toLowerCase()) ||
+        (item.muscleGroup || "").toLowerCase().includes(libSearch.toLowerCase()) ||
+        (item.movementPattern || "").toLowerCase().includes(libSearch.toLowerCase()) ||
+        (item.equipment || "").toLowerCase().includes(libSearch.toLowerCase()) ||
+        (item.musclesInvolved || []).some(m => m.toLowerCase().includes(libSearch.toLowerCase()));
+
+      const matchesCategory = libCategory === "ALL" || item.category === libCategory;
+      const matchesDifficulty = libDifficulty === "ALL" || item.difficulty === libDifficulty;
+
+      return matchesSearch && matchesCategory && matchesDifficulty;
+    });
+  }, [libSearch, libCategory, libDifficulty]);
 
   return (
     <div className="space-y-8 pb-20">
       {/* Sub tabs navigation */}
-      <div className="flex flex-wrap md:flex-nowrap bg-slate-900/80 p-1 rounded-2xl border border-slate-800 max-w-lg gap-1">
+      <div className="flex flex-wrap md:flex-nowrap bg-slate-900/80 p-1 rounded-2xl border border-slate-800 max-w-2xl gap-1">
         <button
           onClick={() => setSubTab("guide")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
@@ -65,10 +97,21 @@ export const AthleteGuide: FC = () => {
           <span>Guia do Sistema</span>
         </button>
         <button
+          onClick={() => setSubTab("library")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+            subTab === "library"
+              ? "bg-[#39FF14]/10 text-[#39FF14] border border-[#39FF14]/20 font-black shadow-lg"
+              : "text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <Dumbbell className="w-4 h-4" />
+          <span>Biblioteca de Exercícios</span>
+        </button>
+        <button
           onClick={() => setSubTab("normatives")}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
             subTab === "normatives"
-              ? "bg-[#39FF14]/10 text-[#39FF14] border border-[#39FF14]/20 font-black shadow-lg"
+              ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 font-black shadow-lg"
               : "text-slate-400 hover:text-slate-200"
           }`}
         >
@@ -399,6 +442,303 @@ export const AthleteGuide: FC = () => {
           <div className="p-5 bg-[#0e1322] rounded-2xl border border-slate-900 text-[10px] text-slate-400 leading-relaxed font-bold">
             <span className="text-white uppercase block mb-1">💡 Como aplicar:</span>
             Utilize o campo de busca acima e as abas rápidas para fazer pesquisas comparativas instantâneas durante as triagens e planejamentos de cargas de treinamento de seus atletas.
+          </div>
+        </div>
+      )}
+
+      {subTab === "library" && (
+        <div className="space-y-8 animate-fadeIn">
+          {/* Header */}
+          <div className="border-b border-slate-900 pb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-black uppercase text-white tracking-wider">Biblioteca de Exercícios Enriquecida</h3>
+              <p className="text-[10px] font-bold text-brand-primary uppercase mt-0.5 tracking-wider">
+                Exos & Hawkin Dynamics Standards • {filteredExercises.length} Exercícios Encontrados
+              </p>
+            </div>
+
+            {/* Quick search */}
+            <div className="relative w-full md:w-80">
+              <input
+                type="text"
+                value={libSearch}
+                onChange={(e) => setLibSearch(e.target.value)}
+                placeholder="Buscar por nome, músculo, padrão..."
+                className="w-full bg-[#0e1322] border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-brand-primary"
+              />
+              <Search className="absolute right-3.5 top-3 w-4 h-4 text-slate-500" />
+            </div>
+          </div>
+
+          {/* Quick Category & Difficulty Filters */}
+          <div className="bg-[#0e1322]/30 border border-slate-900/60 p-5 rounded-3xl space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Sliders className="w-3.5 h-3.5 text-brand-primary" />
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Filtrar por Categoria Biomecânica</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { id: "ALL", label: "Todos os Exercícios" },
+                  { id: "MMII", label: "MMII (Membros Inferiores)" },
+                  { id: "MMSS", label: "MMSS (Membros Superiores)" },
+                  { id: "Potência", label: "Potência & Saltos" },
+                  { id: "Core", label: "Core & Estabilidade" },
+                  { id: "Preventivo", label: "Preventivos / Reabilitação" },
+                  { id: "Velocidade", label: "Velocidade & Agilidade" },
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setLibCategory(cat.id)}
+                    className={`px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
+                      libCategory === cat.id
+                        ? "bg-brand-primary/10 text-brand-primary border-brand-primary/30 font-extrabold"
+                        : "bg-[#0c101b] text-slate-400 border-slate-800 hover:text-white"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-px bg-slate-900" />
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Filter className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Nível de Dificuldade</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { id: "ALL", label: "Todos os Níveis" },
+                  { id: "Iniciante", label: "Iniciante" },
+                  { id: "Intermediário", label: "Intermediário" },
+                  { id: "Avançado", label: "Avançado" },
+                  { id: "Elite", label: "Elite" },
+                ].map((diff) => (
+                  <button
+                    key={diff.id}
+                    onClick={() => setLibDifficulty(diff.id)}
+                    className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all border ${
+                      libDifficulty === diff.id
+                        ? "bg-blue-500/10 text-blue-400 border-blue-500/30 font-extrabold"
+                        : "bg-[#0c101b] text-slate-400 border-slate-800 hover:text-white"
+                    }`}
+                  >
+                    {diff.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Exercises Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {filteredExercises.map((item) => {
+              const isExpanded = expandedExerciseId === item.id;
+              return (
+                <div 
+                  key={item.id}
+                  className={`bg-slate-900/40 border rounded-3xl transition-all overflow-hidden ${
+                    isExpanded ? "border-brand-primary/40 shadow-[0_0_15px_rgba(57,255,20,0.04)]" : "border-slate-800/80 hover:border-slate-700"
+                  }`}
+                >
+                  {/* Summary row */}
+                  <div 
+                    onClick={() => setExpandedExerciseId(isExpanded ? null : item.id)}
+                    className="p-5 flex items-start justify-between gap-4 cursor-pointer select-none"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${
+                          item.category === "MMII" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                          item.category === "MMSS" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
+                          item.category === "Potência" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                          item.category === "Core" ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" :
+                          item.category === "Preventivo" ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" :
+                          "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                        }`}>
+                          {item.category}
+                        </span>
+                        {item.difficulty && (
+                          <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">• {item.difficulty}</span>
+                        )}
+                        {item.lateralType && (
+                          <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">• {item.lateralType}</span>
+                        )}
+                      </div>
+                      <h4 className="text-sm font-black text-white italic uppercase tracking-tight">{item.name}</h4>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        Músculo Alvo: <span className="text-white font-bold">{item.muscleGroup || "Geral"}</span>
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      {item.isFavorite && (
+                        <Heart className="w-3.5 h-3.5 text-brand-primary fill-brand-primary shrink-0" />
+                      )}
+                      <div className="w-8 h-8 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expanded block */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="border-t border-slate-800/80 overflow-hidden"
+                      >
+                        <div className="p-5 space-y-5 text-xs text-slate-300 bg-[#070c14]/40">
+                          {/* Biomechanical Metadata Grid */}
+                          <div className="grid grid-cols-2 gap-3 bg-[#0d1220]/60 p-4 rounded-2xl border border-slate-800">
+                            {item.movementPattern && (
+                              <div>
+                                <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Padrão de Movimento</span>
+                                <span className="text-[10px] font-bold text-white uppercase">{item.movementPattern}</span>
+                              </div>
+                            )}
+                            {item.physicalQuality && (
+                              <div>
+                                <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Qualidade Física</span>
+                                <span className="text-[10px] font-bold text-white uppercase">{item.physicalQuality}</span>
+                              </div>
+                            )}
+                            {item.kineticChain && (
+                              <div>
+                                <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Cadeia Cinética</span>
+                                <span className="text-[10px] font-bold text-white uppercase">{item.kineticChain}</span>
+                              </div>
+                            )}
+                            {item.equipment && (
+                              <div>
+                                <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Equipamento</span>
+                                <span className="text-[10px] font-bold text-white uppercase">{item.equipment}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Default prescriptions */}
+                          <div className="flex flex-wrap gap-4 text-[10px] bg-slate-900/60 p-3 rounded-xl border border-slate-850/60">
+                            {item.defaultReps && (
+                              <div>
+                                <span className="text-slate-500 font-bold uppercase tracking-widest mr-1.5">Reps/Séries:</span>
+                                <span className="text-white font-extrabold">{item.defaultReps}</span>
+                              </div>
+                            )}
+                            {item.defaultWeight && (
+                              <div>
+                                <span className="text-slate-500 font-bold uppercase tracking-widest mr-1.5">Carga Base:</span>
+                                <span className="text-[#39FF14] font-extrabold">{item.defaultWeight}</span>
+                              </div>
+                            )}
+                            {item.recommendedRpe && (
+                              <div>
+                                <span className="text-slate-500 font-bold uppercase tracking-widest mr-1.5">PSE sugerida:</span>
+                                <span className="text-amber-400 font-extrabold">{item.recommendedRpe}</span>
+                              </div>
+                            )}
+                            {item.recommendedRest && (
+                              <div>
+                                <span className="text-slate-500 font-bold uppercase tracking-widest mr-1.5">Intervalo:</span>
+                                <span className="text-blue-400 font-extrabold">{item.recommendedRest}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Musculos envolvidos */}
+                          {item.musclesInvolved && item.musclesInvolved.length > 0 && (
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Músculos Envolvidos</span>
+                              <div className="flex flex-wrap gap-1">
+                                {item.musclesInvolved.map((m, i) => (
+                                  <span key={i} className="bg-slate-800 text-slate-300 text-[8px] font-bold px-2 py-0.5 rounded">
+                                    {m}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Execucao */}
+                          {item.executionSteps && item.executionSteps.length > 0 && (
+                            <div className="space-y-1.5">
+                              <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Passo a Passo de Execução</span>
+                              <ol className="list-decimal list-inside space-y-1 text-[10px] font-medium leading-relaxed text-slate-400 font-sans">
+                                {item.executionSteps.map((step, i) => (
+                                  <li key={i} className="marker:text-brand-primary">{step}</li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
+
+                          {/* Beneficios e erros */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                            {item.benefits && item.benefits.length > 0 && (
+                              <div className="space-y-1.5 bg-[#0b1c11]/10 border border-emerald-950/40 p-3.5 rounded-xl">
+                                <div className="flex items-center gap-1.5 text-emerald-400">
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  <span className="text-[9px] font-black uppercase tracking-wider">Benefícios e Adaptações</span>
+                                </div>
+                                <ul className="space-y-1 text-[9px] font-semibold text-slate-400 leading-relaxed list-disc list-inside">
+                                  {item.benefits.map((b, i) => (
+                                    <li key={i} className="marker:text-emerald-500">{b}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {item.commonErrors && item.commonErrors.length > 0 && (
+                              <div className="space-y-1.5 bg-[#1a0e0e]/10 border border-rose-950/40 p-3.5 rounded-xl">
+                                <div className="flex items-center gap-1.5 text-rose-400">
+                                  <AlertCircle className="w-3.5 h-3.5" />
+                                  <span className="text-[9px] font-black uppercase tracking-wider">Erros Comuns (Evitar)</span>
+                                </div>
+                                <ul className="space-y-1 text-[9px] font-semibold text-slate-400 leading-relaxed list-disc list-inside">
+                                  {item.commonErrors.map((e, i) => (
+                                    <li key={i} className="marker:text-rose-500">{e}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Progressões e Regressões */}
+                          {(item.progressions || item.regressions) && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[10px] border-t border-slate-800/80 pt-3">
+                              {item.regressions && item.regressions.length > 0 && (
+                                <div>
+                                  <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block mb-1">Regressão Clínica</span>
+                                  <span className="text-slate-400 font-bold">{item.regressions.join(", ")}</span>
+                                </div>
+                              )}
+                              {item.progressions && item.progressions.length > 0 && (
+                                <div>
+                                  <span className="text-[8px] font-black uppercase text-brand-primary tracking-wider block mb-1">Progressão de Sobrecarga</span>
+                                  <span className="text-slate-400 font-bold">{item.progressions.join(", ")}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+
+            {filteredExercises.length === 0 && (
+              <div className="col-span-2 text-center py-12 bg-slate-900/10 rounded-3xl border border-dashed border-slate-850">
+                <Search className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                <p className="text-xs font-bold text-slate-500">Nenhum exercício encontrado na biblioteca com esses filtros.</p>
+              </div>
+            )}
           </div>
         </div>
       )}

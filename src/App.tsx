@@ -812,6 +812,24 @@ const EliteHubApp: FC<{
       }
     } else if (user.role === "coach") {
       athletes.forEach((a) => {
+        // Birthday check
+        const isBirthdayToday = (dobString?: string) => {
+          if (!dobString) return false;
+          const dobParts = dobString.split("-");
+          if (dobParts.length < 3) return false;
+          const todayParts = today.split("-");
+          return dobParts[1] === todayParts[1] && dobParts[2] === todayParts[2];
+        };
+
+        if (isBirthdayToday(a.dob)) {
+          list.push({
+            id: `bday-${a.id}-${today}`,
+            text: `🎂 ANIVERSÁRIO HOJE: ${a.name.toUpperCase()}! Parabenize seu atleta!`,
+            type: "success" as const,
+            athleteId: a.id,
+          });
+        }
+
         const lastSession = (a.externalSessions || [])[0];
         if (lastSession && lastSession.date && lastSession.date.startsWith(today) && lastSession.rpe >= 8) {
           list.push({
@@ -2267,6 +2285,42 @@ const EliteHubApp: FC<{
                   )}
                   {user.role === "athlete" ? (
                     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-top-6 duration-550 mb-6">
+                      {(() => {
+                        const isBirthdayToday = (dobString?: string) => {
+                          if (!dobString) return false;
+                          const dobParts = dobString.split("-");
+                          if (dobParts.length < 3) return false;
+                          const todayParts = getLocalDateString().split("-");
+                          return dobParts[1] === todayParts[1] && dobParts[2] === todayParts[2];
+                        };
+                        
+                        if (isBirthdayToday(selected.dob)) {
+                          return (
+                            <div className="relative overflow-hidden bg-gradient-to-r from-pink-500/15 via-purple-500/15 to-brand-primary/15 border border-brand-primary/30 rounded-[2rem] p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 shadow-[0_0_50px_rgba(57,255,20,0.06)] animate-fadeIn">
+                              {/* Animated background stars/confetti placeholders */}
+                              <div className="absolute top-2 right-4 text-xs opacity-40 animate-bounce">✨</div>
+                              <div className="absolute bottom-3 left-6 text-xs opacity-40 animate-ping">🎉</div>
+                              <div className="absolute top-6 left-1/3 text-sm opacity-30">🎈</div>
+                              <div className="absolute bottom-2 right-1/4 text-sm opacity-30">🎂</div>
+
+                              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-brand-primary/20 flex items-center justify-center border border-brand-primary/40 text-4xl shrink-0 shadow-2xl relative">
+                                🎂
+                                <span className="absolute -top-1 -right-1 text-xs">🎉</span>
+                              </div>
+                              <div className="text-center md:text-left space-y-2 flex-grow">
+                                <h2 className="text-lg md:text-xl font-black text-brand-primary uppercase tracking-wider italic">
+                                  Feliz Aniversário, {selected.name.split(" ")[0]}! 🥳🎈
+                                </h2>
+                                <p className="text-xs text-slate-200 leading-relaxed max-w-2xl font-medium">
+                                  Toda a equipe <strong>LB Sports</strong> te deseja parabéns! Que este novo ciclo seja de muita saúde, consistência nos treinos, recordes superados e uma evolução esportiva de nível elite! Vamos juntos conquistar novos patamares. 🚀💪
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/30 shrink-0 shadow-lg">
                           <User size={24} className="text-brand-primary" />
@@ -3923,23 +3977,41 @@ const EliteHubApp: FC<{
                               </div>
 
                               <div className="flex items-center justify-between">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (n.athleteId) {
-                                      setSelectedId(n.athleteId);
-                                      if (n.id === "wellness") {
-                                        setModalState({ type: "wellness" });
-                                      } else {
-                                        setActiveTab("dash");
+                                {n.id.startsWith("bday-") ? (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const ath = athletes.find(x => x.id === n.athleteId);
+                                      if (ath) {
+                                        const cleanName = ath.name.split(" ")[0];
+                                        const text = `Fala, ${cleanName}! Passando aqui em nome da LB Sports para te desejar um feliz aniversário! Muito sucesso, saúde, evolução e que possamos continuar superando recordes e conquistando alta performance juntos! Tmj! 🚀🎂🎉`;
+                                        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+                                        window.open(url, "_blank");
                                       }
-                                      setShowNotifications(false);
-                                    }
-                                  }}
-                                  className="text-[9px] font-black text-brand-primary uppercase tracking-widest hover:brightness-125 px-4 py-2 bg-brand-primary/10 rounded-xl transition-all"
-                                >
-                                  {n.id === "wellness" ? "FAZER CHECK-IN" : "VER ATLETA"}
-                                </button>
+                                    }}
+                                    className="text-[9px] font-black text-green-400 uppercase tracking-widest hover:brightness-125 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 rounded-xl transition-all border border-green-500/30 flex items-center gap-1.5"
+                                  >
+                                    <span>ENVIAR WHATSAPP</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (n.athleteId) {
+                                        setSelectedId(n.athleteId);
+                                        if (n.id === "wellness") {
+                                          setModalState({ type: "wellness" });
+                                        } else {
+                                          setActiveTab("dash");
+                                        }
+                                        setShowNotifications(false);
+                                      }
+                                    }}
+                                    className="text-[9px] font-black text-brand-primary uppercase tracking-widest hover:brightness-125 px-4 py-2 bg-brand-primary/10 rounded-xl transition-all"
+                                  >
+                                    {n.id === "wellness" ? "FAZER CHECK-IN" : "VER ATLETA"}
+                                  </button>
+                                )}
                                 <span className="text-[8px] font-black text-slate-700 uppercase">
                                   Agora
                                 </span>
