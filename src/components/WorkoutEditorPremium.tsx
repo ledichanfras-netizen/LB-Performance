@@ -1029,7 +1029,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   };
 
   return (
-    <div className="w-full h-full md:max-w-[98vw] xl:max-w-[1720px] md:h-[97vh] bg-slate-950 md:border md:border-slate-900 md:rounded-[2.5rem] overflow-hidden shadow-2xl text-slate-100 flex flex-col lg:flex-row animate-in fade-in duration-300">
+    <div className="w-full h-full md:max-w-[98vw] xl:max-w-[1720px] md:h-[97vh] bg-slate-950 md:border md:border-slate-900 md:rounded-[2.5rem] overflow-y-auto shadow-2xl text-slate-100 flex flex-col lg:flex-row animate-in fade-in duration-300">
       
       {/* MOBILE HEADER & TAB SWITCHER */}
       <div className="lg:hidden shrink-0 bg-[#0c111d] border-b border-slate-900 px-4 py-3 flex items-center justify-between gap-2 w-full">

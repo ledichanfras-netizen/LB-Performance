@@ -3009,7 +3009,17 @@ const EliteHubApp: FC<{
                             .map((w, index) => (
                               <Card
                                 key={w.id}
-                                className={`flex flex-col border-l-4 md:border-l-8 transition-all hover:scale-[1.02] relative group ${w.status === "completed" ? "border-emerald-500 opacity-95 hover:opacity-100 duration-200" : "border-brand-primary"}`}
+                                onClick={() => {
+                                  if (w.status === "completed") {
+                                    setModalState({
+                                      type: "active-session",
+                                      editingData: w,
+                                    });
+                                  } else {
+                                    startWorkoutFlow(w);
+                                  }
+                                }}
+                                className={`flex flex-col border-l-4 md:border-l-8 transition-all hover:scale-[1.02] hover:shadow-lg cursor-pointer relative group ${w.status === "completed" ? "border-emerald-500 opacity-95 hover:opacity-100 duration-200" : "border-brand-primary"}`}
                               >
                                 <div className="flex justify-between items-start mb-6">
                                   <div>
@@ -3054,7 +3064,7 @@ const EliteHubApp: FC<{
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               setModalState({
-                                                type: "edit-workout",
+                                                type: w.status === "completed" ? "active-session" : "edit-workout",
                                                 editingData: w,
                                               });
                                             }}
@@ -3248,12 +3258,13 @@ const EliteHubApp: FC<{
                                     )}
 
                                     <Button
-                                      onClick={() =>
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         setModalState({
                                           type: "active-session",
                                           editingData: w,
-                                        })
-                                      }
+                                        });
+                                      }}
                                       variant="secondary"
                                       className="w-full py-3.5 text-[10px] font-black tracking-widest uppercase"
                                     >
@@ -3262,7 +3273,10 @@ const EliteHubApp: FC<{
                                   </div>
                                 ) : (
                                   <Button
-                                    onClick={() => startWorkoutFlow(w)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      startWorkoutFlow(w);
+                                    }}
                                     variant="accent"
                                     className="w-full mt-auto py-4 text-[10px] font-black tracking-widest uppercase shadow-lg shadow-brand-secondary/20"
                                   >
@@ -3390,7 +3404,7 @@ const EliteHubApp: FC<{
 
             {modalState.type === "edit-workout" ||
             modalState.type === "workout" ? (
-              <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md overflow-hidden p-0 md:p-4">
+              <div className="fixed inset-0 z-[1100] flex items-start justify-center bg-slate-950/80 backdrop-blur-md overflow-y-auto pt-10 sm:pt-20 p-4">
                 <WorkoutEditorPremium
                   workout={
                     modalState.type === "workout"
