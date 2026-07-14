@@ -3,7 +3,7 @@ import {
   Play, Pause, RotateCcw, Volume2, VolumeX, Trophy, Zap, 
   Settings, Check, AlertCircle, ChevronRight, MessageSquare, 
   Smile, Dumbbell, Clock, Timer, Sparkles, Flame, ShieldAlert,
-  Sliders, ArrowRight, ArrowLeft, X
+  Sliders, ArrowRight, ArrowLeft, X, ChevronUp, ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "react-hot-toast";
@@ -121,6 +121,8 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
   const [feedbackNotes, setFeedbackNotes] = useState(workout.feedback || "");
   const [overallRpe, setOverallRpe] = useState(workout.rpe || 7);
   const [showFinishModal, setShowFinishModal] = useState(false);
+  const [isQuickAdjustsCollapsed, setIsQuickAdjustsCollapsed] = useState(false);
+  const [isGeneralParamsCollapsed, setIsGeneralParamsCollapsed] = useState(false);
   
   // References
   const mainStopwatchRef = useRef<NodeJS.Timeout | null>(null);
@@ -409,6 +411,265 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
 
   const rpeDetails = getRpeEmojiAndInfo(overallRpe);
 
+  if (isEditingCompleted) {
+    return (
+      <div id="completed-workout-edit-modal" className="w-full max-w-4xl max-h-[92vh] sm:max-h-[88vh] bg-slate-950 md:border md:border-slate-900 md:rounded-[2.5rem] shadow-2xl text-slate-100 p-4 sm:p-6 flex flex-col gap-4 animate-in fade-in duration-300 relative overflow-y-auto no-scrollbar">
+        {/* BACKGROUND GLOW */}
+        <div id="edit-glow" className="absolute -top-12 -right-12 w-48 h-48 bg-brand-primary/5 rounded-full blur-[80px] pointer-events-none" />
+        
+        {/* EDITING HEADER */}
+        <div id="edit-header" className="flex justify-between items-center border-b border-slate-900 pb-3 shrink-0">
+          <div>
+            <span className="text-[9px] font-black text-[#39FF14] uppercase tracking-widest block">MODO DE EDIÇÃO DE TREINO CONCLUÍDO</span>
+            <h2 className="text-sm sm:text-base font-black uppercase italic text-white tracking-tight mt-0.5">{workout.name}</h2>
+          </div>
+          <button
+            id="edit-close-btn"
+            onClick={() => {
+              if (window.confirm("Deseja realmente sair e descartar as alterações deste treino?")) {
+                onCancel();
+              }
+            }}
+            className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-800 transition-all cursor-pointer"
+            title="Sair da Edição"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* PARÂMETROS GERAIS DO TREINO */}
+        {isGeneralParamsCollapsed ? (
+          <div id="edit-general-params-collapsed" className="p-3 bg-[#0a0f1d] border border-slate-900 rounded-2xl flex items-center justify-between gap-3 shrink-0 my-1 hover:border-slate-800 transition-all">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest bg-amber-400/5 px-2 py-0.5 rounded border border-amber-400/15">SESSÃO</span>
+              <span className="text-[10px] text-slate-300 font-black">📅 {sessionDate ? new Date(sessionDate + "T00:00:00").toLocaleDateString('pt-BR') : '-'}</span>
+              <span className="text-[10px] text-slate-300 font-black">⏱️ {manualDurationMinutes || "0"} MIN</span>
+              <span className="text-[10px] text-slate-300 font-black">🔥 PSE {overallRpe} — {getRpeEmojiAndInfo(overallRpe).emoji}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsGeneralParamsCollapsed(false)}
+              className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[#39FF14] text-[9px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0"
+            >
+              <span>Expandir</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#39FF14]" />
+            </button>
+          </div>
+        ) : (
+          <div id="edit-general-params" className="p-4 bg-[#0a0f1d] border border-slate-900 rounded-2xl space-y-3 shrink-0 my-1 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-900">
+              <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest block">📊 DETALHES GERAIS DA SESSÃO</span>
+              <button
+                type="button"
+                onClick={() => setIsGeneralParamsCollapsed(true)}
+                className="px-2.5 py-1 bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                title="Recolher painel para liberar espaço para edição dos exercícios"
+              >
+                <span>Recolher Detalhes</span>
+                <ChevronUp className="w-3.5 h-3.5 text-[#39FF14]" />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Data */}
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">📅 DATA DE EXECUÇÃO</label>
+                <input
+                  id="edit-date-input"
+                  type="date"
+                  value={sessionDate}
+                  onChange={(e) => setSessionDate(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-900 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:border-[#39FF14] transition-all cursor-pointer"
+                />
+              </div>
+
+              {/* Duração */}
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">⏱️ DURAÇÃO DO TREINO</label>
+                <div className="relative">
+                  <input
+                    id="edit-duration-input"
+                    type="number"
+                    min="1"
+                    value={manualDurationMinutes}
+                    onChange={(e) => setManualDurationMinutes(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-900 rounded-xl pl-3 pr-16 py-2 text-xs font-bold text-white outline-none focus:border-[#39FF14] transition-all cursor-pointer"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[8px] font-black text-slate-500 uppercase tracking-wider select-none pointer-events-none">
+                    MINUTOS
+                  </span>
+                </div>
+              </div>
+
+              {/* PSE Geral */}
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🔥 PSE DA SESSÃO (1 A 10)</label>
+                <select
+                  id="edit-rpe-select"
+                  value={overallRpe}
+                  onChange={(e) => setOverallRpe(parseInt(e.target.value) || 7)}
+                  className="w-full bg-slate-950 border border-slate-900 rounded-xl px-3 py-2 text-xs font-bold text-white outline-none focus:border-[#39FF14] transition-all cursor-pointer"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => (
+                    <option key={v} value={v} className="bg-slate-950 text-white">
+                      PSE {v} — {getRpeEmojiAndInfo(v).emoji}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Feedback/Relato */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">💬 RELATO DE BIOFEEDBACK (OPCIONAL)</label>
+              <textarea
+                id="edit-feedback-input"
+                value={feedbackNotes}
+                onChange={(e) => setFeedbackNotes(e.target.value)}
+                className="w-full h-12 bg-slate-950 border border-slate-900 rounded-xl p-2.5 text-xs text-white outline-none focus:border-[#39FF14] transition-all font-semibold resize-none"
+                placeholder="Descreva as percepções sobre o cansaço, cargas ou dores..."
+              />
+            </div>
+          </div>
+        )}
+
+        {/* LISTA VERTICAL DE TODOS OS EXERCÍCIOS */}
+        <div id="edit-exercises-scroll" className="space-y-4 pr-1 mt-1 mb-2">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">🏋️‍♂️ EXERCÍCIOS E METRÍCAS DO TREINO</span>
+            <span className="text-[8px] font-bold text-slate-500 uppercase">Lista contínua</span>
+          </div>
+
+          {session.exercises.map((ex, idx) => {
+            const prescribedSets = ex.sets || 3;
+            const prescribedReps = ex.reps || "10";
+            const prescribedWeight = ex.weight || "0";
+
+            return (
+              <div 
+                key={ex.id} 
+                id={`edit-ex-card-${ex.id}`}
+                className="p-4 bg-[#0c111d] border border-slate-900 rounded-2xl space-y-3 shadow-md hover:border-slate-800 transition-all"
+              >
+                {/* Exercise Title and prescribed metrics */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2.5 border-b border-slate-900">
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-white uppercase tracking-tight flex items-center gap-1.5">
+                      <span className="text-[#39FF14]">{idx + 1}.</span>
+                      <span>{ex.name}</span>
+                    </h4>
+                    <span className="text-[8.5px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 block">
+                      Grupo: {ex.muscleGroup || "GERAL"} • Prescrição: {prescribedSets}x{ex.repsType === "time" ? `${prescribedReps}s` : prescribedReps} @ {prescribedWeight}
+                    </span>
+                  </div>
+
+                  {/* Pain Level Dropdown */}
+                  <div className="flex items-center gap-1.5 shrink-0 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-900/60">
+                    <span className="text-[8.5px] font-black text-slate-400 uppercase tracking-widest">DOR REATIVA:</span>
+                    <select
+                      id={`edit-ex-pain-${ex.id}`}
+                      value={ex.painLevel || 0}
+                      onChange={(e) => updatePainValue(ex.id, parseInt(e.target.value))}
+                      className={`text-[10px] font-black bg-transparent outline-none cursor-pointer transition-colors ${
+                        (ex.painLevel || 0) > 4 ? "text-red-500 font-bold" : "text-white"
+                      }`}
+                    >
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => (
+                        <option key={v} value={v} className="bg-slate-900 text-white">{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Individual performed sets */}
+                <div className="space-y-1.5">
+                  <div className="grid grid-cols-12 gap-2 text-center text-[8.5px] font-black text-slate-500 uppercase tracking-wider px-1 select-none">
+                    <div className="col-span-2 text-left">Série</div>
+                    <div className="col-span-4">Carga (kg)</div>
+                    <div className="col-span-4">Reps / Tempo</div>
+                    <div className="col-span-2">PSE</div>
+                  </div>
+
+                  {(ex.performedSets || []).map((set, setIdx) => (
+                    <div 
+                      key={set.id} 
+                      id={`edit-set-row-${set.id}`}
+                      className="grid grid-cols-12 gap-2 items-center bg-slate-950/40 p-1.5 rounded-xl border border-slate-900/60"
+                    >
+                      <div className="col-span-2 pl-1.5 text-[10px] font-black text-[#39FF14] font-mono">
+                        S{setIdx + 1}
+                      </div>
+
+                      {/* Weight input */}
+                      <div className="col-span-4 relative flex items-center">
+                        <input
+                          id={`edit-weight-input-${set.id}`}
+                          type="number"
+                          step="any"
+                          value={set.weight ?? ""}
+                          onChange={(e) => updateSetField(ex.id, set.id, "weight", parseFloat(e.target.value) || 0)}
+                          onFocus={(e) => e.target.select()}
+                          className="w-full bg-slate-950 border border-slate-900 focus:border-[#39FF14] rounded-lg py-1 text-center font-extrabold text-xs text-white outline-none transition-colors"
+                          placeholder="0"
+                        />
+                      </div>
+
+                      {/* Reps input */}
+                      <div className="col-span-4 relative flex items-center">
+                        <input
+                          id={`edit-reps-input-${set.id}`}
+                          type="number"
+                          value={set.reps ?? ""}
+                          onChange={(e) => updateSetField(ex.id, set.id, "reps", parseInt(e.target.value) || 0)}
+                          onFocus={(e) => e.target.select()}
+                          className="w-full bg-slate-950 border border-slate-900 focus:border-[#39FF14] rounded-lg py-1 text-center font-extrabold text-xs text-white outline-none transition-colors"
+                          placeholder="0"
+                        />
+                      </div>
+
+                      {/* RPE input */}
+                      <div className="col-span-2">
+                        <select
+                          id={`edit-set-rpe-${set.id}`}
+                          value={set.rpe || 0}
+                          onChange={(e) => updateSetField(ex.id, set.id, "rpe", parseInt(e.target.value))}
+                          className="w-full bg-slate-950 border border-slate-900 focus:border-[#39FF14] rounded-lg py-0.5 px-1 text-center font-extrabold text-xs text-white outline-none cursor-pointer"
+                        >
+                          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => (
+                            <option key={v} value={v} className="bg-slate-900">{v}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* BOTTOM ACTION BUTTONS */}
+        <div id="edit-footer-actions" className="border-t border-slate-900 pt-3 flex flex-col sm:flex-row items-center gap-2 sm:gap-4 shrink-0">
+          <button
+            id="edit-save-btn"
+            onClick={triggerFinish}
+            className="w-full sm:flex-1 py-3 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-[#39FF14]/15 cursor-pointer flex items-center justify-center gap-1.5"
+          >
+            <Check className="w-4 h-4 stroke-[2.5]" />
+            <span>Salvar Alterações</span>
+          </button>
+          <button
+            id="edit-cancel-btn"
+            onClick={onCancel}
+            className="w-full sm:w-auto px-6 py-3 border border-slate-800 hover:border-slate-600 text-slate-400 hover:text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer text-center"
+          >
+            Voltar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full md:max-w-6xl md:h-[97vh] bg-slate-950 md:border md:border-slate-900 md:rounded-[2.5rem] overflow-hidden shadow-2xl text-slate-100 p-4 sm:p-6 md:p-8 space-y-4 md:space-y-6 flex flex-col animate-in fade-in duration-300">
       
@@ -486,99 +747,154 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
       {/* SEÇÃO DE AJUSTES RÁPIDOS DO TREINO CONCLUÍDO */}
       {isEditingCompleted && (
         <div className="p-4 bg-[#0a0f1d] border border-slate-900 rounded-2xl space-y-4 shrink-0 shadow-lg animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-900 pb-3">
-            <div>
-              <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest block">🎯 AJUSTES RÁPIDOS DO TREINO</span>
-              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                Altere o tempo de treino, PSE ou clique em qualquer exercício na lista abaixo para editar suas cargas.
-              </p>
-            </div>
-            
-            {/* Botão de Salvar Rápido */}
-            <button
-              onClick={triggerFinish}
-              className="px-5 py-2.5 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-md shadow-[#39FF14]/10 cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto"
-            >
-              <Check className="w-3.5 h-3.5" />
-              <span>Salvar Alterações</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Ajuste de Tempo */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
-                ⏱️ TEMPO DO TREINO (MINUTOS)
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="1"
-                  max="480"
-                  value={manualDurationMinutes}
-                  onChange={(e) => setManualDurationMinutes(e.target.value)}
-                  className="w-24 bg-slate-950 border border-slate-900 rounded-xl px-3 py-1.5 text-xs font-bold text-white outline-none focus:border-[#39FF14] transition-all cursor-pointer"
-                />
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">minutos totais</span>
-              </div>
-            </div>
-
-            {/* Ajuste de PSE */}
-            <div className="space-y-1.5">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
-                🔥 PSE DA SESSÃO (1 a 10)
-              </label>
-              <div className="flex flex-wrap gap-1">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => {
-                  const isSelected = overallRpe === v;
-                  return (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setOverallRpe(v)}
-                      className={`w-7 h-7 rounded-lg border text-xs font-black transition-all cursor-pointer flex items-center justify-center ${
-                        isSelected
-                          ? "bg-amber-500/20 border-amber-500 text-amber-400 shadow-md font-black"
-                          : "bg-slate-950 border-slate-900 hover:border-slate-700 text-slate-400"
-                      }`}
-                    >
-                      {v}
-                    </button>
-                  );
-                })}
-                <span className="text-[9px] text-amber-400 font-bold ml-1 self-center bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                  PSE {overallRpe} — {getRpeEmojiAndInfo(overallRpe).emoji}
+          {isQuickAdjustsCollapsed ? (
+            /* COMPACT COLLAPSED VIEW */
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                  🎯 AJUSTES RÁPIDOS <span className="text-slate-500 font-bold">(Recolhido)</span>
+                </span>
+                <span className="text-[10px] text-slate-300 font-bold">
+                  Tempo: <strong className="text-[#39FF14]">{manualDurationMinutes || "1"} min</strong>
+                </span>
+                <span className="text-[10px] text-slate-300 font-bold">
+                  PSE: <strong className="text-amber-400">{overallRpe}</strong> — {getRpeEmojiAndInfo(overallRpe).emoji}
+                </span>
+                <span className="text-[10px] text-slate-400 font-bold hidden sm:inline">
+                  • Exercício ativo: <strong className="text-white">{(currentExerciseIndex + 1)}. {activeEx?.name}</strong>
                 </span>
               </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={triggerFinish}
+                  className="px-3.5 py-1.5 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-[9px] uppercase tracking-wider rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                >
+                  <Check className="w-3 h-3" />
+                  <span>Salvar</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsQuickAdjustsCollapsed(false)}
+                  className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-[#39FF14] border border-slate-800 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer shrink-0 flex items-center gap-1"
+                >
+                  <span>Expandir</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
-          </div>
-
-          {/* Lista de Exercícios para Seleção Rápida */}
-          <div className="space-y-1.5 pt-2 border-t border-slate-900">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🏋️‍♂️ IR PARA EXERCÍCIO (CLIQUE PARA EDITAR CARGA)</span>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
-              {session.exercises.map((ex, idx) => {
-                const isActive = idx === currentExerciseIndex;
-                return (
+          ) : (
+            /* FULL EXPANDED VIEW */
+            <>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-900 pb-3">
+                <div className="flex items-start justify-between sm:justify-start gap-3 w-full sm:w-auto">
+                  <div>
+                    <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest block">🎯 AJUSTES RÁPIDOS DO TREINO</span>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                      Altere o tempo de treino, PSE ou clique em qualquer exercício na lista abaixo para editar suas cargas.
+                    </p>
+                  </div>
                   <button
-                    key={ex.id}
-                    onClick={() => setCurrentExerciseIndex(idx)}
-                    className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                      isActive
-                        ? "bg-[#39FF14]/15 border-[#39FF14]/30 text-[#39FF14]"
-                        : "bg-slate-950 hover:bg-slate-900 border-slate-900 hover:border-slate-800 text-slate-400 hover:text-slate-300"
-                    }`}
+                    type="button"
+                    onClick={() => setIsQuickAdjustsCollapsed(true)}
+                    className="sm:ml-3 px-2.5 py-1 bg-slate-900 hover:bg-slate-850 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                    title="Recolher painel para liberar espaço para edição dos exercícios"
                   >
-                    <span className="opacity-50">{idx + 1}.</span>
-                    <span>{ex.name}</span>
-                    <span className="text-[8px] bg-slate-900 px-1 py-0.2 rounded-md text-slate-500 font-mono font-black">
-                      {(ex.performedSets || []).length}S
-                    </span>
+                    <span>Recolher</span>
+                    <ChevronUp className="w-3.5 h-3.5 text-[#39FF14]" />
                   </button>
-                );
-              })}
-            </div>
-          </div>
+                </div>
+                
+                {/* Botão de Salvar Rápido */}
+                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                  <button
+                    onClick={triggerFinish}
+                    className="px-5 py-2.5 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-md shadow-[#39FF14]/10 cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Salvar Alterações</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Ajuste de Tempo */}
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                    ⏱️ TEMPO DO TREINO (MINUTOS)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      max="480"
+                      value={manualDurationMinutes}
+                      onChange={(e) => setManualDurationMinutes(e.target.value)}
+                      className="w-24 bg-slate-950 border border-slate-900 rounded-xl px-3 py-1.5 text-xs font-bold text-white outline-none focus:border-[#39FF14] transition-all cursor-pointer"
+                    />
+                    <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">minutos totais</span>
+                  </div>
+                </div>
+
+                {/* Ajuste de PSE */}
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                    🔥 PSE DA SESSÃO (1 a 10)
+                  </label>
+                  <div className="flex flex-wrap gap-1">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => {
+                      const isSelected = overallRpe === v;
+                      return (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setOverallRpe(v)}
+                          className={`w-7 h-7 rounded-lg border text-xs font-black transition-all cursor-pointer flex items-center justify-center ${
+                            isSelected
+                              ? "bg-amber-500/20 border-amber-500 text-amber-400 shadow-md font-black"
+                              : "bg-slate-950 border-slate-900 hover:border-slate-700 text-slate-400"
+                          }`}
+                        >
+                          {v}
+                        </button>
+                      );
+                    })}
+                    <span className="text-[9px] text-amber-400 font-bold ml-1 self-center bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                      PSE {overallRpe} — {getRpeEmojiAndInfo(overallRpe).emoji}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de Exercícios para Seleção Rápida */}
+              <div className="space-y-1.5 pt-2 border-t border-slate-900">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🏋️‍♂️ IR PARA EXERCÍCIO (CLIQUE PARA EDITAR CARGA)</span>
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+                  {session.exercises.map((ex, idx) => {
+                    const isActive = idx === currentExerciseIndex;
+                    return (
+                      <button
+                        key={ex.id}
+                        onClick={() => setCurrentExerciseIndex(idx)}
+                        className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                          isActive
+                            ? "bg-[#39FF14]/15 border-[#39FF14]/30 text-[#39FF14]"
+                            : "bg-slate-950 hover:bg-slate-900 border-slate-900 hover:border-slate-800 text-slate-400 hover:text-slate-300"
+                        }`}
+                      >
+                        <span className="opacity-50">{idx + 1}.</span>
+                        <span>{ex.name}</span>
+                        <span className="text-[8px] bg-slate-900 px-1 py-0.2 rounded-md text-slate-500 font-mono font-black">
+                          {(ex.performedSets || []).length}S
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
