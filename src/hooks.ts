@@ -59,8 +59,9 @@ async function resilientFetch(url: string, options: RequestInit = {}, retries = 
 }
 
 const ensureImtpAndMigrate = (a: any): Athlete => {
-  const currentAssessments = a.assessments || { bioimpedance: [], isometricStrength: [], cmj: [], dropJump: [], vo2max: [], speed: [] };
+  const currentAssessments = a.assessments || { bioimpedance: [], isometricStrength: [], imtp: [], cmj: [], dropJump: [], vo2max: [], speed: [], postural: [] };
   const imtp = currentAssessments.imtp || [];
+  const postural = currentAssessments.postural || [];
   
   const migratedImtp = [...imtp];
   // If there's no imtp entry at all, let's look up isometricStrength to see if there's any halfSquatKgf
@@ -114,7 +115,8 @@ const ensureImtpAndMigrate = (a: any): Athlete => {
       dropJump: currentAssessments.dropJump || [],
       vo2max: currentAssessments.vo2max || [],
       speed: currentAssessments.speed || [],
-      imtp: migratedImtp
+      imtp: migratedImtp,
+      postural: postural
     }
   };
 };

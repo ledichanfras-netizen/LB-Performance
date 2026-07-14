@@ -103,6 +103,7 @@ const parseBackupAthleteFields = (a: any) => {
   let trainingDays = safeParseJson(a.training_days, [1, 3, 5]);
   let dropJumpBackup = [];
   let imtpBackup = [];
+  let posturalBackup = [];
 
   if (a.injury_history && typeof a.injury_history === 'string' && a.injury_history.trim().startsWith('{')) {
     try {
@@ -123,24 +124,29 @@ const parseBackupAthleteFields = (a: any) => {
         if (parsed.hasOwnProperty('imtpBackup') && Array.isArray(parsed.imtpBackup)) {
           imtpBackup = parsed.imtpBackup;
         }
+        if (parsed.hasOwnProperty('posturalBackup') && Array.isArray(parsed.posturalBackup)) {
+          posturalBackup = parsed.posturalBackup;
+        }
       }
     } catch (e) {
       console.error("[SafeParseJson] Error parsing backup in injury_history:", e);
     }
   }
   
-  return { injuryHistory, injuries, trainingDays, dropJumpBackup, imtpBackup };
+  return { injuryHistory, injuries, trainingDays, dropJumpBackup, imtpBackup, posturalBackup };
 };
 
 const serializeBackupAthleteFields = (athlete: any) => {
   const dropJump = athlete.assessments?.dropJump || athlete.dropJumpBackup || [];
   const imtp = athlete.assessments?.imtp || athlete.imtpBackup || [];
+  const postural = athlete.assessments?.postural || athlete.posturalBackup || [];
   return JSON.stringify({
     legacy: athlete.injuryHistory || '',
     injuries: athlete.injuries || [],
     trainingDays: athlete.trainingDays || [1, 3, 5],
     dropJumpBackup: dropJump,
-    imtpBackup: imtp
+    imtpBackup: imtp,
+    posturalBackup: postural
   });
 };
 
@@ -583,6 +589,10 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
                 if (item && item.id) mergedMap.set(item.id, item);
               }
               return Array.from(mergedMap.values()).sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime());
+            })(),
+            postural: (() => {
+              const bkPostural = parsedFields.posturalBackup || [];
+              return [...bkPostural].sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime());
             })()
           }
         }; });
@@ -841,6 +851,10 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
             if (item && item.id) mergedMap.set(item.id, item);
           }
           return Array.from(mergedMap.values()).sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime());
+        })(),
+        postural: (() => {
+          const bkPostural = parsedFields.posturalBackup || [];
+          return [...bkPostural].sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime());
         })()
       }
     }; });
@@ -1931,6 +1945,140 @@ apiRouter.post('/generate-imtp-ai', authMiddleware, async (req, res) => {
   } catch (error: any) {
     console.error("[AI IMTP] Erro chamando Gemini no backend:", error);
     res.status(500).json({ error: error.message || "Falha ao gerar laudo IMTP por IA no servidor." });
+  }
+});
+
+apiRouter.post('/generate-postural-ai', authMiddleware, async (req, res) => {
+  const { painZones, presetType, notes, photoAnterior, photoLateral, photoPosterior } = req.body;
+
+  if (!process.env.GEMINI_API_KEY) {
+    console.error("[AI Postural] GEMINI_API_KEY not configured on the server.");
+    return res.status(500).json({ error: "Chave de API do Gemini não configurada no servidor." });
+  }
+
+  try {
+    let presetExplanation = "";
+    if (presetType === "cabeça_protusa") {
+      presetExplanation = "O atleta apresenta um desalinhamento acentuado de cabeça protusa (Forward Head Posture), com projeção anterior da coluna cervical, frequentemente associado a tensão nos suboccipitais e fraqueza dos flexores profundos do pescoço.";
+    } else if (presetType === "ombros_assimetricos") {
+      presetExplanation = "O atleta apresenta assimetria de ombros (um ombro visivelmente mais elevado que o outro) e ombros protusos (enrolados para a frente), sugerindo encurtamento do peitoral menor e trapézio superior, com fraqueza do trapézio inferior e serrátil anterior.";
+    } else if (presetType === "hiperlordose") {
+      presetExplanation = "O atleta apresenta hiperlordose lombar acentuada com anteversão pélvica anterior (Anterior Pelvic Tilt), padrão clássico de síndrome cruzada inferior, com encurtamento de flexores do quadril e eretores espinhais, combinados com inibição de glúteos e reto abdominal.";
+    } else if (presetType === "joelhos_valgos") {
+      presetExplanation = "O atleta apresenta valgo dinâmico/estático acentuado nos joelhos (joelhos apontando para dentro), com possível pronação excessiva dos pés, sugerindo fraqueza crônica de glúteo médio e rotadores externos do quadril.";
+    } else if (presetType === "postura_ideal") {
+      presetExplanation = "O atleta apresenta um alinhamento postural excelente e simétrico nas vistas anterior, lateral e posterior, sem desvios significativos visíveis.";
+    } else {
+      presetExplanation = "Avaliação postural customizada com base nas fotos fornecidas e nos dados relatados.";
+    }
+
+    const promptText = `Você é um fisioterapeuta esportivo de elite, especialista em biomecânica e avaliação postural kinantropométrica de atletas de alto rendimento.
+Sua missão é realizar uma avaliação postural detalhada de nível elite e fornecer um plano corretivo preciso.
+
+As seguintes informações de entrada foram fornecidas:
+- Zona(s) de dor relatadas pelo atleta: ${Array.isArray(painZones) ? painZones.join(', ') : 'Nenhuma dor relatada'}
+- Tipo de desvio postural simulado ou real: ${presetExplanation}
+- Observações/queixas adicionais: ${notes || 'Nenhuma observação adicional.'}
+
+Se fotos reais foram fornecidas em anexo, por favor use a sua capacidade de visão computacional multimodal para identificar se há desvios reais nelas e cruzar com as zonas de dor indicadas.
+
+Você deve retornar obrigatoriamente um objeto JSON com a seguinte estrutura de correção detalhada:
+1. desvios: lista de desvios identificados, cada um contendo 'regiao' (ex: "Coluna Cervical"), 'desvio' (ex: "Cabeça Protusa"), 'gravidade' (que deve ser 'Leve', 'Moderado' ou 'Severo') e 'compensacao' (explicação biomecânica das tensões ou fraquezas).
+2. conclusao: um resumo profissional clínico do padrão do atleta.
+3. exerciciosMobilidade: lista de 2 a 3 exercícios específicos de mobilidade e liberação miofascial com 'nome', 'series', 'tempo' (ex: "3 séries de 45 segundos") e 'instrucoes' passo a passo.
+4. exerciciosFortalecimento: lista de 2 a 3 exercícios específicos de fortalecimento e ativação neuromuscular com 'nome', 'series', 'reps' (ex: "3 séries de 12 repetições") e 'instrucoes'.
+5. ergonomia: lista de 3 conselhos de hábitos ergonômicos e posturais para o dia a dia e nos treinos.
+
+Assegure que os termos clínicos e nomes de exercícios sejam em português brasileiro (PT-BR) e de alta precisão técnica.`;
+
+    const parts: any[] = [{ text: promptText }];
+
+    // Helper to extract base64 clean data
+    const parseBase64 = (dataUrl: string) => {
+      if (!dataUrl) return null;
+      const parts = dataUrl.split(',');
+      const mime = dataUrl.match(/data:([^;]+);/)?.[1] || 'image/jpeg';
+      const base64 = parts[1] || parts[0];
+      return { data: base64, mimeType: mime };
+    };
+
+    if (photoAnterior) {
+      const img = parseBase64(photoAnterior);
+      if (img) parts.push({ inlineData: img });
+    }
+    if (photoLateral) {
+      const img = parseBase64(photoLateral);
+      if (img) parts.push({ inlineData: img });
+    }
+    if (photoPosterior) {
+      const img = parseBase64(photoPosterior);
+      if (img) parts.push({ inlineData: img });
+    }
+
+    const contents = [{ role: 'user', parts }];
+
+    const response = await generateContentWithRetry({
+      contents,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            desvios: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  regiao: { type: Type.STRING },
+                  desvio: { type: Type.STRING },
+                  gravidade: { type: Type.STRING }, // 'Leve', 'Moderado', 'Severo'
+                  compensacao: { type: Type.STRING }
+                },
+                required: ["regiao", "desvio", "gravidade", "compensacao"]
+              }
+            },
+            conclusao: { type: Type.STRING },
+            exerciciosMobilidade: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  nome: { type: Type.STRING },
+                  series: { type: Type.STRING },
+                  tempo: { type: Type.STRING },
+                  instrucoes: { type: Type.STRING }
+                },
+                required: ["nome", "series", "tempo", "instrucoes"]
+              }
+            },
+            exerciciosFortalecimento: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  nome: { type: Type.STRING },
+                  series: { type: Type.STRING },
+                  reps: { type: Type.STRING },
+                  instrucoes: { type: Type.STRING }
+                },
+                required: ["nome", "series", "reps", "instrucoes"]
+              }
+            },
+            ergonomia: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            }
+          },
+          required: ["desvios", "conclusao", "exerciciosMobilidade", "exerciciosFortalecimento", "ergonomia"]
+        }
+      }
+    });
+
+    const resultText = response.text || "";
+    res.json({ result: JSON.parse(resultText) });
+  } catch (error: any) {
+    console.error("[AI Postural] Erro chamando Gemini no backend:", error);
+    res.status(500).json({ error: error.message || "Falha ao gerar análise postural por IA no servidor." });
   }
 });
 

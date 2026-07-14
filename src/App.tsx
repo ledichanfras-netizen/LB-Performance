@@ -83,6 +83,7 @@ import { SPORTS_DATA, parseNormativeValue } from "./data/imtpNormatives";
 import { ENRICHED_LIBRARY } from "./data/exercises";
 import { InjuriesView } from "./components/InjuriesView";
 import { MenstrualCycleDashboard } from "./components/MenstrualCycleDashboard";
+import { PosturalAssessmentPremium } from "./components/PosturalAssessmentPremium";
 import toast from "react-hot-toast";
 import { toJpeg } from "html-to-image";
 import ReactMarkdown from "react-markdown";
@@ -3341,6 +3342,8 @@ const EliteHubApp: FC<{
                         aiLoading={aiModelingLoading}
                         role={user.role}
                         updateAssessment={updateAssessment}
+                        addAssessment={addAssessment}
+                        removeAssessment={removeAssessment}
                       />
                     )}
 
@@ -14962,7 +14965,9 @@ const AssessmentView: FC<{
   aiLoading: boolean;
   role: "coach" | "athlete";
   updateAssessment?: (athleteId: string, type: AssessmentType, assessmentId: string, data: any) => Promise<any>;
-}> = ({ athlete, onAdd, onEdit, onDelete, onGenerateAI, aiLoading, role, updateAssessment }) => {
+  addAssessment?: (athleteId: string, type: AssessmentType, data: any) => Promise<any>;
+  removeAssessment?: (athleteId: string, type: AssessmentType, assessmentId: string) => Promise<any>;
+}> = ({ athlete, onAdd, onEdit, onDelete, onGenerateAI, aiLoading, role, updateAssessment, addAssessment, removeAssessment }) => {
   const [filterType, setFilterType] = useState<AssessmentType>("bioimpedance");
   const [showBioReport, setShowBioReport] = useState<Bioimpedance | null>(null);
   const [showStrengthReport, setShowStrengthReport] =
@@ -14980,6 +14985,7 @@ const AssessmentView: FC<{
     { id: "dropJump", label: "Salto Drop Jump" },
     { id: "vo2max", label: "VO2 Máx" },
     { id: "speed", label: "Velocidade" },
+    { id: "postural", label: "Avaliação Postural (IA)" },
   ];
 
   const categoryInsights: Record<AssessmentType, string> = {
@@ -14996,6 +15002,8 @@ const AssessmentView: FC<{
       "Um VO2 alto não garante vitória, mas determina quão rápido você se recupera entre sprints. É o 'motor' que sustenta o volume da partida.",
     speed:
       "A velocidade máxima e a aceleração são determinantes em esportes de campo. Monitorar as parciais ajuda a identificar se o foco deve ser na saída (0-10m) ou na velocidade final.",
+    postural:
+      "A Avaliação Postural Inteligente por IA identifica desvios biomecânicos e assimetrias estruturais crônicas, correlacionando-as com queixas de dores e sugerindo rotinas corretivas individualizadas de nível elite.",
   };
 
   const currentAssessments = athlete.assessments || {
@@ -15006,6 +15014,7 @@ const AssessmentView: FC<{
     dropJump: [],
     vo2max: [],
     speed: [],
+    postural: [],
   };
   const sortedItems = useMemo(() => {
     const items = Array.isArray(currentAssessments[filterType])
@@ -15090,11 +15099,20 @@ const AssessmentView: FC<{
         </div>
       </div>
 
-      <PerformanceChart data={sortedItems} type={filterType} />
+      {filterType === "postural" ? (
+        <PosturalAssessmentPremium
+          athlete={athlete}
+          role={role}
+          addAssessment={addAssessment || (async () => {})}
+          removeAssessment={removeAssessment || (async () => {})}
+        />
+      ) : (
+        <>
+          <PerformanceChart data={sortedItems} type={filterType} />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {sortedItems.map((item: any, index: number) => {
-          const prevItem = sortedItems[index + 1] as any;
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {sortedItems.map((item: any, index: number) => {
+              const prevItem = sortedItems[index + 1] as any;
           let report = null;
 
           const renderDiff = (
@@ -15466,6 +15484,8 @@ const AssessmentView: FC<{
           </div>
         )}
       </div>
+      </>
+    )}
 
       <AnimatePresence>
         {showBioReport && (

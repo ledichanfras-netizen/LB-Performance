@@ -48,6 +48,7 @@ export interface Athlete {
     dropJump: DropJump[];
     vo2max: Vo2max[];
     speed: Speed[];
+    postural?: PosturalAssessment[];
   };
   wellness: WellnessEntry[];
   workouts: Workout[];
@@ -288,7 +289,40 @@ export interface Speed extends Assessment {
   speed30m?: number;
 }
 
-export type AssessmentType = 'bioimpedance' | 'isometricStrength' | 'imtp' | 'cmj' | 'dropJump' | 'vo2max' | 'speed';
+export type AssessmentType = 'bioimpedance' | 'isometricStrength' | 'imtp' | 'cmj' | 'dropJump' | 'vo2max' | 'speed' | 'postural';
+
+export interface PosturalDeviation {
+  regiao: string;
+  desvio: string;
+  gravidade: 'Leve' | 'Moderado' | 'Severo';
+  compensacao: string;
+}
+
+export interface PosturalCorrectiveExercise {
+  nome: string;
+  series: string;
+  tempo?: string;
+  reps?: string;
+  instrucoes: string;
+}
+
+export interface PosturalAiDetails {
+  desvios: PosturalDeviation[];
+  conclusao: string;
+  exerciciosMobilidade: PosturalCorrectiveExercise[];
+  exerciciosFortalecimento: PosturalCorrectiveExercise[];
+  ergonomia: string[];
+}
+
+export interface PosturalAssessment extends Assessment {
+  painZones: string[];
+  presetType: string;
+  notes?: string;
+  photoAnterior?: string;
+  photoLateral?: string;
+  photoPosterior?: string;
+  aiDetails?: PosturalAiDetails;
+}
 
 export interface IQRatioStatus {
   ratio: number;
