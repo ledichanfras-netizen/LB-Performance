@@ -123,6 +123,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [isQuickAdjustsCollapsed, setIsQuickAdjustsCollapsed] = useState(false);
   const [isGeneralParamsCollapsed, setIsGeneralParamsCollapsed] = useState(false);
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   
   // References
   const mainStopwatchRef = useRef<NodeJS.Timeout | null>(null);
@@ -671,81 +672,139 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
   }
 
   return (
-    <div className="w-full h-full md:max-w-6xl md:h-[97vh] bg-slate-950 md:border md:border-slate-900 md:rounded-[2.5rem] overflow-hidden shadow-2xl text-slate-100 p-4 sm:p-6 md:p-8 space-y-4 md:space-y-6 flex flex-col animate-in fade-in duration-300">
+    <div className="w-full min-h-screen md:min-h-0 md:h-[97vh] md:max-w-6xl bg-slate-950 md:border md:border-slate-900 md:rounded-[2.5rem] overflow-y-auto md:overflow-hidden shadow-2xl text-slate-100 p-3 sm:p-6 md:p-8 space-y-4 md:space-y-6 flex flex-col animate-in fade-in duration-300">
       
-      {/* HUD HEADER PANEL */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-900 pb-5 shrink-0">
-        <div>
+      {isHeaderCollapsed ? (
+        /* COMPACT FOCUS HEADER FOR MOBILE */
+        <div className="flex items-center justify-between gap-3 border-b border-slate-900 pb-3 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-black uppercase text-emerald-400 tracking-widest">SESSÃO ELITE EM EXECUÇÃO</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-black text-slate-300 uppercase tracking-wider truncate max-w-[150px] sm:max-w-none">
+              {workout.name} — <strong className="text-amber-400">Modo Foco 🎯</strong>
+            </span>
           </div>
-          <h2 className="text-xl md:text-2xl font-black uppercase italic text-white tracking-tight mt-1">{workout.name}</h2>
+          
+          <div className="flex items-center gap-2">
+            {isEditingCompleted && (
+              <button
+                type="button"
+                onClick={triggerFinish}
+                className="px-3 py-1.5 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-[9px] uppercase tracking-wider rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Salvar</span>
+              </button>
+            )}
+            
+            <button
+              type="button"
+              onClick={() => setIsHeaderCollapsed(false)}
+              className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-850 text-[#39FF14] border border-slate-800 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1"
+            >
+              <span>Exibir Cabeçalho</span>
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+            
+            <button
+              onClick={() => {
+                if (window.confirm("Deseja realmente sair e descartar o andamento deste treino?")) {
+                  onCancel();
+                }
+              }}
+              className="p-1.5 bg-red-950/20 hover:bg-red-900 text-red-400 hover:text-white rounded-lg border border-red-900/30 transition-all cursor-pointer"
+              title="Sair"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
-
-        {/* CLOCKS & TOGGLES */}
-        <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
-          <button
-            onClick={() => {
-              if (manualDurationMinutes === "") {
-                setManualDurationMinutes(Math.max(1, Math.round(totalElapsedTime / 60)).toString());
-              }
-              setShowFinishModal(true);
-            }}
-            className="flex items-center gap-2 bg-[#0c111d] hover:bg-slate-900 px-4 py-2 rounded-xl border border-slate-900 hover:border-slate-800 shadow-md group transition-all cursor-pointer text-left"
-            title="Ajustar data/tempo total de execução"
-          >
-            <Clock className="w-4 h-4 text-amber-400 animate-spin-slow group-hover:text-[#39FF14] transition-colors" />
-            <div className="flex flex-col leading-none">
-              <span className="text-[7px] font-black text-[#39FF14] uppercase tracking-wider select-none opacity-80 group-hover:opacity-100 transition-all">Ajustar</span>
-              <span className="text-xs font-black text-white font-mono mt-0.5">
-                {manualDurationMinutes !== "" ? `${manualDurationMinutes} min` : formatTime(totalElapsedTime)}
-              </span>
+      ) : (
+        /* HUD HEADER PANEL */
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-900 pb-5 shrink-0">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase text-emerald-400 tracking-widest">SESSÃO ELITE EM EXECUÇÃO</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsHeaderCollapsed(true)}
+                className="px-2 py-0.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-[8px] font-bold uppercase tracking-wider text-amber-400 rounded transition-all cursor-pointer"
+                title="Ocultar cabeçalho para focar exclusivamente nos exercícios e liberar espaço no celular"
+              >
+                🎯 Recolher Cabeçalho (Foco Celular)
+              </button>
             </div>
-          </button>
+            <h2 className="text-xl md:text-2xl font-black uppercase italic text-white tracking-tight mt-1">{workout.name}</h2>
+          </div>
 
-          <button
-            onClick={toggleVoice}
-            className={`p-2.5 rounded-xl border transition-all ${
-              isVoiceEnabled 
-                ? "bg-[#39FF14]/10 text-[#39FF14] border-[#39FF14]/30 shadow-lg shadow-[#39FF14]/5" 
-                : "bg-slate-900 text-slate-500 border-slate-800"
-            }`}
-            title="Ativar/Desativar áudio guia"
-          >
-            {isVoiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-          </button>
+          {/* CLOCKS & TOGGLES */}
+          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
+            <button
+              onClick={() => {
+                if (manualDurationMinutes === "") {
+                  setManualDurationMinutes(Math.max(1, Math.round(totalElapsedTime / 60)).toString());
+                }
+                setShowFinishModal(true);
+              }}
+              className="flex items-center gap-2 bg-[#0c111d] hover:bg-slate-900 px-4 py-2 rounded-xl border border-slate-900 hover:border-slate-800 shadow-md group transition-all cursor-pointer text-left"
+              title="Ajustar data/tempo total de execução"
+            >
+              <Clock className="w-4 h-4 text-amber-400 animate-spin-slow group-hover:text-[#39FF14] transition-colors" />
+              <div className="flex flex-col leading-none">
+                <span className="text-[7px] font-black text-[#39FF14] uppercase tracking-wider select-none opacity-80 group-hover:opacity-100 transition-all">Ajustar</span>
+                <span className="text-xs font-black text-white font-mono mt-0.5">
+                  {manualDurationMinutes !== "" ? `${manualDurationMinutes} min` : formatTime(totalElapsedTime)}
+                </span>
+              </div>
+            </button>
 
-          <button
-            onClick={() => {
-              if (window.confirm("Deseja realmente sair e descartar o andamento deste treino?")) {
-                onCancel();
-              }
-            }}
-            className="p-2.5 bg-red-950/20 hover:bg-red-900 text-red-400 hover:text-white rounded-xl border border-red-900/30 transition-all cursor-pointer"
-            title="Sair do Treino"
-          >
-            <X className="w-4 h-4" />
-          </button>
+            <button
+              onClick={toggleVoice}
+              className={`p-2.5 rounded-xl border transition-all ${
+                isVoiceEnabled 
+                  ? "bg-[#39FF14]/10 text-[#39FF14] border-[#39FF14]/30 shadow-lg shadow-[#39FF14]/5" 
+                  : "bg-slate-900 text-slate-500 border-slate-800"
+              }`}
+              title="Ativar/Desativar áudio guia"
+            >
+              {isVoiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+
+            <button
+              onClick={() => {
+                if (window.confirm("Deseja realmente sair e descartar o andamento deste treino?")) {
+                  onCancel();
+                }
+              }}
+              className="p-2.5 bg-red-950/20 hover:bg-red-900 text-red-400 hover:text-white rounded-xl border border-red-900/30 transition-all cursor-pointer"
+              title="Sair do Treino"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* SESSION PROGRESSION TIMELINE */}
-      <div className="space-y-1.5 shrink-0">
-        <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-500 tracking-wider px-1">
-          <span>PROGRESSO DA SESSÃO</span>
-          <span className="text-[#39FF14]">{completedSetsCount} DE {totalSetsCount} SÉRIES ({progressPercent}%)</span>
+      {!isHeaderCollapsed && (
+        <div className="space-y-1.5 shrink-0">
+          <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-500 tracking-wider px-1">
+            <span>PROGRESSO DA SESSÃO</span>
+            <span className="text-[#39FF14]">{completedSetsCount} DE {totalSetsCount} SÉRIES ({progressPercent}%)</span>
+          </div>
+          <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-950">
+            <div 
+              className="bg-gradient-to-r from-emerald-500 via-brand-primary to-cyan-400 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
         </div>
-        <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-950">
-          <div 
-            className="bg-gradient-to-r from-emerald-500 via-brand-primary to-cyan-400 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* SEÇÃO DE AJUSTES RÁPIDOS DO TREINO CONCLUÍDO */}
-      {isEditingCompleted && (
+      {isEditingCompleted && !isHeaderCollapsed && (
         <div className="p-4 bg-[#0a0f1d] border border-slate-900 rounded-2xl space-y-4 shrink-0 shadow-lg animate-in fade-in slide-in-from-top-4 duration-300">
           {isQuickAdjustsCollapsed ? (
             /* COMPACT COLLAPSED VIEW */

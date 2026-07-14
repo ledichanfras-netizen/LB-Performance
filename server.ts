@@ -97,6 +97,22 @@ const safeParseJson = (val: any, defaultVal: any = []) => {
   return val;
 };
 
+const getSafeDateTime = (dateStr: any): number => {
+  if (!dateStr) return 0;
+  if (dateStr instanceof Date) return dateStr.getTime();
+  const str = String(dateStr).trim();
+  if (/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}/.test(str)) {
+    const sep = str.includes('/') ? '/' : '-';
+    const parts = str.split(sep);
+    const d = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const y = parseInt(parts[2], 10);
+    return new Date(y, m, d).getTime();
+  }
+  const t = Date.parse(str);
+  return isNaN(t) ? 0 : t;
+};
+
 const parseBackupAthleteFields = (a: any) => {
   let injuryHistory = a.injury_history || '';
   let injuries = safeParseJson(a.injuries, []);
@@ -520,13 +536,13 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
           assessments: {
             bioimpedance: (a.bioimpedance || [])
               .map((b: any) => ({ ...b, fatPercentage: b.fat_percentage, muscleMass: b.muscle_mass, visceralFat: b.visceral_fat, hydration: b.hydration, basalMetabolism: b.basal_metabolism, metabolicAge: b.metabolic_age, boneMass: b.bone_mass, physiqueRating: b.physique_rating, fatArmR: b.fat_arm_r, fatArmL: b.fat_arm_l, fatLegR: b.fat_leg_r, fatLegL: b.fat_leg_l, fatTrunk: b.fat_trunk, muscleArmR: b.muscle_arm_r, muscleArmL: b.muscle_arm_l, muscleLegR: b.muscle_leg_r, muscleLegL: b.muscle_leg_l, muscleTrunk: b.muscle_trunk }))
-              .sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime()),
+              .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
             isometricStrength: (a.isometric_strength || [])
               .map((s: any) => ({ ...s, halfSquatKgf: s.half_squat_kgf, quadricepsR: s.quadriceps_r, quadricepsL: s.quadriceps_l, hamstringsR: s.hamstrings_r, hamstringsL: s.hamstrings_l, iqRatioR: s.iq_ratio_r, iqRatioL: s.iq_ratio_l }))
-              .sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime()),
+              .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
             cmj: (a.cmj || [])
               .map((c: any) => ({ ...c, rsi: c.rsi, flightTime: c.flight_time, weight: c.weight }))
-              .sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime()),
+              .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
             dropJump: (() => {
               const dbDj = (a.drop_jump || []).map((dj: any) => ({
                 ...dj,
@@ -551,14 +567,14 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
               for (const item of dbDj) {
                 if (item && item.id) mergedMap.set(item.id, item);
               }
-              return Array.from(mergedMap.values()).sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime());
+              return Array.from(mergedMap.values()).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
             })(),
             vo2max: (a.vo2max || [])
               .map((v: any) => ({ ...v, vam: v.vam, maxSpeed: v.max_speed, maxHeartRate: v.max_heart_rate, thresholdHeartRate: v.threshold_heart_rate, thresholdSpeed: v.threshold_speed, rec10s: v.rec_10s, rec30s: v.rec_30s, rec60s: v.rec_60s, maxVentilation: v.max_ventilation }))
-              .sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime()),
+              .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
             speed: (a.speed || [])
               .map((sp: any) => ({ ...sp, time5m: sp.time_5m, time10m: sp.time_10m, time20m: sp.time_20m, time30m: sp.time_30m, speed5m: sp.speed_5m, speed10m: sp.speed_10m, speed20m: sp.speed_20m, speed30m: sp.speed_30m }))
-              .sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime()),
+              .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
             imtp: (() => {
               const dbIm = (a.imtp || []).map((im: any) => ({
                 ...im,
@@ -588,11 +604,11 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
               for (const item of dbIm) {
                 if (item && item.id) mergedMap.set(item.id, item);
               }
-              return Array.from(mergedMap.values()).sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime());
+              return Array.from(mergedMap.values()).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
             })(),
             postural: (() => {
               const bkPostural = parsedFields.posturalBackup || [];
-              return [...bkPostural].sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime());
+              return [...bkPostural].sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
             })()
           }
         }; });
@@ -754,7 +770,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
             muscleLegR: b.muscle_leg_r,
             muscleLegL: b.muscle_leg_l,
             muscleTrunk: b.muscle_trunk
-        })),
+        })).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
         isometricStrength: (strengthByAth[a.id] || []).map((s: any) => ({
             ...s, 
             iqRatioR: s.iq_ratio_r, 
@@ -764,13 +780,13 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
             hamstringsR: s.hamstrings_r, 
             hamstringsL: s.hamstrings_l,
             halfSquatKgf: s.half_squat_kgf
-        })),
+        })).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
         cmj: (cmjByAth[a.id] || []).map((c: any) => ({
             ...c, 
             flightTime: c.flight_time,
             rsi: c.rsi,
             weight: c.weight
-        })),
+        })).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
         dropJump: (() => {
           const dbDj = (dropJumpByAth[a.id] || []).map((dj: any) => ({
             ...dj,
@@ -795,7 +811,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
           for (const item of dbDj) {
             if (item && item.id) mergedMap.set(item.id, item);
           }
-          return Array.from(mergedMap.values()).sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime());
+          return Array.from(mergedMap.values()).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
         })(),
         vo2max: (vo2ByAth[a.id] || []).map((v: any) => ({
             ...v, 
@@ -809,7 +825,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
             rec60s: v.rec_60s,
             maxVentilation: v.max_ventilation,
             score: v.score
-        })),
+        })).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
         speed: (speedByAth[a.id] || []).map((sp: any) => ({
             ...sp,
             time5m: sp.time_5m,
@@ -820,7 +836,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
             speed10m: sp.speed_10m,
             speed20m: sp.speed_20m,
             speed30m: sp.speed_30m
-        })),
+        })).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
         imtp: (() => {
           const dbIm = (imtpByAth[a.id] || []).map((im: any) => ({
             ...im,
@@ -850,11 +866,11 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
           for (const item of dbIm) {
             if (item && item.id) mergedMap.set(item.id, item);
           }
-          return Array.from(mergedMap.values()).sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime());
+          return Array.from(mergedMap.values()).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
         })(),
         postural: (() => {
           const bkPostural = parsedFields.posturalBackup || [];
-          return [...bkPostural].sort((x: any, y: any) => new Date(y.date).getTime() - new Date(x.date).getTime());
+          return [...bkPostural].sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
         })()
       }
     }; });

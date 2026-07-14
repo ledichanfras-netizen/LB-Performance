@@ -24,6 +24,7 @@ const parseBackupAthleteFields = (a: any) => {
   let courtDays = [2, 4]; // default/fallback
   let dropJumpBackup = [];
   let imtpBackup = [];
+  let posturalBackup = [];
 
   if (a.injury_history && typeof a.injury_history === 'string' && a.injury_history.trim().startsWith('{')) {
     try {
@@ -52,18 +53,22 @@ const parseBackupAthleteFields = (a: any) => {
         if (parsed.hasOwnProperty('imtpBackup') && Array.isArray(parsed.imtpBackup)) {
           imtpBackup = parsed.imtpBackup;
         }
+        if (parsed.hasOwnProperty('posturalBackup') && Array.isArray(parsed.posturalBackup)) {
+          posturalBackup = parsed.posturalBackup;
+        }
       }
     } catch (e) {
       console.error("[SafeParse] Error parsing backup in injury_history:", e);
     }
   }
   
-  return { injuryHistory, injuries, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup };
+  return { injuryHistory, injuries, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup, posturalBackup };
 };
 
 const serializeBackupAthleteFields = (athlete: any) => {
   const dropJump = athlete.assessments?.dropJump || athlete.dropJumpBackup || [];
   const imtp = athlete.assessments?.imtp || athlete.imtpBackup || [];
+  const postural = athlete.assessments?.postural || athlete.posturalBackup || [];
   return JSON.stringify({
     legacy: athlete.injuryHistory || '',
     injuries: athlete.injuries || [],
@@ -71,7 +76,8 @@ const serializeBackupAthleteFields = (athlete: any) => {
     academyDays: athlete.academyDays || [],
     courtDays: athlete.courtDays || [],
     dropJumpBackup: dropJump,
-    imtpBackup: imtp
+    imtpBackup: imtp,
+    posturalBackup: postural
   });
 };
 
@@ -403,6 +409,10 @@ export const supabaseService = {
                 if (item && item.id) mergedMap.set(item.id, item);
               }
               return Array.from(mergedMap.values()).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
+            })(),
+            postural: (() => {
+              const bkPostural = parsedFields.posturalBackup || [];
+              return [...bkPostural].sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
             })()
           }
         };

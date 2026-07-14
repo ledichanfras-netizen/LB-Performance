@@ -3393,7 +3393,7 @@ const EliteHubApp: FC<{
             )}
 
             {modalState.type === "active-session" && (
-              <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-950/80 backdrop-blur-md overflow-hidden p-0 md:p-4">
+              <div className="fixed inset-0 z-[1100] flex items-start justify-center bg-slate-950/80 backdrop-blur-md overflow-y-auto p-0 sm:p-4 md:py-8">
                 <SessionTrackerPremium
                   workout={modalState.editingData}
                   onCancel={() => setModalState({ type: null })}
