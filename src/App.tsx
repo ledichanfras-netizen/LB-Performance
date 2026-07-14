@@ -4849,6 +4849,39 @@ const DashboardView: FC<{
     };
   }, [athlete.assessments]);
 
+  const imtpChangePct = useMemo(() => {
+    const list = [...(athlete.assessments?.imtp || [])].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    if (list.length < 2) return null;
+    const latestItem = list[list.length - 1];
+    const prevItem = list[list.length - 2];
+    const latestValRaw = latestItem.peakForce;
+    const prevValRaw = prevItem.peakForce;
+    const latestVal = latestValRaw > 1000 ? latestValRaw / 9.80665 : latestValRaw;
+    const prevVal = prevValRaw > 1000 ? prevValRaw / 9.80665 : prevValRaw;
+    if (prevVal <= 0) return null;
+    return parseFloat((((latestVal - prevVal) / prevVal) * 100).toFixed(1));
+  }, [athlete.assessments?.imtp]);
+
+  const cmjChangePct = useMemo(() => {
+    const list = [...(athlete.assessments?.cmj || [])].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    if (list.length < 2) return null;
+    const latestVal = list[list.length - 1].height;
+    const prevVal = list[list.length - 2].height;
+    if (prevVal <= 0) return null;
+    return parseFloat((((latestVal - prevVal) / prevVal) * 100).toFixed(1));
+  }, [athlete.assessments?.cmj]);
+
+  const rsiChangePct = useMemo(() => {
+    const djList = [...(athlete.assessments?.dropJump || [])]
+      .filter(x => x.rsi && x.rsi > 0)
+      .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    if (djList.length < 2) return null;
+    const latestVal = djList[djList.length - 1].rsi || 0;
+    const prevVal = djList[djList.length - 2].rsi || 0;
+    if (prevVal <= 0) return null;
+    return parseFloat((((latestVal - prevVal) / prevVal) * 100).toFixed(1));
+  }, [athlete.assessments?.dropJump]);
+
   // Sparklines trend generators
   const imtpSparkHistory = useMemo(() => {
     const list = [...(athlete.assessments?.imtp || [])].sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -4934,7 +4967,7 @@ const DashboardView: FC<{
   const sessionsCount = useMemo(() => {
     const wkCount = (athlete.workouts || []).filter(w => w.status === "completed").length;
     const exCount = (athlete.externalSessions || []).length;
-    return wkCount + exCount || 12;
+    return wkCount + exCount;
   }, [athlete.workouts, athlete.externalSessions]);
 
   const accumulatedCargaTotal = useMemo(() => {
@@ -5266,14 +5299,24 @@ const DashboardView: FC<{
                 <span className="text-3xl md:text-4xl font-black text-white tracking-tighter bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
                   {imtpImpulse > 0 ? `${imtpImpulse.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 1 })} kg` : "--"}
                 </span>
-                {imtpImpulse > 0 && (
-                  <span className="flex items-center gap-0.5 text-[10px] font-black uppercase text-emerald-400 bg-emerald-500/5 px-2 py-0.5 rounded-full border border-emerald-500/10">
-                    <ArrowUp className="w-3 h-3 text-emerald-400" />
-                    <span>+7.2%</span>
+                {imtpChangePct !== null && (
+                  <span className={`flex items-center gap-0.5 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                    imtpChangePct > 0 
+                      ? "text-emerald-400 bg-emerald-500/5 border-emerald-500/10" 
+                      : imtpChangePct < 0 
+                        ? "text-rose-400 bg-rose-500/5 border-rose-500/10" 
+                        : "text-slate-400 bg-slate-500/5 border-slate-500/10"
+                  }`}>
+                    {imtpChangePct > 0 ? (
+                      <ArrowUp className="w-3 h-3 text-emerald-400" />
+                    ) : imtpChangePct < 0 ? (
+                      <ArrowDown className="w-3 h-3 text-rose-400" />
+                    ) : null}
+                    <span>{imtpChangePct > 0 ? `+${imtpChangePct}%` : `${imtpChangePct}%`}</span>
                   </span>
                 )}
               </div>
-              {imtpImpulse > 0 && <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">vs período anterior</p>}
+              {imtpChangePct !== null && <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">vs período anterior</p>}
 
               {/* Sparkline chart */}
               <div className="h-16 w-full mt-6 flex items-center justify-center">
@@ -5340,14 +5383,24 @@ const DashboardView: FC<{
                 <span className="text-3xl md:text-4xl font-black text-white tracking-tighter bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
                   {cmjHeight > 0 ? `${cmjHeight.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} cm` : "--"}
                 </span>
-                {cmjHeight > 0 && (
-                  <span className="flex items-center gap-0.5 text-[10px] font-black uppercase text-amber-400 bg-amber-500/5 px-2 py-0.5 rounded-full border border-amber-500/10">
-                    <ArrowUp className="w-3 h-3 text-amber-400" />
-                    <span>+5.8%</span>
+                {cmjChangePct !== null && (
+                  <span className={`flex items-center gap-0.5 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                    cmjChangePct > 0 
+                      ? "text-emerald-400 bg-emerald-500/5 border-emerald-500/10" 
+                      : cmjChangePct < 0 
+                        ? "text-rose-400 bg-rose-500/5 border-rose-500/10" 
+                        : "text-slate-400 bg-slate-500/5 border-slate-500/10"
+                  }`}>
+                    {cmjChangePct > 0 ? (
+                      <ArrowUp className="w-3 h-3 text-emerald-400" />
+                    ) : cmjChangePct < 0 ? (
+                      <ArrowDown className="w-3 h-3 text-rose-400" />
+                    ) : null}
+                    <span>{cmjChangePct > 0 ? `+${cmjChangePct}%` : `${cmjChangePct}%`}</span>
                   </span>
                 )}
               </div>
-              {cmjHeight > 0 && <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">vs período anterior</p>}
+              {cmjChangePct !== null && <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">vs período anterior</p>}
 
               {/* Sparkline chart */}
               <div className="h-16 w-full mt-6 flex items-center justify-center">
@@ -5414,14 +5467,24 @@ const DashboardView: FC<{
                 <span className="text-3xl md:text-4xl font-black text-white tracking-tighter bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
                   {rsiValue > 0 ? rsiValue.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "--"}
                 </span>
-                {rsiValue > 0 && (
-                  <span className="flex items-center gap-0.5 text-[10px] font-black uppercase text-purple-400 bg-purple-500/5 px-2 py-0.5 rounded-full border border-purple-500/10">
-                    <ArrowUp className="w-3 h-3 text-purple-400" />
-                    <span>+6.1%</span>
+                {rsiChangePct !== null && (
+                  <span className={`flex items-center gap-0.5 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                    rsiChangePct > 0 
+                      ? "text-emerald-400 bg-emerald-500/5 border-emerald-500/10" 
+                      : rsiChangePct < 0 
+                        ? "text-rose-400 bg-rose-500/5 border-rose-500/10" 
+                        : "text-slate-400 bg-slate-500/5 border-slate-500/10"
+                  }`}>
+                    {rsiChangePct > 0 ? (
+                      <ArrowUp className="w-3 h-3 text-emerald-400" />
+                    ) : rsiChangePct < 0 ? (
+                      <ArrowDown className="w-3 h-3 text-rose-400" />
+                    ) : null}
+                    <span>{rsiChangePct > 0 ? `+${rsiChangePct}%` : `${rsiChangePct}%`}</span>
                   </span>
                 )}
               </div>
-              {rsiValue > 0 && <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">vs período anterior</p>}
+              {rsiChangePct !== null && <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">vs período anterior</p>}
 
               {/* Sparkline chart */}
               <div className="h-16 w-full mt-6 flex items-center justify-center">
