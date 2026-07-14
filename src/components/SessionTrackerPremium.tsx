@@ -365,12 +365,16 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
 
   // Finishing the entire session
   const triggerFinish = () => {
-    if (completedSetsCount < totalSetsCount * 0.5) {
+    if (!isEditingCompleted && completedSetsCount < totalSetsCount * 0.5) {
       const confirmFinish = window.confirm("Você concluiu menos da metade das séries planejadas. Deseja finalizar mesmo assim?");
       if (!confirmFinish) return;
     }
 
-    speakText("Treino concluído com maestria. Parabéns pelo desempenho elite!", isVoiceEnabled);
+    if (isEditingCompleted) {
+      speakText("Alterações salvas com sucesso.", isVoiceEnabled);
+    } else {
+      speakText("Treino concluído com maestria. Parabéns pelo desempenho elite!", isVoiceEnabled);
+    }
     
     // Save state
     const finalDuration = manualDurationMinutes !== "" 
@@ -832,7 +836,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                           Série {currentSetIndexForActiveEx + 1} de {(activeEx.performedSets || []).length}
                         </h3>
                         <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5 tracking-wider">
-                          Meta: {activeEx.repsType === "time" ? `${activeEx.reps}s` : activeEx.reps} Reps • Carga: {activeEx.performedSets?.[currentSetIndexForActiveEx]?.weight || activeEx.weight || 0} kg
+                          Meta: {activeEx.repsType === "time" ? `${activeEx.reps}s (Tempo)` : `${activeEx.reps} Reps`} • Carga: {activeEx.performedSets?.[currentSetIndexForActiveEx]?.weight || activeEx.weight || 0} kg
                         </p>
                       </div>
 
@@ -906,7 +910,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                             className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-3 px-2 text-center font-extrabold text-sm md:text-base text-white transition-all"
                             placeholder="0"
                           />
-                          <span className="text-[10px] font-black text-slate-400 uppercase">RPS</span>
+                          <span className="text-[10px] font-black text-slate-400 uppercase">{activeEx.repsType === "time" ? "SEG" : "RPS"}</span>
                         </div>
 
                         {/* RPE input */}
@@ -967,7 +971,14 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
         {/* FEEDBACK & OVERALL RPE INPUT EXPANSION PANEL */}
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
           
-          {currentExerciseIndex === session.exercises.length - 1 ? (
+          {isEditingCompleted ? (
+            <button
+              onClick={triggerFinish}
+              className="w-full sm:w-auto px-8 py-4.5 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-[#39FF14]/20 flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            >
+              SALVAR ALTERAÇÕES ✔️
+            </button>
+          ) : currentExerciseIndex === session.exercises.length - 1 ? (
             <button
               onClick={() => setShowFinishModal(true)}
               className="w-full sm:w-auto px-8 py-4.5 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-[#39FF14]/20 flex items-center justify-center gap-2 cursor-pointer shrink-0"

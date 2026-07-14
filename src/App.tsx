@@ -2321,17 +2321,42 @@ const EliteHubApp: FC<{
                         return null;
                       })()}
 
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/30 shrink-0 shadow-lg">
-                          <User size={24} className="text-brand-primary" />
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/30 shrink-0 shadow-lg">
+                            <User size={24} className="text-brand-primary" />
+                          </div>
+                          <div className="flex flex-col">
+                            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold italic uppercase tracking-tight text-white leading-none">
+                              Olá, {selected.name.split(" ")[0]}
+                            </h1>
+                            <span className="text-[10px] sm:text-[11px] font-black tracking-widest text-brand-primary uppercase mt-1">
+                              {(selected.modality || "Preparação Física").toUpperCase()} | ELITE COMMAND CENTER
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-col">
-                          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold italic uppercase tracking-tight text-white leading-none">
-                            Olá, {selected.name.split(" ")[0]}
-                          </h1>
-                          <span className="text-[10px] sm:text-[11px] font-black tracking-widest text-brand-primary uppercase mt-1">
-                            {(selected.modality || "Preparação Física").toUpperCase()} | ELITE COMMAND CENTER
-                          </span>
+
+                        {/* Athlete Sync & Logout Actions */}
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={async () => {
+                              const toastId = toast.loading("Sincronizando seus treinos...");
+                              await syncData();
+                              toast.success("Dados Atualizados!", { id: toastId });
+                            }}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-brand-primary/30 text-slate-300 hover:text-white text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-lg group"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5 text-[#39FF14] group-hover:rotate-180 transition-transform duration-700" />
+                            <span>Sincronizar</span>
+                          </button>
+
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 hover:border-red-500/30 text-red-400 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
+                          >
+                            <LogOut className="w-3.5 h-3.5 text-red-500" />
+                            <span>Sair</span>
+                          </button>
                         </div>
                       </div>
                       

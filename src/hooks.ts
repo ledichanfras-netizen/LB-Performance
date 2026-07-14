@@ -135,15 +135,28 @@ export const useAthletes = (token?: string | null) => {
     return generateFeaturedAthletes();
   });
 
-  const athletes = rawAthletes.map(ensureImtpAndMigrate);
+  const sortWorkoutExercises = (a: Athlete): Athlete => {
+    return {
+      ...a,
+      workouts: (a.workouts || []).map(w => ({
+        ...w,
+        exercises: (w.exercises || [])
+          .slice()
+          .sort((x: any, y: any) => (x.order_index ?? 0) - (y.order_index ?? 0))
+      }))
+    };
+  };
+
+  const athletes = rawAthletes.map(a => sortWorkoutExercises(ensureImtpAndMigrate(a)));
 
   const setAthletes = (v: Athlete[] | ((prev: Athlete[]) => Athlete[])) => {
     if (typeof v === 'function') {
       setRawAthletes(prev => {
-        return v(prev.map(ensureImtpAndMigrate));
+        const mappedPrev = prev.map(a => sortWorkoutExercises(ensureImtpAndMigrate(a)));
+        return v(mappedPrev).map(sortWorkoutExercises);
       });
     } else {
-      setRawAthletes(v);
+      setRawAthletes(v.map(sortWorkoutExercises));
     }
   };
   const [loading, setLoading] = useState(true);
@@ -317,6 +330,7 @@ export const useAthletes = (token?: string | null) => {
         setAthletes(filtered);
         safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(filtered));
         console.log('Dados dos atletas atualizados e cacheados.');
+        lastSyncTimeRef.current = Date.now();
       }
     } catch (err: any) {
       const isIframeErr = err.message && (err.message.includes('bloqueou') || err.message.includes('Unexpected token') || err.message.includes('cookie'));
@@ -354,7 +368,6 @@ export const useAthletes = (token?: string | null) => {
         }
       }
     } finally {
-      lastSyncTimeRef.current = Date.now();
       if (!isSilent) setLoading(false);
     }
   };
