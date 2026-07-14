@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Athlete, AssessmentType, WellnessEntry, Workout, PrescribedExercise, ExerciseSet, ExternalSession } from './types';
 import { calculateReadiness, calculateWorkoutLoad, calculateAdvancedMetrics, calculateAge, getSafeDateTime, getLocalDateString } from './utils';
 import toast from 'react-hot-toast';
@@ -150,6 +150,17 @@ export const useAthletes = (token?: string | null) => {
   const [syncing, setSyncing] = useState(false);
   const [iframeCookieWarning, setIframeCookieWarning] = useState(false);
 
+  // Refs for tracking synchronization state and avoiding stale closures / timer resets
+  const syncDataRef = useRef<(isSilent?: boolean) => Promise<void>>(async () => {});
+  const syncingRef = useRef(false);
+  const lastSyncTimeRef = useRef<number>(Date.now());
+
+  // Keep references updated on every render
+  useEffect(() => {
+    syncingRef.current = syncing;
+    syncDataRef.current = syncData;
+  });
+
   // Update cache whenever athletes change
   useEffect(() => {
     if (athletes.length > 0) {
@@ -167,7 +178,7 @@ export const useAthletes = (token?: string | null) => {
         try {
           if (token) {
             console.log('Tentando carregar dados da API local (/api/ler)...');
-            const res = await resilientFetch('/api/ler', {
+            const res = await resilientFetch(`/api/ler?_t=${Date.now()}`, {
               headers: {
                 'Authorization': `Bearer ${token}`
               }
@@ -343,6 +354,7 @@ export const useAthletes = (token?: string | null) => {
         }
       }
     } finally {
+      lastSyncTimeRef.current = Date.now();
       if (!isSilent) setLoading(false);
     }
   };
@@ -354,7 +366,19 @@ export const useAthletes = (token?: string | null) => {
     const handleRefocusOrOnline = () => {
       if (navigator.onLine && document.visibilityState === 'visible') {
         console.log('[Auto-Sync] Janela ativa e online. Sincronizando dados em background...');
-        syncData(true); // Silent sync
+        lastSyncTimeRef.current = Date.now();
+        syncDataRef.current(true); // Silent sync
+      }
+    };
+
+    // Intelligent sync on user activity (ideal for tablets waking up from sleep/stand-by)
+    const handleUserActivity = () => {
+      const now = Date.now();
+      // If the last sync was more than 15 seconds ago, trigger a background sync on interaction
+      if (now - lastSyncTimeRef.current > 15000 && navigator.onLine && !syncingRef.current) {
+        console.log('[Activity-Sync] Interação do usuário detectada após 15s de inatividade. Sincronizando dados...');
+        lastSyncTimeRef.current = now; // Update timestamp immediately to prevent concurrent triggers
+        syncDataRef.current(true); // Silent sync
       }
     };
 
@@ -362,11 +386,16 @@ export const useAthletes = (token?: string | null) => {
     window.addEventListener('online', handleRefocusOrOnline);
     document.addEventListener('visibilitychange', handleRefocusOrOnline);
 
+    // Add user interaction listeners to instantly trigger background sync on tablets/mobiles waking up from stand-by
+    window.addEventListener('mousedown', handleUserActivity, { passive: true });
+    window.addEventListener('touchstart', handleUserActivity, { passive: true });
+
     // Configura um intervalo periódico de atualização (pooling) em background para sincronizar salvamentos de outros IPs/dispositivos
     const intervalId = setInterval(() => {
-      if (navigator.onLine && document.visibilityState === 'visible' && !syncing) {
+      if (navigator.onLine && document.visibilityState === 'visible' && !syncingRef.current) {
         console.log('[Interval-Sync] Sincronizando dados de outros dispositivos/IPs em background...');
-        syncData(true); // Silent sync
+        lastSyncTimeRef.current = Date.now();
+        syncDataRef.current(true); // Silent sync
       }
     }, 15000); // Executa a cada 15 segundos
 
@@ -374,9 +403,11 @@ export const useAthletes = (token?: string | null) => {
       window.removeEventListener('focus', handleRefocusOrOnline);
       window.removeEventListener('online', handleRefocusOrOnline);
       document.removeEventListener('visibilitychange', handleRefocusOrOnline);
+      window.removeEventListener('mousedown', handleUserActivity);
+      window.removeEventListener('touchstart', handleUserActivity);
       clearInterval(intervalId);
     };
-  }, [token, syncing]);
+  }, [token]);
 
   const save = async (newAthletes: Athlete[], specificAthleteId?: string) => {
     // Immediate local cache update for maximum responsiveness

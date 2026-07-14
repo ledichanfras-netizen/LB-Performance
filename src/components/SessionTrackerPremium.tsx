@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "react-hot-toast";
 import { Workout, PrescribedExercise, ExerciseSet } from "../types";
+import { ENRICHED_LIBRARY } from "../data/exercises";
 
 // TTS Voice announcer
 const speakText = (text: string, enabled: boolean) => {
@@ -66,6 +67,8 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
   onFinish,
   onCancel
 }) => {
+  const isEditingCompleted = workout.status === "completed";
+
   const [session, setSession] = useState<Workout>({
     ...workout,
     status: "in_progress",
@@ -80,14 +83,14 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
               ...s,
               reps: (s.reps === 0 || !s.reps) ? targetReps : s.reps,
               weight: (s.weight === 0 || !s.weight) ? targetWeight : s.weight,
-              isCompleted: (s as any).isCompleted || false
+              isCompleted: isEditingCompleted ? true : ((s as any).isCompleted || false)
             }))
           : Array.from({ length: ex.sets || 3 }).map((_, i) => ({
               id: `s-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
               reps: targetReps,
               weight: targetWeight,
               rpe: 0,
-              isCompleted: false // New flag for state tracking
+              isCompleted: isEditingCompleted ? true : false // New flag for state tracking
             }));
 
         return {
@@ -103,18 +106,20 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
   // UI state managers
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
-  const [totalElapsedTime, setTotalElapsedTime] = useState(0); // in seconds
+  const [totalElapsedTime, setTotalElapsedTime] = useState(workout.durationMinutes ? workout.durationMinutes * 60 : 0); // in seconds
   const [sessionDate, setSessionDate] = useState<string>(
     workout.date?.split("T")[0] || new Date().toISOString().split("T")[0]
   );
-  const [manualDurationMinutes, setManualDurationMinutes] = useState<string>("");
+  const [manualDurationMinutes, setManualDurationMinutes] = useState<string>(
+    isEditingCompleted ? (workout.durationMinutes || 60).toString() : ""
+  );
   
   // Rest Timer states
   const [restSecondsRemaining, setRestSecondsRemaining] = useState(0);
   const [restDuration, setRestDuration] = useState(90); // default rest is 90s
   const [isTimerActive, setIsTimerActive] = useState(false);
-  const [feedbackNotes, setFeedbackNotes] = useState("");
-  const [overallRpe, setOverallRpe] = useState(7);
+  const [feedbackNotes, setFeedbackNotes] = useState(workout.feedback || "");
+  const [overallRpe, setOverallRpe] = useState(workout.rpe || 7);
   const [showFinishModal, setShowFinishModal] = useState(false);
   
   // References
@@ -474,6 +479,105 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
         </div>
       </div>
 
+      {/* SEÇÃO DE AJUSTES RÁPIDOS DO TREINO CONCLUÍDO */}
+      {isEditingCompleted && (
+        <div className="p-4 bg-[#0a0f1d] border border-slate-900 rounded-2xl space-y-4 shrink-0 shadow-lg animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-900 pb-3">
+            <div>
+              <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest block">🎯 AJUSTES RÁPIDOS DO TREINO</span>
+              <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                Altere o tempo de treino, PSE ou clique em qualquer exercício na lista abaixo para editar suas cargas.
+              </p>
+            </div>
+            
+            {/* Botão de Salvar Rápido */}
+            <button
+              onClick={triggerFinish}
+              className="px-5 py-2.5 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-md shadow-[#39FF14]/10 cursor-pointer flex items-center justify-center gap-1.5 self-start sm:self-auto"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>Salvar Alterações</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Ajuste de Tempo */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                ⏱️ TEMPO DO TREINO (MINUTOS)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  max="480"
+                  value={manualDurationMinutes}
+                  onChange={(e) => setManualDurationMinutes(e.target.value)}
+                  className="w-24 bg-slate-950 border border-slate-900 rounded-xl px-3 py-1.5 text-xs font-bold text-white outline-none focus:border-[#39FF14] transition-all cursor-pointer"
+                />
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">minutos totais</span>
+              </div>
+            </div>
+
+            {/* Ajuste de PSE */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                🔥 PSE DA SESSÃO (1 a 10)
+              </label>
+              <div className="flex flex-wrap gap-1">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => {
+                  const isSelected = overallRpe === v;
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setOverallRpe(v)}
+                      className={`w-7 h-7 rounded-lg border text-xs font-black transition-all cursor-pointer flex items-center justify-center ${
+                        isSelected
+                          ? "bg-amber-500/20 border-amber-500 text-amber-400 shadow-md font-black"
+                          : "bg-slate-950 border-slate-900 hover:border-slate-700 text-slate-400"
+                      }`}
+                    >
+                      {v}
+                    </button>
+                  );
+                })}
+                <span className="text-[9px] text-amber-400 font-bold ml-1 self-center bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                  PSE {overallRpe} — {getRpeEmojiAndInfo(overallRpe).emoji}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Lista de Exercícios para Seleção Rápida */}
+          <div className="space-y-1.5 pt-2 border-t border-slate-900">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">🏋️‍♂️ IR PARA EXERCÍCIO (CLIQUE PARA EDITAR CARGA)</span>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+              {session.exercises.map((ex, idx) => {
+                const isActive = idx === currentExerciseIndex;
+                return (
+                  <button
+                    key={ex.id}
+                    onClick={() => setCurrentExerciseIndex(idx)}
+                    className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                      isActive
+                        ? "bg-[#39FF14]/15 border-[#39FF14]/30 text-[#39FF14]"
+                        : "bg-slate-950 hover:bg-slate-900 border-slate-900 hover:border-slate-800 text-slate-400 hover:text-slate-300"
+                    }`}
+                  >
+                    <span className="opacity-50">{idx + 1}.</span>
+                    <span>{ex.name}</span>
+                    <span className="text-[8px] bg-slate-900 px-1 py-0.2 rounded-md text-slate-500 font-mono font-black">
+                      {(ex.performedSets || []).length}S
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* DETAILED ACTIVE WORKOUT CARD */}
       <div className="flex-1 overflow-y-auto space-y-6 no-scrollbar">
         {activeEx ? (
@@ -501,8 +605,30 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                       )
                     )}
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-black uppercase italic text-white tracking-tight mt-2.5">
-                    {activeEx.name}
+                  <h3 className="text-2xl md:text-3xl font-black uppercase italic text-white tracking-tight mt-2.5 flex flex-wrap items-center gap-3">
+                    <span>{activeEx.name}</span>
+                    {(() => {
+                      const matchingLibEx = ENRICHED_LIBRARY.find((x: any) => x.name.toLowerCase().trim() === activeEx.name.toLowerCase().trim() || activeEx.name.toLowerCase().includes(x.name.toLowerCase()));
+                      const videoUrl = activeEx.videoUrl || matchingLibEx?.videoUrl || `https://www.youtube.com/results?search_query=como+fazer+${encodeURIComponent(activeEx.name)}`;
+                      const hasDirectVideo = !!(activeEx.videoUrl || matchingLibEx?.videoUrl);
+
+                      return (
+                        <a
+                          href={videoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 text-[9px] uppercase font-black tracking-wider rounded-lg transition-all ${
+                            hasDirectVideo 
+                              ? "bg-[#39FF14]/10 hover:bg-[#39FF14]/20 text-[#39FF14] border border-[#39FF14]/20 shadow-[0_0_15px_rgba(57,255,20,0.15)] animate-pulse" 
+                              : "bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800 hover:border-slate-700"
+                          }`}
+                          title={hasDirectVideo ? "Assistir ao vídeo técnico de execução cadastrado" : "Pesquisar vídeo de execução no YouTube automaticamente"}
+                        >
+                          <Play className="w-2.5 h-2.5 fill-current shrink-0" />
+                          <span>{hasDirectVideo ? "Ver Vídeo Técnico" : "Auto-Vídeo ⚡"}</span>
+                        </a>
+                      );
+                    })()}
                   </h3>
                   {activeEx.notes && (
                     <p className="text-xs text-slate-400 font-semibold mt-2.5 bg-slate-950/40 p-2.5 rounded-lg border border-slate-900 italic">

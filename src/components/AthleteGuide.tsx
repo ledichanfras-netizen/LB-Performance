@@ -1,4 +1,4 @@
-import React, { FC, useState, useMemo } from 'react';
+import React, { FC, useState, useMemo, useEffect } from 'react';
 import { 
   Info, 
   LayoutDashboard, 
@@ -20,11 +20,17 @@ import {
   CheckCircle2,
   AlertCircle,
   TrendingUp,
-  Sliders
+  Sliders,
+  Edit3,
+  Trash2,
+  Copy,
+  Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { IMTPNormativos } from './IMTPNormativos';
 import { ENRICHED_LIBRARY, EnrichedExercise } from '../data/exercises';
+import { toast } from 'react-hot-toast';
+import { ExerciseEditorModal } from './ExerciseEditorModal';
 
 const GuideCard: FC<{ 
   icon: any, 
@@ -64,9 +70,143 @@ export const AthleteGuide: FC = () => {
   const [libDifficulty, setLibDifficulty] = useState<string>("ALL");
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
 
-  // Filter exercises
+  // Load custom library and deleted exercises
+  const [customLibraryExercises, setCustomLibraryExercises] = useState<EnrichedExercise[]>(() => {
+    try {
+      const stored = localStorage.getItem("LB_CUSTOM_LIBRARY_EXERCISES");
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Erro ao carregar exercícios customizados:", e);
+      return [];
+    }
+  });
+
+  const [deletedExerciseIds, setDeletedExerciseIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem("LB_DELETED_LIBRARY_EXERCISES");
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Erro ao carregar exercícios deletados:", e);
+      return [];
+    }
+  });
+
+  // Keep state updated if other tabs change local storage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        const storedCustom = localStorage.getItem("LB_CUSTOM_LIBRARY_EXERCISES");
+        if (storedCustom) setCustomLibraryExercises(JSON.parse(storedCustom));
+        const storedDeleted = localStorage.getItem("LB_DELETED_LIBRARY_EXERCISES");
+        if (storedDeleted) setDeletedExerciseIds(JSON.parse(storedDeleted));
+      } catch (e) {
+        console.error("Erro ao sincronizar localStorage:", e);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    // Listen to custom local events if available, or just standard intervals
+    const interval = setInterval(handleStorageChange, 2000);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const combinedLibrary = useMemo(() => {
+    const customMap = new Map(customLibraryExercises.map(ex => [ex.id, ex]));
+    const list: EnrichedExercise[] = [];
+    
+    // Built-ins
+    ENRICHED_LIBRARY.forEach(builtIn => {
+      if (deletedExerciseIds.includes(builtIn.id)) return;
+      if (customMap.has(builtIn.id)) {
+        list.push(customMap.get(builtIn.id)!);
+      } else {
+        list.push(builtIn);
+      }
+    });
+    
+    // Custom news
+    customLibraryExercises.forEach(custom => {
+      if (deletedExerciseIds.includes(custom.id)) return;
+      const isOverrideOfBuiltIn = ENRICHED_LIBRARY.some(b => b.id === custom.id);
+      if (!isOverrideOfBuiltIn) {
+        list.push(custom);
+      }
+    });
+    
+    return list;
+  }, [customLibraryExercises, deletedExerciseIds]);
+
+  // Modals / Confirmation States
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [exerciseToEdit, setExerciseToEdit] = useState<EnrichedExercise | null>(null);
+  const [exerciseToDelete, setExerciseToDelete] = useState<EnrichedExercise | null>(null);
+  const [exerciseToClone, setExerciseToClone] = useState<EnrichedExercise | null>(null);
+
+  const handleSaveExercise = (updated: EnrichedExercise) => {
+    let updatedList = [...customLibraryExercises];
+    const index = updatedList.findIndex(x => x.id === updated.id);
+    if (index >= 0) {
+      updatedList[index] = updated;
+    } else {
+      updatedList.unshift(updated);
+    }
+    setCustomLibraryExercises(updatedList);
+    localStorage.setItem("LB_CUSTOM_LIBRARY_EXERCISES", JSON.stringify(updatedList));
+    
+    // Trigger storage event so other components sync
+    window.dispatchEvent(new Event("storage"));
+
+    setIsEditorOpen(false);
+    setExerciseToEdit(null);
+    toast.success(`"${updated.name}" salvo com sucesso! 📚`);
+  };
+
+  const handleDeleteExercise = (id: string) => {
+    const updatedDeleted = [...deletedExerciseIds, id];
+    setDeletedExerciseIds(updatedDeleted);
+    localStorage.setItem("LB_DELETED_LIBRARY_EXERCISES", JSON.stringify(updatedDeleted));
+    
+    // Also remove from custom lists if present
+    const updatedCustom = customLibraryExercises.filter(x => x.id !== id);
+    setCustomLibraryExercises(updatedCustom);
+    localStorage.setItem("LB_CUSTOM_LIBRARY_EXERCISES", JSON.stringify(updatedCustom));
+    
+    // Trigger storage event
+    window.dispatchEvent(new Event("storage"));
+
+    setExerciseToDelete(null);
+    toast.success("Exercício excluído da biblioteca.");
+  };
+
+  const handleCloneExercise = (item: EnrichedExercise) => {
+    const newId = `custom-lib-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    const cloned: EnrichedExercise = {
+      ...item,
+      id: newId,
+      name: `${item.name} (CÓPIA)`,
+      isFavorite: false,
+    };
+    
+    const updatedList = [cloned, ...customLibraryExercises];
+    setCustomLibraryExercises(updatedList);
+    localStorage.setItem("LB_CUSTOM_LIBRARY_EXERCISES", JSON.stringify(updatedList));
+    
+    // Trigger storage event
+    window.dispatchEvent(new Event("storage"));
+
+    setExerciseToClone(null);
+    toast.success(`"${item.name}" clonado com sucesso como "${cloned.name}"!`);
+    
+    // Automatically open editor on the cloned exercise so they can modify it
+    setExerciseToEdit(cloned);
+    setIsEditorOpen(true);
+  };
+
+  // Filter exercises using combinedLibrary
   const filteredExercises = useMemo(() => {
-    return ENRICHED_LIBRARY.filter(item => {
+    return combinedLibrary.filter(item => {
       const matchesSearch = 
         item.name.toLowerCase().includes(libSearch.toLowerCase()) ||
         (item.muscleGroup || "").toLowerCase().includes(libSearch.toLowerCase()) ||
@@ -79,7 +219,7 @@ export const AthleteGuide: FC = () => {
 
       return matchesSearch && matchesCategory && matchesDifficulty;
     });
-  }, [libSearch, libCategory, libDifficulty]);
+  }, [combinedLibrary, libSearch, libCategory, libDifficulty]);
 
   return (
     <div className="space-y-8 pb-20">
@@ -457,16 +597,29 @@ export const AthleteGuide: FC = () => {
               </p>
             </div>
 
-            {/* Quick search */}
-            <div className="relative w-full md:w-80">
-              <input
-                type="text"
-                value={libSearch}
-                onChange={(e) => setLibSearch(e.target.value)}
-                placeholder="Buscar por nome, músculo, padrão..."
-                className="w-full bg-[#0e1322] border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-brand-primary"
-              />
-              <Search className="absolute right-3.5 top-3 w-4 h-4 text-slate-500" />
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => {
+                  setExerciseToEdit(null);
+                  setIsEditorOpen(true);
+                }}
+                className="bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-[10px] px-4 py-2.5 rounded-xl transition-all uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-[#39FF14]/10 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>Novo Exercício</span>
+              </button>
+
+              {/* Quick search */}
+              <div className="relative w-full md:w-80">
+                <input
+                  type="text"
+                  value={libSearch}
+                  onChange={(e) => setLibSearch(e.target.value)}
+                  placeholder="Buscar por nome, músculo, padrão..."
+                  className="w-full bg-[#0e1322] border border-slate-800 rounded-xl px-4 py-2.5 text-xs font-bold text-white placeholder-slate-500 focus:outline-none focus:border-brand-primary"
+                />
+                <Search className="absolute right-3.5 top-3 w-4 h-4 text-slate-500" />
+              </div>
             </div>
           </div>
 
@@ -725,6 +878,41 @@ export const AthleteGuide: FC = () => {
                               )}
                             </div>
                           )}
+
+                          {/* Botões de Ação para Biblioteca */}
+                          <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-850/65">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExerciseToEdit(item);
+                                setIsEditorOpen(true);
+                              }}
+                              className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              <span>Editar Exercício</span>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExerciseToClone(item);
+                              }}
+                              className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Clonar</span>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExerciseToDelete(item);
+                              }}
+                              className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Excluir</span>
+                            </button>
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -742,6 +930,95 @@ export const AthleteGuide: FC = () => {
           </div>
         </div>
       )}
+
+      {/* CONFIRM DELETE MODAL */}
+      <AnimatePresence>
+        {exerciseToDelete && (
+          <div className="fixed inset-0 z-[1400] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-fade-in">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0c111d] border border-slate-850 p-6 rounded-3xl max-w-md w-full shadow-2xl space-y-4"
+            >
+              <div className="flex items-center gap-3 text-rose-500">
+                <AlertCircle className="w-6 h-6 shrink-0" />
+                <h4 className="text-base font-black uppercase tracking-tight">Confirmar Exclusão</h4>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                Tem certeza de que deseja excluir o exercício <strong className="text-white italic">"{exerciseToDelete.name.toUpperCase()}"</strong> da sua biblioteca?
+              </p>
+              <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+                ⚠️ Essa ação é irreversível e removerá o exercício de todas as buscas futuras.
+              </p>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setExerciseToDelete(null)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-850 text-slate-300 font-black text-[9px] uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => handleDeleteExercise(exerciseToDelete.id)}
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-black text-[9px] uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-rose-600/10 cursor-pointer"
+                >
+                  Confirmar e Excluir
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CONFIRM CLONE MODAL */}
+      <AnimatePresence>
+        {exerciseToClone && (
+          <div className="fixed inset-0 z-[1400] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-fade-in">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0c111d] border border-slate-850 p-6 rounded-3xl max-w-md w-full shadow-2xl space-y-4"
+            >
+              <div className="flex items-center gap-3 text-amber-500">
+                <Copy className="w-6 h-6 shrink-0" />
+                <h4 className="text-base font-black uppercase tracking-tight">Clonar Exercício</h4>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                Deseja criar uma cópia do exercício <strong className="text-white italic">"{exerciseToClone.name.toUpperCase()}"</strong> na sua biblioteca?
+              </p>
+              <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+                💡 A cópia será gerada com o sufixo "(CÓPIA)" para que você possa editá-la livremente sem alterar o original.
+              </p>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setExerciseToClone(null)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-850 text-slate-300 font-black text-[9px] uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => handleCloneExercise(exerciseToClone)}
+                  className="px-5 py-2 bg-amber-500 text-slate-950 hover:bg-amber-400 font-black text-[9px] uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-amber-500/10 cursor-pointer"
+                >
+                  Clonar Exercício
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL DE EDIÇÃO / CRIAÇÃO */}
+      <ExerciseEditorModal
+        isOpen={isEditorOpen}
+        exercise={exerciseToEdit}
+        onClose={() => {
+          setIsEditorOpen(false);
+          setExerciseToEdit(null);
+        }}
+        onSave={handleSaveExercise}
+      />
     </div>
   );
 };

@@ -5,13 +5,15 @@ import {
   Settings, AlertCircle, Check, Heart, History, 
   X, ChevronRight, Grid, HelpCircle, Info, Brain, 
   Cpu, Sliders, Layers, Award, ShieldAlert, CheckCircle2,
-  TrendingUp, RefreshCw, Eye, BookOpen, Target, Save, Bookmark, Video, Play, Image as ImageIcon
+  TrendingUp, RefreshCw, Eye, BookOpen, Target, Save, Bookmark, Video, Play, Image as ImageIcon,
+  Edit3
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "react-hot-toast";
 import { Workout, PrescribedExercise } from "../types";
 import { ENRICHED_LIBRARY, EnrichedExercise, getBiomechanicalDetails, BiomechanicalDetails } from "../data/exercises";
 import { searchExercisesWithAi, prescribeWorkoutWithAi } from "../services/aiPerformanceService";
+import { ExerciseEditorModal } from "./ExerciseEditorModal";
 
 interface WorkoutEditorPremiumProps {
   workout: Partial<Workout>;
@@ -346,9 +348,128 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
     }
   });
 
+  const [deletedExerciseIds, setDeletedExerciseIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem("LB_DELETED_LIBRARY_EXERCISES");
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Erro ao carregar exercícios deletados:", e);
+      return [];
+    }
+  });
+
+  // Keep state updated if other tabs change local storage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        const storedCustom = localStorage.getItem("LB_CUSTOM_LIBRARY_EXERCISES");
+        if (storedCustom) setCustomLibraryExercises(JSON.parse(storedCustom));
+        const storedDeleted = localStorage.getItem("LB_DELETED_LIBRARY_EXERCISES");
+        if (storedDeleted) setDeletedExerciseIds(JSON.parse(storedDeleted));
+      } catch (e) {
+        console.error("Erro ao sincronizar localStorage:", e);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    // Listen to custom local events if available, or just standard intervals
+    const interval = setInterval(handleStorageChange, 2000);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
   const combinedLibrary = useMemo(() => {
-    return [...ENRICHED_LIBRARY, ...customLibraryExercises];
-  }, [customLibraryExercises]);
+    const customMap = new Map(customLibraryExercises.map(ex => [ex.id, ex]));
+    const list: EnrichedExercise[] = [];
+    
+    // Built-ins
+    ENRICHED_LIBRARY.forEach(builtIn => {
+      if (deletedExerciseIds.includes(builtIn.id)) return;
+      if (customMap.has(builtIn.id)) {
+        list.push(customMap.get(builtIn.id)!);
+      } else {
+        list.push(builtIn);
+      }
+    });
+    
+    // Custom news
+    customLibraryExercises.forEach(custom => {
+      if (deletedExerciseIds.includes(custom.id)) return;
+      const isOverrideOfBuiltIn = ENRICHED_LIBRARY.some(b => b.id === custom.id);
+      if (!isOverrideOfBuiltIn) {
+        list.push(custom);
+      }
+    });
+    
+    return list;
+  }, [customLibraryExercises, deletedExerciseIds]);
+
+  // Modals / Confirmation States for Workout Editor
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [exerciseToEdit, setExerciseToEdit] = useState<EnrichedExercise | null>(null);
+  const [exerciseToDelete, setExerciseToDelete] = useState<EnrichedExercise | null>(null);
+  const [exerciseToClone, setExerciseToClone] = useState<EnrichedExercise | null>(null);
+
+  const handleSaveExercise = (updated: EnrichedExercise) => {
+    let updatedList = [...customLibraryExercises];
+    const index = updatedList.findIndex(x => x.id === updated.id);
+    if (index >= 0) {
+      updatedList[index] = updated;
+    } else {
+      updatedList.unshift(updated);
+    }
+    setCustomLibraryExercises(updatedList);
+    localStorage.setItem("LB_CUSTOM_LIBRARY_EXERCISES", JSON.stringify(updatedList));
+    
+    // Trigger storage event so other components sync
+    window.dispatchEvent(new Event("storage"));
+
+    setIsEditorOpen(false);
+    setExerciseToEdit(null);
+    toast.success(`"${updated.name}" salvo com sucesso! 📚`);
+  };
+
+  const handleDeleteExercise = (id: string) => {
+    const updatedDeleted = [...deletedExerciseIds, id];
+    setDeletedExerciseIds(updatedDeleted);
+    localStorage.setItem("LB_DELETED_LIBRARY_EXERCISES", JSON.stringify(updatedDeleted));
+    
+    // Also remove from custom lists if present
+    const updatedCustom = customLibraryExercises.filter(x => x.id !== id);
+    setCustomLibraryExercises(updatedCustom);
+    localStorage.setItem("LB_CUSTOM_LIBRARY_EXERCISES", JSON.stringify(updatedCustom));
+    
+    // Trigger storage event so other components sync
+    window.dispatchEvent(new Event("storage"));
+
+    setExerciseToDelete(null);
+    toast.success("Exercício excluído da biblioteca.");
+  };
+
+  const handleCloneExercise = (item: EnrichedExercise) => {
+    const newId = `custom-lib-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    const cloned: EnrichedExercise = {
+      ...item,
+      id: newId,
+      name: `${item.name} (CÓPIA)`,
+      isFavorite: false,
+    };
+    
+    const updatedList = [cloned, ...customLibraryExercises];
+    setCustomLibraryExercises(updatedList);
+    localStorage.setItem("LB_CUSTOM_LIBRARY_EXERCISES", JSON.stringify(updatedList));
+    
+    // Trigger storage event so other components sync
+    window.dispatchEvent(new Event("storage"));
+
+    setExerciseToClone(null);
+    toast.success(`"${item.name}" clonado com sucesso como "${cloned.name}"!`);
+    
+    // Automatically open editor on the cloned exercise so they can modify it
+    setExerciseToEdit(cloned);
+    setIsEditorOpen(true);
+  };
 
   const saveExerciseToLibrary = (ex: Partial<EnrichedExercise>) => {
     if (!ex.name) {
@@ -2589,25 +2710,152 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
               </div>
 
               {/* Drawer Footer */}
-              <div className="p-6 bg-[#0c111d] border-t border-slate-900 flex justify-between items-center shrink-0">
+              <div className="p-6 bg-[#0c111d] border-t border-slate-900 flex flex-wrap gap-4 justify-between items-center shrink-0">
                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
                   TAGS: {(selectedDetailsExercise.tags || ["N/A"]).join(" | ")}
                 </span>
-                <button
-                  onClick={() => {
-                    addExFromLib(selectedDetailsExercise);
-                    setSelectedDetailsExercise(null);
-                  }}
-                  className="px-6 py-3 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-[11px] uppercase tracking-wider rounded-xl transition-all shadow-xl shadow-[#39FF14]/10 cursor-pointer"
-                >
-                  Prescrever na Planilha Ativa
-                </button>
+                
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setExerciseToEdit(selectedDetailsExercise);
+                      setIsEditorOpen(true);
+                      setSelectedDetailsExercise(null);
+                    }}
+                    className="px-3.5 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="Editar Exercício"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Editar</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setExerciseToClone(selectedDetailsExercise);
+                      setSelectedDetailsExercise(null);
+                    }}
+                    className="px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="Clonar Exercício"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Clonar</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setExerciseToDelete(selectedDetailsExercise);
+                      setSelectedDetailsExercise(null);
+                    }}
+                    className="px-3.5 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="Excluir Exercício"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Excluir</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      addExFromLib(selectedDetailsExercise);
+                      setSelectedDetailsExercise(null);
+                    }}
+                    className="px-5 py-2.5 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-xl shadow-[#39FF14]/10 cursor-pointer ml-2"
+                  >
+                    Prescrever na Planilha Ativa
+                  </button>
+                </div>
               </div>
 
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      {/* CONFIRM DELETE MODAL */}
+      <AnimatePresence>
+        {exerciseToDelete && (
+          <div className="fixed inset-0 z-[1400] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-fade-in">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0c111d] border border-slate-850 p-6 rounded-3xl max-w-md w-full shadow-2xl space-y-4 text-slate-100"
+            >
+              <div className="flex items-center gap-3 text-rose-500">
+                <AlertCircle className="w-6 h-6 shrink-0" />
+                <h4 className="text-base font-black uppercase tracking-tight">Confirmar Exclusão</h4>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                Tem certeza de que deseja excluir o exercício <strong className="text-white italic">"{exerciseToDelete.name.toUpperCase()}"</strong> da sua biblioteca?
+              </p>
+              <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+                ⚠️ Essa ação é irreversível e removerá o exercício de todas as buscas futuras.
+              </p>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setExerciseToDelete(null)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-850 text-slate-300 font-black text-[9px] uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => handleDeleteExercise(exerciseToDelete.id)}
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-black text-[9px] uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-rose-600/10 cursor-pointer"
+                >
+                  Confirmar e Excluir
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CONFIRM CLONE MODAL */}
+      <AnimatePresence>
+        {exerciseToClone && (
+          <div className="fixed inset-0 z-[1400] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-fade-in">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0c111d] border border-slate-850 p-6 rounded-3xl max-w-md w-full shadow-2xl space-y-4 text-slate-100"
+            >
+              <div className="flex items-center gap-3 text-amber-500">
+                <Copy className="w-6 h-6 shrink-0" />
+                <h4 className="text-base font-black uppercase tracking-tight">Clonar Exercício</h4>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                Deseja criar uma cópia do exercício <strong className="text-white italic">"{exerciseToClone.name.toUpperCase()}"</strong> na sua biblioteca?
+              </p>
+              <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+                💡 A cópia será gerada com o sufixo "(CÓPIA)" para que você possa editá-la livremente sem alterar o original.
+              </p>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setExerciseToClone(null)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-850 text-slate-300 font-black text-[9px] uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => handleCloneExercise(exerciseToClone)}
+                  className="px-5 py-2 bg-amber-500 text-slate-950 hover:bg-amber-400 font-black text-[9px] uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-amber-500/10 cursor-pointer"
+                >
+                  Clonar Exercício
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL DE EDIÇÃO / CRIAÇÃO */}
+      <ExerciseEditorModal
+        isOpen={isEditorOpen}
+        exercise={exerciseToEdit}
+        onClose={() => {
+          setIsEditorOpen(false);
+          setExerciseToEdit(null);
+        }}
+        onSave={handleSaveExercise}
+      />
 
     </div>
   );
