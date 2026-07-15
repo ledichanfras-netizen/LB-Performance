@@ -443,7 +443,6 @@ export const supabaseService = {
         periodization_start: athlete.periodizationStart,
         periodization_end: athlete.periodizationEnd,
         training_days: athlete.trainingDays || [],
-        injuries: athlete.injuries || [],
         updated_at: new Date().toISOString()
       });
 

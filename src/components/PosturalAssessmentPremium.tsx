@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Athlete, PosturalAssessment, PosturalDeviation, PosturalCorrectiveExercise, PosturalAiDetails, AssessmentType } from '../types';
-import { Sparkles, Activity, Camera, AlertTriangle, CheckCircle2, Plus, Trash2, Eye, FileText, ChevronRight, Calendar, ArrowLeft, UploadCloud, Info, Dumbbell, Shield, Lightbulb, RefreshCw, EyeOff, Printer } from 'lucide-react';
+import { Sparkles, Activity, Camera, AlertTriangle, CheckCircle2, Plus, Trash2, Eye, FileText, ChevronRight, Calendar, ArrowLeft, UploadCloud, Info, Dumbbell, Shield, Lightbulb, RefreshCw, EyeOff, Printer, Grid, Sliders, Check, RotateCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
 import { DynamicReportEngine, ReportBlock } from './DynamicReportEngine';
@@ -38,6 +38,501 @@ const LOADING_STEPS = [
   "Correlacionando áreas de queixa álgica com compensações de cadeia cinética...",
   "Prescrevendo rotinas corretivas de mobilidade e ativação muscular de elite..."
 ];
+
+interface PosturalVisualizerProps {
+  photoUrl: string;
+  view: 'anterior' | 'lateral' | 'posterior';
+  assessmentId: string;
+  compact?: boolean;
+}
+
+interface PosturalState {
+  showGrid: boolean;
+  showPlumbline: boolean;
+  showAnatomyLines: boolean;
+  plumblineX: number;
+  shoulderY?: number;
+  shoulderAngle?: number;
+  pelvisY?: number;
+  pelvisAngle?: number;
+  headAngle?: number;
+  earX?: number;
+  earY?: number;
+  shoulderX?: number;
+}
+
+export const PosturalVisualizer: React.FC<PosturalVisualizerProps> = ({ photoUrl, view, assessmentId, compact = false }) => {
+  // Unique storage key
+  const storageKey = `LB_POSTURAL_VISUALIZER_v2_${assessmentId}_${view}`;
+
+  // Initial state helper
+  const getInitialState = (): PosturalState => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) return JSON.parse(stored);
+    } catch (e) {
+      console.warn(e);
+    }
+
+    // Smart defaults based on typical anatomical proportions
+    if (view === 'lateral') {
+      return {
+        showGrid: true,
+        showPlumbline: true,
+        showAnatomyLines: true,
+        plumblineX: 48,
+        headAngle: 12.4,
+        earX: 52,
+        earY: 14,
+        shoulderX: 48,
+        shoulderY: 22,
+      };
+    } else {
+      // anterior or posterior
+      return {
+        showGrid: true,
+        showPlumbline: true,
+        showAnatomyLines: true,
+        plumblineX: 50,
+        shoulderY: 21,
+        shoulderAngle: view === 'anterior' ? -1.8 : 2.2,
+        pelvisY: 42,
+        pelvisAngle: view === 'anterior' ? 1.4 : -1.6,
+      };
+    }
+  };
+
+  const [state, setState] = React.useState<PosturalState>(getInitialState);
+
+  // Update helper
+  const updateState = (updates: Partial<PosturalState>) => {
+    setState((prev: PosturalState) => {
+      const newState = { ...prev, ...updates };
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(newState));
+      } catch (e) {
+        console.warn(e);
+      }
+      return newState;
+    });
+  };
+
+  const { showGrid, showPlumbline, showAnatomyLines, plumblineX } = state;
+
+  return (
+    <div className={`relative bg-slate-900 rounded-2xl overflow-hidden flex flex-col border border-slate-200/40 shadow-sm mx-auto ${compact ? 'shadow-xs max-w-[210px] w-fit' : 'w-full'}`}>
+      {/* PHOTO & OVERLAY CONTAINER */}
+      <div className={`relative overflow-hidden flex items-center justify-center bg-black select-none ${compact ? 'w-fit h-fit mx-auto' : 'w-full'}`}>
+        <img
+          src={photoUrl}
+          alt={`Postural View ${view}`}
+          className={`select-none pointer-events-none object-contain ${compact ? 'max-h-[310px] max-w-[190px] w-auto h-auto' : 'w-full h-auto'}`}
+          referrerPolicy="no-referrer"
+        />
+
+        {/* 1. POSTURAL GRID (TELA QUADRICULADA) */}
+        {showGrid && (
+          <div className="absolute inset-0 pointer-events-none opacity-30">
+            <svg className="w-full h-full">
+              <defs>
+                <pattern id={`postural-grid-${view}-${assessmentId}`} width="18" height="18" patternUnits="userSpaceOnUse">
+                  <path d="M 18 0 L 0 0 0 18" fill="none" stroke="rgba(255, 255, 255, 0.45)" strokeWidth="0.5" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill={`url(#postural-grid-${view}-${assessmentId})`} />
+            </svg>
+          </div>
+        )}
+
+        {/* 2. PLUMBLINE (FIO DE PRUMO) */}
+        {showPlumbline && (
+          <div
+            className="absolute top-0 bottom-0 pointer-events-none"
+            style={{ left: `${plumblineX ?? 50}%` }}
+          >
+            {/* Dashed vertical line */}
+            <div className="h-full w-[1.5px] border-l-2 border-dashed border-emerald-400 opacity-80" />
+            {/* Center label */}
+            <span className="absolute top-2 left-1.5 bg-emerald-600/90 text-white text-[7px] font-bold font-mono px-1 py-0.2 rounded leading-none whitespace-nowrap">
+              EIXO DE PRUMO
+            </span>
+          </div>
+        )}
+
+        {/* 3. BIOMECHANICAL ALIGNMENT LINES */}
+        {showAnatomyLines && (
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 300 533" preserveAspectRatio="none">
+            {view !== 'lateral' ? (
+              <>
+                {/* SHOULDER LINE */}
+                {(() => {
+                  const y = (state.shoulderY ?? 21) * 5.33;
+                  const angle = state.shoulderAngle ?? 0;
+                  const isAligned = Math.abs(angle) < 0.2;
+                  const strokeColor = isAligned ? '#10b981' : '#f43f5e';
+                  
+                  return (
+                    <g>
+                      {/* We rotate using SVG transform around the center of the line */}
+                      <g transform={`rotate(${angle}, 150, ${y})`}>
+                        <line
+                          x1="15"
+                          y1={y}
+                          x2="285"
+                          y2={y}
+                          stroke={strokeColor}
+                          strokeWidth="2"
+                          strokeDasharray={isAligned ? "none" : "2 2"}
+                        />
+                        {/* Anatomy Landmark Nodes */}
+                        <circle cx="60" cy={y} r="4" fill={strokeColor} />
+                        <circle cx="240" cy={y} r="4" fill={strokeColor} />
+                      </g>
+                      {/* Label displaying degrees */}
+                      <foreignObject
+                        x="30"
+                        y={y - 25}
+                        width="240"
+                        height="30"
+                        className="overflow-visible"
+                      >
+                        <div className="flex justify-center">
+                          <span
+                            className={`text-[8px] font-black font-sans px-1.5 py-0.5 rounded leading-none shadow-md border whitespace-nowrap ${
+                              isAligned
+                                ? 'bg-emerald-600 text-white border-emerald-500'
+                                : 'bg-rose-600 text-white border-rose-500'
+                            }`}
+                          >
+                            ALINHAMENTO DE OMBROS: {angle > 0 ? '+' : ''}
+                            {angle.toFixed(1)}°
+                          </span>
+                        </div>
+                      </foreignObject>
+                    </g>
+                  );
+                })()}
+
+                {/* PELVIS / HIP LINE */}
+                {(() => {
+                  const y = (state.pelvisY ?? 42) * 5.33;
+                  const angle = state.pelvisAngle ?? 0;
+                  const isAligned = Math.abs(angle) < 0.2;
+                  const strokeColor = isAligned ? '#10b981' : '#f59e0b';
+                  
+                  return (
+                    <g>
+                      <g transform={`rotate(${angle}, 150, ${y})`}>
+                        <line
+                          x1="15"
+                          y1={y}
+                          x2="285"
+                          y2={y}
+                          stroke={strokeColor}
+                          strokeWidth="2"
+                          strokeDasharray={isAligned ? "none" : "2 2"}
+                        />
+                        <circle cx="75" cy={y} r="4" fill={strokeColor} />
+                        <circle cx="225" cy={y} r="4" fill={strokeColor} />
+                      </g>
+                      <foreignObject
+                        x="30"
+                        y={y - 25}
+                        width="240"
+                        height="30"
+                        className="overflow-visible"
+                      >
+                        <div className="flex justify-center">
+                          <span
+                            className={`text-[8px] font-black font-sans px-1.5 py-0.5 rounded leading-none shadow-md border whitespace-nowrap ${
+                              isAligned
+                                ? 'bg-emerald-600 text-white border-emerald-500'
+                                : 'bg-amber-600 text-white border-amber-500'
+                            }`}
+                          >
+                            NIVELAMENTO PÉLVICO: {angle > 0 ? '+' : ''}
+                            {angle.toFixed(1)}°
+                          </span>
+                        </div>
+                      </foreignObject>
+                    </g>
+                  );
+                })()}
+              </>
+            ) : (
+              <>
+                {/* LATERAL VIEW: FORWARD HEAD CARRIAGE LINE */}
+                {(() => {
+                  const earX = (state.earX ?? 52) * 3;
+                  const earY = (state.earY ?? 14) * 5.33;
+                  const shoulderX = (state.shoulderX ?? 48) * 3;
+                  const shoulderY = (state.shoulderY ?? 22) * 5.33;
+                  const angle = state.headAngle ?? 0;
+                  const isNormal = angle < 10;
+                  const color = isNormal ? '#10b981' : '#f59e0b';
+
+                  return (
+                    <g>
+                      {/* Draw anatomical markers */}
+                      {/* Ear (Meato Acústico Externo) */}
+                      <circle cx={earX} cy={earY} r="5" fill="#38bdf8" stroke="#ffffff" strokeWidth="1.5" />
+                      {/* Acromion (Ombro) */}
+                      <circle cx={shoulderX} cy={shoulderY} r="5" fill="#f43f5e" stroke="#ffffff" strokeWidth="1.5" />
+
+                      {/* Connect ear to acromion */}
+                      <line
+                        x1={earX}
+                        y1={earY}
+                        x2={shoulderX}
+                        y2={shoulderY}
+                        stroke={color}
+                        strokeWidth="2"
+                        strokeDasharray="3 3"
+                      />
+
+                      {/* Projection Line (Vertical from Shoulder to compare Head Position) */}
+                      <line
+                        x1={shoulderX}
+                        y1={earY - 10}
+                        x2={shoulderX}
+                        y2={shoulderY + 50}
+                        stroke="rgba(255, 255, 255, 0.4)"
+                        strokeWidth="1"
+                        strokeDasharray="1 1"
+                      />
+
+                      {/* Text Label */}
+                      <foreignObject
+                        x="30"
+                        y={(earY + shoulderY) / 2 - 15}
+                        width="240"
+                        height="30"
+                        className="overflow-visible"
+                      >
+                        <div className="flex justify-center">
+                          <span
+                            className={`text-[8px] font-black font-sans px-1.5 py-0.5 rounded leading-none shadow-md border whitespace-nowrap ${
+                              isNormal
+                                ? 'bg-emerald-600 text-white border-emerald-500'
+                                : 'bg-amber-600 text-white border-amber-500'
+                            }`}
+                          >
+                            PROJEÇÃO CERVICAL: {angle.toFixed(1)}° {isNormal ? '(NEUTRA)' : '(PROTUSA)'}
+                          </span>
+                        </div>
+                      </foreignObject>
+                    </g>
+                  );
+                })()}
+              </>
+            )}
+          </svg>
+        )}
+
+        {/* View text overlay (Prismatic badge) */}
+        <div className="absolute bottom-2 left-2 bg-slate-900/90 backdrop-blur-md text-white text-[8px] font-bold font-mono px-2 py-0.5 rounded border border-slate-800 uppercase tracking-wider font-sans select-none pointer-events-none">
+          Vista {view}
+        </div>
+      </div>
+
+      {/* CONTROLS OVERLAY (HIDDEN ON PRINT & JPEG EXPORT) */}
+      {!compact && (
+        <div className="print:hidden no-print bg-slate-950/95 border-t border-slate-800 p-3 flex flex-col gap-2 shrink-0 select-none">
+        {/* Toggle Controls bar */}
+        <div className="flex items-center justify-between gap-1 border-b border-slate-850 pb-2">
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Sliders className="w-3 h-3 text-emerald-500" /> Ajuste Métrico
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => updateState({ showGrid: !showGrid })}
+              className={`p-1.5 rounded text-[8px] font-black uppercase tracking-wider flex items-center gap-1 transition-colors border cursor-pointer ${
+                showGrid
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-400'
+              }`}
+              title="Alternar Grade de Postura"
+            >
+              <Grid className="w-3 h-3" /> Grade
+            </button>
+            <button
+              onClick={() => updateState({ showPlumbline: !showPlumbline })}
+              className={`p-1.5 rounded text-[8px] font-black uppercase tracking-wider flex items-center gap-1 transition-colors border cursor-pointer ${
+                showPlumbline
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-400'
+              }`}
+              title="Alternar Linha Vertical de Prumo"
+            >
+              <Activity className="w-3 h-3" /> Prumo
+            </button>
+            <button
+              onClick={() => updateState({ showAnatomyLines: !showAnatomyLines })}
+              className={`p-1.5 rounded text-[8px] font-black uppercase tracking-wider flex items-center gap-1 transition-colors border cursor-pointer ${
+                showAnatomyLines
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-400'
+              }`}
+              title="Alternar Linhas Biomecânicas"
+            >
+              <Check className="w-3 h-3" /> Linhas
+            </button>
+          </div>
+        </div>
+
+        {/* Adjustments sliders */}
+        {showAnatomyLines && (
+          <div className="space-y-2 pt-0.5">
+            {view !== 'lateral' ? (
+              <>
+                {/* Shoulder Y Adjustment */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center text-[9px] font-semibold text-slate-400">
+                    <span className="uppercase">Altura Ombros</span>
+                    <span className="font-mono font-bold text-slate-300">{state.shoulderY ?? 21}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="90"
+                    step="1"
+                    value={state.shoulderY ?? 21}
+                    onChange={e => updateState({ shoulderY: parseInt(e.target.value) })}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                  />
+                </div>
+
+                {/* Shoulder Angle Adjustment */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center text-[9px] font-semibold text-slate-400">
+                    <span className="uppercase">Rotação Ombros (Grau)</span>
+                    <span className="font-mono font-bold text-slate-300">{state.shoulderAngle?.toFixed(1)}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-10"
+                    max="10"
+                    step="0.1"
+                    value={state.shoulderAngle ?? 0}
+                    onChange={e => updateState({ shoulderAngle: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                  />
+                </div>
+
+                {/* Pelvis Y Adjustment */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center text-[9px] font-semibold text-slate-400">
+                    <span className="uppercase">Altura Pélvis</span>
+                    <span className="font-mono font-bold text-slate-300">{state.pelvisY ?? 42}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="90"
+                    step="1"
+                    value={state.pelvisY ?? 42}
+                    onChange={e => updateState({ pelvisY: parseInt(e.target.value) })}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                  />
+                </div>
+
+                {/* Pelvis Angle Adjustment */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center text-[9px] font-semibold text-slate-400">
+                    <span className="uppercase">Rotação Pélvis (Grau)</span>
+                    <span className="font-mono font-bold text-slate-300">{state.pelvisAngle?.toFixed(1)}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-10"
+                    max="10"
+                    step="0.1"
+                    value={state.pelvisAngle ?? 0}
+                    onChange={e => updateState({ pelvisAngle: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Lateral: Head Angle Slider */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center text-[9px] font-semibold text-slate-400">
+                    <span className="uppercase">Ângulo Cervical (Graus)</span>
+                    <span className="font-mono font-bold text-slate-300">{state.headAngle?.toFixed(1)}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="30"
+                    step="0.1"
+                    value={state.headAngle ?? 12.4}
+                    onChange={e => updateState({ headAngle: parseFloat(e.target.value) })}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  />
+                </div>
+
+                {/* Lateral: Head Y Slider */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center text-[9px] font-semibold text-slate-400">
+                    <span className="uppercase">Posição do Ouvido (Y)</span>
+                    <span className="font-mono font-bold text-slate-300">{state.earY}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="40"
+                    step="1"
+                    value={state.earY ?? 14}
+                    onChange={e => updateState({ earY: parseInt(e.target.value), headAngle: Math.max(0, ((state.shoulderY ?? 22) - parseInt(e.target.value)) * 0.9) })}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
+                  />
+                </div>
+
+                {/* Lateral: Shoulder Y Slider */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center text-[9px] font-semibold text-slate-400">
+                    <span className="uppercase">Posição do Ombro (Y)</span>
+                    <span className="font-mono font-bold text-slate-300">{state.shoulderY}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="15"
+                    max="60"
+                    step="1"
+                    value={state.shoulderY ?? 22}
+                    onChange={e => updateState({ shoulderY: parseInt(e.target.value), headAngle: Math.max(0, (parseInt(e.target.value) - (state.earY ?? 14)) * 0.9) })}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Plumbline X slider */}
+            {showPlumbline && (
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between items-center text-[9px] font-semibold text-slate-400">
+                  <span className="uppercase">Eixo Horizontal do Prumo</span>
+                  <span className="font-mono font-bold text-slate-300">{state.plumblineX ?? 50}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="80"
+                  step="1"
+                  value={state.plumblineX ?? 50}
+                  onChange={e => updateState({ plumblineX: parseInt(e.target.value) })}
+                  className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      )}
+    </div>
+  );
+};
 
 export const PosturalAssessmentPremium: React.FC<PosturalAssessmentPremiumProps> = ({
   athlete,
@@ -283,32 +778,16 @@ export const PosturalAssessmentPremium: React.FC<PosturalAssessmentPremiumProps>
               section: 'Laudo Clínico',
               content: (
                 <div className="space-y-6 text-left">
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-3 gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-150">
-                    <div>
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Modalidade</p>
-                      <p className="text-sm font-black text-slate-900 uppercase italic truncate">{athlete.modality || 'Não Informada'}</p>
-                    </div>
-                    <div className="border-l border-slate-200 pl-4">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Peso Corporal</p>
-                      <p className="text-sm font-black text-slate-900 uppercase italic truncate">{athlete.weight ? `${athlete.weight} kg` : 'N/D'}</p>
-                    </div>
-                    <div className="border-l border-slate-200 pl-4">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Estatura</p>
-                      <p className="text-sm font-black text-slate-900 uppercase italic truncate">{athlete.height ? `${athlete.height} cm` : 'N/D'}</p>
-                    </div>
-                  </div>
-
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <div className="w-1.5 h-4 bg-emerald-600 rounded-full"></div>
                       <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Diagnóstico Clínico da Postura</h3>
                     </div>
-                    <div className="bg-slate-950 text-white rounded-[2rem] p-6 border border-slate-900 shadow-xl relative overflow-hidden">
+                    <div className="bg-slate-950 text-white rounded-[2rem] p-6 border border-slate-900 shadow-xl relative overflow-hidden print:p-4 print:rounded-2xl">
                       <div className="absolute right-4 bottom-4 opacity-[0.03] pointer-events-none">
                         <Sparkles className="w-32 h-32 text-white" />
                       </div>
-                      <p className="text-xs text-slate-300 leading-relaxed font-sans whitespace-pre-line">
+                      <p className="text-xs text-slate-300 leading-relaxed font-sans whitespace-pre-line break-words overflow-hidden print:text-[10px] print:leading-normal">
                         {selectedAssessment.aiDetails?.conclusao || selectedAssessment.observations}
                       </p>
                     </div>
@@ -321,8 +800,8 @@ export const PosturalAssessmentPremium: React.FC<PosturalAssessmentPremiumProps>
                         {selectedAssessment.painZones.map(zone => {
                           const label = COMMON_PAIN_ZONES.find(z => z.id === zone)?.label || zone;
                           return (
-                            <span key={zone} className="text-[10px] bg-red-50 border border-red-200 text-red-600 px-3 py-1 rounded-full flex items-center gap-1.5 font-bold">
-                              <AlertTriangle className="w-3.5 h-3.5" /> {label}
+                            <span key={zone} className="text-[10px] bg-red-50 border border-red-200 text-red-600 px-3 py-1 rounded-full inline-flex items-center gap-1.5 font-bold break-words whitespace-normal print:px-2 print:py-0.5 print:text-[9px]">
+                              <AlertTriangle className="w-3.5 h-3.5 shrink-0" /> <span className="break-all">{label}</span>
                             </span>
                           );
                         })}
@@ -330,30 +809,104 @@ export const PosturalAssessmentPremium: React.FC<PosturalAssessmentPremiumProps>
                     </div>
                   )}
 
-                  <div className="space-y-3 pt-2">
-                    <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Registros Fotográficos Kinantropométricos</h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      {['anterior', 'lateral', 'posterior'].map(view => {
-                        const photoUrl = view === 'anterior' ? selectedAssessment.photoAnterior :
-                                       view === 'lateral' ? selectedAssessment.photoLateral :
-                                       selectedAssessment.photoPosterior;
-                        
-                        return (
-                          <div key={view} className="aspect-[3/4] rounded-2xl bg-slate-50 border border-slate-200/60 flex flex-col items-center justify-center p-1.5 overflow-hidden relative">
-                            {photoUrl ? (
-                              <img src={photoUrl} alt={view} className="w-full h-full object-cover rounded-xl" referrerPolicy="no-referrer" />
-                            ) : (
-                              <div className="text-center p-2">
-                                <EyeOff className="w-5 h-5 text-slate-300 mx-auto mb-1" />
-                                <span className="text-[9px] text-slate-400 font-mono capitalize">{view}</span>
-                              </div>
-                            )}
-                            <div className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-md text-white text-[8px] font-bold font-mono px-2 py-0.5 rounded capitalize font-sans">
-                              Vista {view}
-                            </div>
-                          </div>
-                        );
-                      })}
+                  <div className="pt-2">
+                    <p className="text-[10px] text-slate-400 italic text-center leading-normal">
+                      * As fotos com as linhas de avaliação anatômica estão posicionadas lado a lado a seguir para análise integrada.
+                    </p>
+                  </div>
+                </div>
+              )
+            },
+            {
+              id: 'fotos-postura-tridimensional',
+              section: 'Alinhamento Postural',
+              forcePageBreak: true,
+              content: (
+                <div className="space-y-3 text-left">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-4 bg-emerald-600 rounded-full"></div>
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Avaliação Postural Tridimensional</h3>
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-normal -mt-2">
+                    Registro fotográfico do alinhamento biomecânico corporal em planos Anterior, Lateral e Posterior com sobreposição de eixos anatômicos e linha de prumo.
+                  </p>
+
+                  {/* 3 Photos Side by Side */}
+                  <div className="grid grid-cols-3 gap-3 justify-items-center items-stretch py-1">
+                    {/* Anterior View */}
+                    <div className="flex flex-col items-center w-full min-w-0">
+                      <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center mb-1">Vista Anterior</div>
+                      {selectedAssessment.photoAnterior ? (
+                        <PosturalVisualizer
+                          photoUrl={selectedAssessment.photoAnterior}
+                          view="anterior"
+                          assessmentId={selectedAssessment.id}
+                          compact={true}
+                        />
+                      ) : (
+                        <div className="aspect-[9/16] rounded-xl bg-slate-50 border border-slate-200/60 flex flex-col items-center justify-center p-3 relative w-[140px] h-[230px] shrink-0">
+                          <EyeOff className="w-5 h-5 text-slate-300 mb-1" />
+                          <span className="text-[8px] text-slate-400 font-bold font-mono uppercase text-center leading-tight">Não Disponível</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Lateral View */}
+                    <div className="flex flex-col items-center w-full min-w-0">
+                      <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center mb-1">Vista Lateral</div>
+                      {selectedAssessment.photoLateral ? (
+                        <PosturalVisualizer
+                          photoUrl={selectedAssessment.photoLateral}
+                          view="lateral"
+                          assessmentId={selectedAssessment.id}
+                          compact={true}
+                        />
+                      ) : (
+                        <div className="aspect-[9/16] rounded-xl bg-slate-50 border border-slate-200/60 flex flex-col items-center justify-center p-3 relative w-[140px] h-[230px] shrink-0">
+                          <EyeOff className="w-5 h-5 text-slate-300 mb-1" />
+                          <span className="text-[8px] text-slate-400 font-bold font-mono uppercase text-center leading-tight">Não Disponível</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Posterior View */}
+                    <div className="flex flex-col items-center w-full min-w-0">
+                      <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center mb-1">Vista Posterior</div>
+                      {selectedAssessment.photoPosterior ? (
+                        <PosturalVisualizer
+                          photoUrl={selectedAssessment.photoPosterior}
+                          view="posterior"
+                          assessmentId={selectedAssessment.id}
+                          compact={true}
+                        />
+                      ) : (
+                        <div className="aspect-[9/16] rounded-xl bg-slate-50 border border-slate-200/60 flex flex-col items-center justify-center p-3 relative w-[140px] h-[230px] shrink-0">
+                          <EyeOff className="w-5 h-5 text-slate-300 mb-1" />
+                          <span className="text-[8px] text-slate-400 font-bold font-mono uppercase text-center leading-tight">Não Disponível</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Descriptions Grid Below */}
+                  <div className="grid grid-cols-3 gap-3 pt-2 border-t border-slate-100">
+                    <div className="bg-slate-50/50 p-2 rounded-xl border border-slate-150">
+                      <h4 className="text-[8px] font-black text-slate-700 uppercase tracking-wider mb-0.5">Vista Anterior</h4>
+                      <p className="text-[9px] text-slate-500 leading-relaxed font-semibold">
+                        Nivelamento pélvico e dos ombros. Identifica inclinações laterais e assimetrias de linha média.
+                      </p>
+                    </div>
+                    <div className="bg-slate-50/50 p-2 rounded-xl border border-slate-150">
+                      <h4 className="text-[8px] font-black text-slate-700 uppercase tracking-wider mb-0.5">Vista Lateral</h4>
+                      <p className="text-[9px] text-slate-500 leading-relaxed font-semibold">
+                        Fio de prumo ideal. Identifica hiperlordose, cifose dorsal ou anteriorização da cabeça.
+                      </p>
+                    </div>
+                    <div className="bg-slate-50/50 p-2 rounded-xl border border-slate-150">
+                      <h4 className="text-[8px] font-black text-slate-700 uppercase tracking-wider mb-0.5">Vista Posterior</h4>
+                      <p className="text-[9px] text-slate-500 leading-relaxed font-semibold">
+                        Espinhas escapulares e triângulo de escarpa. Diagnostica escoliose ou rotações de quadril.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -380,16 +933,16 @@ export const PosturalAssessmentPremium: React.FC<PosturalAssessmentPremiumProps>
                                              'bg-emerald-50 text-emerald-700 border-emerald-150';
                       
                       return (
-                        <div key={idx} className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/60 flex flex-col justify-between text-left">
-                          <div>
-                            <div className="flex items-center justify-between gap-2 mb-2">
-                              <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-widest">{d.regiao}</span>
-                              <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${severityColors}`}>
+                        <div key={idx} className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/60 flex flex-col justify-between text-left overflow-hidden break-words">
+                          <div className="min-w-0 w-full">
+                            <div className="flex items-center justify-between gap-2 mb-2 min-w-0">
+                              <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-widest truncate flex-shrink-0">{d.regiao}</span>
+                              <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider flex-shrink-0 ${severityColors}`}>
                                 {d.gravidade}
                               </span>
                             </div>
-                            <h4 className="font-black text-slate-900 text-xs mb-1 uppercase tracking-tight">{d.desvio}</h4>
-                            <p className="text-[10px] text-slate-600 leading-relaxed font-semibold">{d.compensacao}</p>
+                            <h4 className="font-black text-slate-900 text-xs mb-1 uppercase tracking-tight break-words">{d.desvio}</h4>
+                            <p className="text-[10px] text-slate-600 leading-relaxed font-semibold break-words">{d.compensacao}</p>
                           </div>
                         </div>
                       );
@@ -409,40 +962,40 @@ export const PosturalAssessmentPremium: React.FC<PosturalAssessmentPremiumProps>
                     <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Protocolo Corretivo e Prescrições</h3>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6 font-sans">
-                    {/* Mobility Column */}
-                    <div className="space-y-4">
+                  <div className="space-y-8 font-sans">
+                    {/* Mobility Section */}
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2 mb-1 border-b border-slate-100 pb-2">
                         <Activity className="w-4 h-4 text-emerald-600 animate-pulse" />
-                        <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Mobilidade e Liberação</h4>
+                        <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Mobilidade e Liberação</h4>
                       </div>
-                      <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-2 print:gap-3">
                         {selectedAssessment.aiDetails?.exerciciosMobilidade?.map((ex, idx) => (
-                          <div key={idx} className="p-4 bg-emerald-50/5 rounded-2xl border border-emerald-100/30 text-left">
-                            <div className="flex justify-between items-start gap-2 mb-1.5">
-                              <h5 className="text-[11px] font-black text-emerald-950 uppercase italic leading-tight">{ex.nome}</h5>
-                              <span className="text-[9px] font-mono bg-emerald-100/40 text-emerald-800 px-2 py-0.5 rounded font-black whitespace-nowrap">{ex.series} • {ex.tempo}</span>
+                          <div key={idx} className="p-4 bg-emerald-50/5 rounded-2xl border border-emerald-100/30 text-left overflow-hidden break-words flex flex-col gap-2">
+                            <div className="flex justify-between items-center gap-4 border-b border-slate-100 pb-2 min-w-0">
+                              <h5 className="text-[11px] font-black text-emerald-950 uppercase italic leading-tight flex-1 min-w-0 break-words">{ex.nome}</h5>
+                              <span className="text-[9px] font-mono bg-emerald-100/40 text-emerald-800 px-2.5 py-0.5 rounded font-black whitespace-nowrap flex-shrink-0">{ex.series} • {ex.tempo}</span>
                             </div>
-                            <p className="text-[10px] text-slate-600 leading-relaxed font-semibold">{ex.instrucoes}</p>
+                            <p className="text-[10px] text-slate-600 leading-relaxed font-semibold break-words whitespace-pre-line">{ex.instrucoes}</p>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Strengthening Column */}
-                    <div className="space-y-4">
+                    {/* Strengthening Section */}
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2 mb-1 border-b border-slate-100 pb-2">
                         <Dumbbell className="w-4 h-4 text-sky-600" />
-                        <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest font-bold">Fortalecimento e Ativação</h4>
+                        <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest font-bold">Fortalecimento e Ativação</h4>
                       </div>
-                      <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-2 print:gap-3">
                         {selectedAssessment.aiDetails?.exerciciosFortalecimento?.map((ex, idx) => (
-                          <div key={idx} className="p-4 bg-sky-50/5 rounded-2xl border border-sky-100/30 text-left">
-                            <div className="flex justify-between items-start gap-2 mb-1.5">
-                              <h5 className="text-[11px] font-black text-sky-950 uppercase italic leading-tight">{ex.nome}</h5>
-                              <span className="text-[9px] font-mono bg-sky-100/40 text-sky-800 px-2 py-0.5 rounded font-black whitespace-nowrap">{ex.series} • {ex.reps}</span>
+                          <div key={idx} className="p-4 bg-sky-50/5 rounded-2xl border border-sky-100/30 text-left overflow-hidden break-words flex flex-col gap-2">
+                            <div className="flex justify-between items-center gap-4 border-b border-slate-100 pb-2 min-w-0">
+                              <h5 className="text-[11px] font-black text-sky-950 uppercase italic leading-tight flex-1 min-w-0 break-words">{ex.nome}</h5>
+                              <span className="text-[9px] font-mono bg-sky-100/40 text-sky-800 px-2.5 py-0.5 rounded font-black whitespace-nowrap flex-shrink-0">{ex.series} • {ex.reps}</span>
                             </div>
-                            <p className="text-[10px] text-slate-600 leading-relaxed font-semibold">{ex.instrucoes}</p>
+                            <p className="text-[10px] text-slate-600 leading-relaxed font-semibold break-words whitespace-pre-line">{ex.instrucoes}</p>
                           </div>
                         ))}
                       </div>
@@ -467,13 +1020,13 @@ export const PosturalAssessmentPremium: React.FC<PosturalAssessmentPremiumProps>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {selectedAssessment.aiDetails?.ergonomia?.map((tip, idx) => (
-                      <div key={idx} className="bg-emerald-50/10 p-4 rounded-2xl border border-emerald-100/20 relative overflow-hidden text-left">
+                      <div key={idx} className="bg-emerald-50/10 p-4 rounded-2xl border border-emerald-100/20 relative overflow-hidden text-left break-words">
                         <div className="absolute -right-4 -bottom-4 opacity-[0.03] pointer-events-none">
                           <Info className="w-16 h-16 text-emerald-600" />
                         </div>
-                        <div className="flex items-start gap-2">
+                        <div className="flex items-start gap-2 min-w-0">
                           <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                          <p className="text-[10px] text-slate-600 font-semibold leading-relaxed">{tip}</p>
+                          <p className="text-[10px] text-slate-600 font-semibold leading-relaxed break-words flex-1 min-w-0">{tip}</p>
                         </div>
                       </div>
                     ))}
@@ -489,12 +1042,11 @@ export const PosturalAssessmentPremium: React.FC<PosturalAssessmentPremiumProps>
               reportTitle="AVALIAÇÃO POSTURAL INTELIGENTE"
               reportSubTitle="LAUDO TÉCNICO DE ALINHAMENTO BIOMECÂNICO"
               extraStats={[
-                { label: 'Avaliado em', value: selectedAssessment.date },
                 { label: 'Nível', value: athlete.competitiveLevel ? athlete.competitiveLevel.toUpperCase() : 'ELITE' }
               ]}
               blocks={reportBlocks}
               onClose={() => setSelectedAssessment(null)}
-              hideTOC={false}
+              hideTOC={true}
             />
           );
         })()}
