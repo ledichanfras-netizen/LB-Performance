@@ -152,12 +152,22 @@ export const PosturalAssessmentPremium: React.FC<PosturalAssessmentPremiumProps>
         photoPosterior
       };
 
+      let token = '';
+      try {
+        const storedUser = localStorage.getItem('lb_user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          token = parsedUser.token || '';
+        }
+      } catch (e) {
+        console.warn("Erro ao obter token do lb_user:", e);
+      }
+
       const res = await fetch('/api/generate-postural-ai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Auto inject token if active in the app
-          'Authorization': `Bearer ${localStorage.getItem('lb_token') || ''}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });

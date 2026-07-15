@@ -128,7 +128,7 @@ export const useAthletes = (token?: string | null) => {
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        const list = Array.isArray(parsed) ? parsed.filter(a => !a.id.startsWith('model-')) : [];
+        const list = Array.isArray(parsed) ? parsed.filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises') : [];
         return list.length > 0 ? list : generateFeaturedAthletes();
       } catch (e) {
         return generateFeaturedAthletes();
@@ -321,7 +321,27 @@ export const useAthletes = (token?: string | null) => {
       console.log('Buscando atletas do banco de forma resiliente...');
       const data = await api.loadAthletes();
       if (data) {
-        const filtered = data.filter(a => !a.id.startsWith('model-'));
+        // Extract meta custom library if present
+        const metaRow = data.find(a => a.id === 'meta-custom-library-exercises');
+        if (metaRow && metaRow.injuryHistory) {
+          try {
+            const parsed = JSON.parse(metaRow.injuryHistory);
+            if (parsed && typeof parsed === 'object') {
+              if (Array.isArray(parsed.customLibraryExercises)) {
+                localStorage.setItem("LB_CUSTOM_LIBRARY_EXERCISES", JSON.stringify(parsed.customLibraryExercises));
+              }
+              if (Array.isArray(parsed.deletedExerciseIds)) {
+                localStorage.setItem("LB_DELETED_LIBRARY_EXERCISES", JSON.stringify(parsed.deletedExerciseIds));
+              }
+              window.dispatchEvent(new Event('custom-library-synced'));
+              console.log("[Sync] Biblioteca de exercícios sincronizada com sucesso do banco.");
+            }
+          } catch (e) {
+            console.warn("[Sync] Erro ao carregar biblioteca customizada do metaRow:", e);
+          }
+        }
+
+        const filtered = data.filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises');
         
         // Prevent accidental data deletion on temporary connection/empty-response quirks
         if (filtered.length === 0 && athletes.length > 0) {
@@ -422,6 +442,67 @@ export const useAthletes = (token?: string | null) => {
       window.removeEventListener('touchstart', handleUserActivity);
       clearInterval(intervalId);
     };
+  }, [token]);
+
+  // Intercept localStorage.setItem to auto-sync custom library exercises to database
+  useEffect(() => {
+    try {
+      const originalSetItem = localStorage.setItem;
+      localStorage.setItem = function(key, value) {
+        try {
+          originalSetItem.apply(this, [key, value]);
+        } catch (e) {
+          originalSetItem(key, value);
+        }
+        
+        if (key === "LB_CUSTOM_LIBRARY_EXERCISES" || key === "LB_DELETED_LIBRARY_EXERCISES") {
+          // Trigger background sync
+          setTimeout(() => {
+            try {
+              const custom = JSON.parse(localStorage.getItem("LB_CUSTOM_LIBRARY_EXERCISES") || "[]");
+              const deleted = JSON.parse(localStorage.getItem("LB_DELETED_LIBRARY_EXERCISES") || "[]");
+              
+              const metaAthlete: Athlete = {
+                id: 'meta-custom-library-exercises',
+                name: 'Meta Custom Library Exercises',
+                dob: '2000-01-01',
+                gender: 'M',
+                injuryHistory: JSON.stringify({
+                  customLibraryExercises: custom,
+                  deletedExerciseIds: deleted
+                }),
+                workouts: [],
+                wellness: [],
+                externalSessions: [],
+                assessments: {}
+              };
+
+              console.log("[Auto-Sync] Salvando biblioteca de exercícios alterada no banco...", custom.length);
+              if (token) {
+                resilientFetch('/api/salvar', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify([metaAthlete])
+                }).catch(e => console.warn("[Auto-Sync] Falha ao salvar biblioteca customizada via API:", e));
+              } else {
+                supabaseService.saveAthlete(metaAthlete).catch(e => console.warn("[Auto-Sync] Falha ao salvar biblioteca customizada via Supabase:", e));
+              }
+            } catch (err) {
+              console.warn("[Auto-Sync] Erro ao processar salvamento automático da biblioteca:", err);
+            }
+          }, 200);
+        }
+      };
+
+      return () => {
+        localStorage.setItem = originalSetItem;
+      };
+    } catch (e) {
+      console.warn("Não foi possível interceptar localStorage.setItem:", e);
+    }
   }, [token]);
 
   const save = async (newAthletes: Athlete[], specificAthleteId?: string) => {
