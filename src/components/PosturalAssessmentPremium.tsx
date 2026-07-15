@@ -3,6 +3,7 @@ import { Athlete, PosturalAssessment, PosturalDeviation, PosturalCorrectiveExerc
 import { Sparkles, Activity, Camera, AlertTriangle, CheckCircle2, Plus, Trash2, Eye, FileText, ChevronRight, Calendar, ArrowLeft, UploadCloud, Info, Dumbbell, Shield, Lightbulb, RefreshCw, EyeOff, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
+import { DynamicReportEngine, ReportBlock } from './DynamicReportEngine';
 
 interface PosturalAssessmentPremiumProps {
   athlete: Athlete;
@@ -275,216 +276,228 @@ export const PosturalAssessmentPremium: React.FC<PosturalAssessmentPremiumProps>
         )}
 
         {/* VIEW 2: LAUDO / SINGLE REPORT VIEW */}
-        {!aiLoading && selectedAssessment && (
-          <motion.div
-            key="assessment-details"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            className="space-y-6 print:bg-white print:text-black print:p-0"
-          >
-            {/* Header Controls */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 print:hidden">
-              <button
-                onClick={() => setSelectedAssessment(null)}
-                className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" /> Voltar ao Histórico
-              </button>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => window.print()}
-                  className="flex items-center gap-2 text-xs bg-slate-100 text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-200 transition-colors font-medium"
-                >
-                  <Printer className="w-3.5 h-3.5" /> Imprimir Laudo
-                </button>
-              </div>
-            </div>
-
-            {/* Print Header */}
-            <div className="hidden print:flex flex-col items-center text-center border-b pb-4 mb-6">
-              <h2 className="text-xl font-bold">LATERALUS TRAINING PLATFORM</h2>
-              <p className="text-xs text-gray-500">Laudo Clínico de Avaliação Postural por Inteligência Artificial</p>
-              <div className="flex gap-4 mt-2 text-xs text-gray-700">
-                <span><strong>Atleta:</strong> {athlete.name}</span>
-                <span><strong>Data:</strong> {selectedAssessment.date}</span>
-              </div>
-            </div>
-
-            {/* Assessment Meta Card */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
-              {/* Clinical Summary */}
-              <div className="md:col-span-2 bg-gradient-to-br from-slate-900 via-slate-950 to-black rounded-2xl p-6 border border-slate-800 text-white shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-5">
-                  <Sparkles className="w-48 h-48 text-emerald-400" />
-                </div>
-
-                <div className="flex items-center gap-2.5 mb-4">
-                  <span className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
-                    <Sparkles className="w-5 h-5 animate-pulse" />
-                  </span>
-                  <div>
-                    <span className="text-emerald-400 font-mono text-[10px] uppercase tracking-widest font-semibold">Análise de IA de Elite</span>
-                    <h3 className="font-bold text-lg font-sans">Laudo Postural & Funcional</h3>
+        {!aiLoading && selectedAssessment && (() => {
+          const reportBlocks: ReportBlock[] = [
+            {
+              id: 'resumo-postural',
+              section: 'Laudo Clínico',
+              content: (
+                <div className="space-y-6 text-left">
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-3 gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-150">
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Modalidade</p>
+                      <p className="text-sm font-black text-slate-900 uppercase italic truncate">{athlete.modality || 'Não Informada'}</p>
+                    </div>
+                    <div className="border-l border-slate-200 pl-4">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Peso Corporal</p>
+                      <p className="text-sm font-black text-slate-900 uppercase italic truncate">{athlete.weight ? `${athlete.weight} kg` : 'N/D'}</p>
+                    </div>
+                    <div className="border-l border-slate-200 pl-4">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Estatura</p>
+                      <p className="text-sm font-black text-slate-900 uppercase italic truncate">{athlete.height ? `${athlete.height} cm` : 'N/D'}</p>
+                    </div>
                   </div>
-                </div>
 
-                <p className="text-slate-300 leading-relaxed text-sm whitespace-pre-line font-sans">
-                  {selectedAssessment.aiDetails?.conclusao || selectedAssessment.observations}
-                </p>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-4 bg-emerald-600 rounded-full"></div>
+                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Diagnóstico Clínico da Postura</h3>
+                    </div>
+                    <div className="bg-slate-950 text-white rounded-[2rem] p-6 border border-slate-900 shadow-xl relative overflow-hidden">
+                      <div className="absolute right-4 bottom-4 opacity-[0.03] pointer-events-none">
+                        <Sparkles className="w-32 h-32 text-white" />
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed font-sans whitespace-pre-line">
+                        {selectedAssessment.aiDetails?.conclusao || selectedAssessment.observations}
+                      </p>
+                    </div>
+                  </div>
 
-                {selectedAssessment.painZones && selectedAssessment.painZones.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-slate-800">
-                    <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Zonas de Queixa Álgica Relatadas:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedAssessment.painZones.map(zone => {
-                        const label = COMMON_PAIN_ZONES.find(z => z.id === zone)?.label || zone;
+                  {selectedAssessment.painZones && selectedAssessment.painZones.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Zonas de Queixa Álgica</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedAssessment.painZones.map(zone => {
+                          const label = COMMON_PAIN_ZONES.find(z => z.id === zone)?.label || zone;
+                          return (
+                            <span key={zone} className="text-[10px] bg-red-50 border border-red-200 text-red-600 px-3 py-1 rounded-full flex items-center gap-1.5 font-bold">
+                              <AlertTriangle className="w-3.5 h-3.5" /> {label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3 pt-2">
+                    <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Registros Fotográficos Kinantropométricos</h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['anterior', 'lateral', 'posterior'].map(view => {
+                        const photoUrl = view === 'anterior' ? selectedAssessment.photoAnterior :
+                                       view === 'lateral' ? selectedAssessment.photoLateral :
+                                       selectedAssessment.photoPosterior;
+                        
                         return (
-                          <span key={zone} className="text-xs bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-1 rounded-full flex items-center gap-1.5 font-medium">
-                            <AlertTriangle className="w-3 h-3" /> {label}
-                          </span>
+                          <div key={view} className="aspect-[3/4] rounded-2xl bg-slate-50 border border-slate-200/60 flex flex-col items-center justify-center p-1.5 overflow-hidden relative">
+                            {photoUrl ? (
+                              <img src={photoUrl} alt={view} className="w-full h-full object-cover rounded-xl" referrerPolicy="no-referrer" />
+                            ) : (
+                              <div className="text-center p-2">
+                                <EyeOff className="w-5 h-5 text-slate-300 mx-auto mb-1" />
+                                <span className="text-[9px] text-slate-400 font-mono capitalize">{view}</span>
+                              </div>
+                            )}
+                            <div className="absolute bottom-2 left-2 bg-slate-900/85 backdrop-blur-md text-white text-[8px] font-bold font-mono px-2 py-0.5 rounded capitalize font-sans">
+                              Vista {view}
+                            </div>
+                          </div>
                         );
                       })}
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Photos Captured (if any) */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 flex flex-col justify-between">
-                <div>
-                  <h4 className="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2">
-                    <Camera className="w-4 h-4 text-slate-500" /> Registros Fotográficos
-                  </h4>
+                </div>
+              )
+            },
+            {
+              id: 'desvios-posturais',
+              section: 'Desvios & Compensações',
+              forcePageBreak: true,
+              content: (
+                <div className="space-y-4 text-left">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-4 bg-emerald-600 rounded-full"></div>
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Desvios Anatômicos e Compensações Identificadas</h3>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed -mt-2">
+                    Abaixo estão detalhados os desalinhamentos posturais estruturais detectados pela análise de imagem inteligente.
+                  </p>
                   
-                  <div className="grid grid-cols-3 gap-2">
-                    {['anterior', 'lateral', 'posterior'].map(view => {
-                      const photoUrl = view === 'anterior' ? selectedAssessment.photoAnterior :
-                                     view === 'lateral' ? selectedAssessment.photoLateral :
-                                     selectedAssessment.photoPosterior;
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedAssessment.aiDetails?.desvios?.map((d, idx) => {
+                      const severityColors = d.gravidade === 'Severo' ? 'bg-red-50 text-red-700 border-red-150' :
+                                             d.gravidade === 'Moderado' ? 'bg-amber-50 text-amber-700 border-amber-150' :
+                                             'bg-emerald-50 text-emerald-700 border-emerald-150';
                       
                       return (
-                        <div key={view} className="aspect-3/4 rounded-lg bg-slate-50 border border-slate-100 flex flex-col items-center justify-center p-1 overflow-hidden relative group">
-                          {photoUrl ? (
-                            <>
-                              <img src={photoUrl} alt={view} className="w-full h-full object-cover rounded-md" referrerPolicy="no-referrer" />
-                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                <span className="text-[9px] font-mono text-white capitalize">{view}</span>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="text-center p-2">
-                              <EyeOff className="w-4 h-4 text-slate-300 mx-auto mb-1" />
-                              <span className="text-[9px] text-slate-400 block capitalize font-mono">{view}</span>
+                        <div key={idx} className="bg-slate-50/50 rounded-2xl p-4 border border-slate-200/60 flex flex-col justify-between text-left">
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className="text-[9px] font-mono font-black text-slate-400 uppercase tracking-widest">{d.regiao}</span>
+                              <span className={`text-[9px] font-black px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${severityColors}`}>
+                                {d.gravidade}
+                              </span>
                             </div>
-                          )}
+                            <h4 className="font-black text-slate-900 text-xs mb-1 uppercase tracking-tight">{d.desvio}</h4>
+                            <p className="text-[10px] text-slate-600 leading-relaxed font-semibold">{d.compensacao}</p>
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 </div>
+              )
+            },
+            {
+              id: 'protocolos-corretivos',
+              section: 'Protocolos de Correção',
+              forcePageBreak: true,
+              content: (
+                <div className="space-y-6 text-left">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-4 bg-slate-900 rounded-full"></div>
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Protocolo Corretivo e Prescrições</h3>
+                  </div>
 
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>Avaliado em {selectedAssessment.date}</span>
+                  <div className="grid grid-cols-2 gap-6 font-sans">
+                    {/* Mobility Column */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-1 border-b border-slate-100 pb-2">
+                        <Activity className="w-4 h-4 text-emerald-600 animate-pulse" />
+                        <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Mobilidade e Liberação</h4>
+                      </div>
+                      <div className="space-y-3">
+                        {selectedAssessment.aiDetails?.exerciciosMobilidade?.map((ex, idx) => (
+                          <div key={idx} className="p-4 bg-emerald-50/5 rounded-2xl border border-emerald-100/30 text-left">
+                            <div className="flex justify-between items-start gap-2 mb-1.5">
+                              <h5 className="text-[11px] font-black text-emerald-950 uppercase italic leading-tight">{ex.nome}</h5>
+                              <span className="text-[9px] font-mono bg-emerald-100/40 text-emerald-800 px-2 py-0.5 rounded font-black whitespace-nowrap">{ex.series} • {ex.tempo}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-600 leading-relaxed font-semibold">{ex.instrucoes}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Strengthening Column */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-1 border-b border-slate-100 pb-2">
+                        <Dumbbell className="w-4 h-4 text-sky-600" />
+                        <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest font-bold">Fortalecimento e Ativação</h4>
+                      </div>
+                      <div className="space-y-3">
+                        {selectedAssessment.aiDetails?.exerciciosFortalecimento?.map((ex, idx) => (
+                          <div key={idx} className="p-4 bg-sky-50/5 rounded-2xl border border-sky-100/30 text-left">
+                            <div className="flex justify-between items-start gap-2 mb-1.5">
+                              <h5 className="text-[11px] font-black text-sky-950 uppercase italic leading-tight">{ex.nome}</h5>
+                              <span className="text-[9px] font-mono bg-sky-100/40 text-sky-800 px-2 py-0.5 rounded font-black whitespace-nowrap">{ex.series} • {ex.reps}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-600 leading-relaxed font-semibold">{ex.instrucoes}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Bento Grid: Identified Deviations */}
-            <div className="space-y-4">
-              <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
-                <Shield className="w-4.5 h-4.5 text-slate-500" /> Desvios Anatômicos e Compensações Identificadas
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {selectedAssessment.aiDetails?.desvios?.map((d, idx) => {
-                  const severityColors = d.gravidade === 'Severo' ? 'bg-red-50 text-red-700 border-red-100' :
-                                         d.gravidade === 'Moderado' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                                         'bg-emerald-50 text-emerald-700 border-emerald-100';
+              )
+            },
+            {
+              id: 'ergonomia-postura',
+              section: 'Prescrições Ergonômicas',
+              forcePageBreak: true,
+              content: (
+                <div className="space-y-4 text-left">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5 text-emerald-600" />
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Recomendações de Ergonomia & Estilo de Vida</h3>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-relaxed -mt-2">
+                    Hábitos posturais diários recomendados para evitar recidivas e consolidar os ganhos corretivos neuromusculares.
+                  </p>
                   
-                  return (
-                    <div key={idx} className="bg-white rounded-xl p-5 border border-slate-200 flex flex-col justify-between hover:border-slate-300 hover:shadow-sm transition-all">
-                      <div>
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wide">{d.regiao}</span>
-                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${severityColors}`}>
-                            {d.gravidade}
-                          </span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {selectedAssessment.aiDetails?.ergonomia?.map((tip, idx) => (
+                      <div key={idx} className="bg-emerald-50/10 p-4 rounded-2xl border border-emerald-100/20 relative overflow-hidden text-left">
+                        <div className="absolute -right-4 -bottom-4 opacity-[0.03] pointer-events-none">
+                          <Info className="w-16 h-16 text-emerald-600" />
                         </div>
-                        <h4 className="font-bold text-slate-800 text-sm mb-2">{d.desvio}</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed font-sans">{d.compensacao}</p>
+                        <div className="flex items-start gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                          <p className="text-[10px] text-slate-600 font-semibold leading-relaxed">{tip}</p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Tabs Corrective Prescription */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* MOBILITY PROTOCOL */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
-                <h3 className="font-bold text-slate-800 text-base flex items-center gap-2 border-b pb-3 border-slate-100">
-                  <span className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg"><Activity className="w-4 h-4" /></span>
-                  Protocolo de Mobilidade & Liberação Miofascial
-                </h3>
-
-                <div className="space-y-4">
-                  {selectedAssessment.aiDetails?.exerciciosMobilidade?.map((ex, idx) => (
-                    <div key={idx} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                        <h4 className="font-bold text-slate-800 text-sm">{ex.nome}</h4>
-                        <span className="text-xs font-mono bg-emerald-100/40 text-emerald-800 px-2.5 py-0.5 rounded font-semibold">{ex.series} • {ex.tempo}</span>
-                      </div>
-                      <p className="text-xs text-slate-600 leading-relaxed font-sans">{ex.instrucoes}</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )
+            }
+          ];
 
-              {/* STRENGTHENING PROTOCOL */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-200 space-y-4">
-                <h3 className="font-bold text-slate-800 text-base flex items-center gap-2 border-b pb-3 border-slate-100">
-                  <span className="p-1.5 bg-sky-50 text-sky-600 rounded-lg"><Dumbbell className="w-4 h-4" /></span>
-                  Protocolo de Fortalecimento & Estabilização
-                </h3>
-
-                <div className="space-y-4">
-                  {selectedAssessment.aiDetails?.exerciciosFortalecimento?.map((ex, idx) => (
-                    <div key={idx} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                        <h4 className="font-bold text-slate-800 text-sm">{ex.nome}</h4>
-                        <span className="text-xs font-mono bg-sky-100/40 text-sky-800 px-2.5 py-0.5 rounded font-semibold">{ex.series} • {ex.reps}</span>
-                      </div>
-                      <p className="text-xs text-slate-600 leading-relaxed font-sans">{ex.instrucoes}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Ergonomics Cards */}
-            <div className="bg-emerald-500/5 rounded-2xl p-6 border border-emerald-500/10 space-y-3">
-              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                <Lightbulb className="w-4.5 h-4.5 text-emerald-600" /> Prescrições Ergonômicas & Hábitos Posturais
-              </h4>
-              <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {selectedAssessment.aiDetails?.ergonomia?.map((tip, idx) => (
-                  <li key={idx} className="bg-white p-3.5 rounded-xl border border-slate-100 text-xs text-slate-600 leading-relaxed flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                    <span>{tip}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </motion.div>
-        )}
+          return (
+            <DynamicReportEngine
+              athlete={athlete}
+              reportTitle="AVALIAÇÃO POSTURAL INTELIGENTE"
+              reportSubTitle="LAUDO TÉCNICO DE ALINHAMENTO BIOMECÂNICO"
+              extraStats={[
+                { label: 'Avaliado em', value: selectedAssessment.date },
+                { label: 'Nível', value: athlete.competitiveLevel ? athlete.competitiveLevel.toUpperCase() : 'ELITE' }
+              ]}
+              blocks={reportBlocks}
+              onClose={() => setSelectedAssessment(null)}
+              hideTOC={false}
+            />
+          );
+        })()}
 
         {/* VIEW 3: WIZARD / CREATE NEW ASSESSMENT */}
         {!aiLoading && !selectedAssessment && isCreating && (

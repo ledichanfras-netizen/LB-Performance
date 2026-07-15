@@ -467,6 +467,7 @@ export const useAthletes = (token?: string | null) => {
                 name: 'Meta Custom Library Exercises',
                 dob: '2000-01-01',
                 gender: 'M',
+                modality: 'Meta',
                 injuryHistory: JSON.stringify({
                   customLibraryExercises: custom,
                   deletedExerciseIds: deleted
@@ -474,7 +475,7 @@ export const useAthletes = (token?: string | null) => {
                 workouts: [],
                 wellness: [],
                 externalSessions: [],
-                assessments: {}
+                assessments: {} as any
               };
 
               console.log("[Auto-Sync] Salvando biblioteca de exercícios alterada no banco...", custom.length);
