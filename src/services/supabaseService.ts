@@ -426,25 +426,36 @@ export const supabaseService = {
   async saveAthlete(athlete: Athlete): Promise<void> {
     console.log(`[Supabase] Iniciando salvamento do atleta: ${athlete.name} (${athlete.id})`);
     
-    const { error: athleteError } = await supabase
+    const payload: any = {
+      id: athlete.id,
+      name: athlete.name,
+      dob: athlete.dob,
+      gender: athlete.gender || 'M',
+      modality: athlete.modality,
+      competitive_level: athlete.competitiveLevel,
+      position: athlete.position,
+      injury_history: serializeBackupAthleteFields(athlete),
+      goal: athlete.goal,
+      weekly_frequency: athlete.weeklyFrequency || (athlete as any).weekly_frequency || (athlete.trainingDays?.length || 3),
+      is_tournament_mode: athlete.isTournamentMode,
+      periodization_start: athlete.periodizationStart,
+      periodization_end: athlete.periodizationEnd,
+      training_days: athlete.trainingDays || [],
+      updated_at: new Date().toISOString()
+    };
+
+    let { error: athleteError } = await supabase
       .from('athletes')
-      .upsert({
-        id: athlete.id,
-        name: athlete.name,
-        dob: athlete.dob,
-        gender: athlete.gender || 'M',
-        modality: athlete.modality,
-        competitive_level: athlete.competitiveLevel,
-        position: athlete.position,
-        injury_history: serializeBackupAthleteFields(athlete),
-        goal: athlete.goal,
-        weekly_frequency: athlete.weeklyFrequency || (athlete as any).weekly_frequency || (athlete.trainingDays?.length || 3),
-        is_tournament_mode: athlete.isTournamentMode,
-        periodization_start: athlete.periodizationStart,
-        periodization_end: athlete.periodizationEnd,
-        training_days: athlete.trainingDays || [],
-        updated_at: new Date().toISOString()
-      });
+      .upsert(payload);
+
+    if (athleteError && athleteError.message?.toLowerCase().includes('training_days')) {
+      console.warn('[Supabase] Tabela "athletes" não possui a coluna "training_days". Retentando sem essa coluna...');
+      delete payload.training_days;
+      const retryResult = await supabase
+        .from('athletes')
+        .upsert(payload);
+      athleteError = retryResult.error;
+    }
 
     if (athleteError) {
       logError('[Supabase] Erro ao salvar atleta base:', athleteError);

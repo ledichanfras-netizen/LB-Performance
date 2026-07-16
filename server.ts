@@ -2287,22 +2287,19 @@ Regras de Seleção:
 });
 
 apiRouter.post('/ai-prescribe-workout', authMiddleware, async (req, res) => {
-  const { athleteData, objective, restrictions, timeAvailable, equipment, periodizationPhase } = req.body;
+  const { athleteData, objective, restrictions, timeAvailable, equipment, periodizationPhase, library } = req.body;
   if (!process.env.GEMINI_API_KEY) {
     return res.status(500).json({ error: "Chave de API do Gemini não configurada no servidor." });
   }
 
-  const prompt = `Gere uma prescrição de treino técnico de altíssima performance para a LB Sports, baseada estritamente em evidências científicas biomecânicas de elite e na metodologia de Treinamento Baseado em Velocidade (VBT).
+  let libraryPromptPart = "";
+  if (Array.isArray(library) && library.length > 0) {
+    libraryPromptPart = `Você deve sugerir de 5 a 8 exercícios altamente específicos e estruturados de forma coerente. Dê PREFERÊNCIA ABSOLUTA aos exercícios cadastrados na Biblioteca do Treinador listados abaixo quando aplicável, especificando seus IDs:
+` + library.map((ex: any) => `- "${ex.name}" (ID: ${ex.id}) | Grupo Muscular/Valência: ${ex.muscleGroup || ex.category || ''} ${ex.description ? `| Justificativa/Notas: ${ex.description}` : ''}`).join('\n') + `
 
-Fatores Atuais do Atleta:
-- Perfil/Nível: ${athleteData || 'Atleta geral de rendimento'}
-- Objetivo de Performance: ${objective || 'Desenvolvimento atlético integral'}
-- Histórico de lesões/Restrições: ${restrictions || 'Nenhuma restrição relatada'}
-- Tempo disponível para a sessão: ${timeAvailable || '60 minutos'}
-- Equipamentos disponíveis na sessão: ${equipment || 'Estrutura completa de academia'}
-- Fase de periodização recomendada: ${periodizationPhase || 'Preparação Geral'}
-
-Você deve sugerir de 5 a 8 exercícios altamente específicos e estruturados de forma coerente. Dê preferência absoluta aos exercícios da nossa biblioteca de elite quando aplicável, especificando seus IDs:
+ATENÇÃO: Você PODE criar e prescrever novos exercícios específicos que NÃO estão na lista acima caso considere que são mais adequados, específicos ou necessários para o atleta e seu esporte. Quando prescrever um exercício novo fora da biblioteca, retorne o campo "exerciseId" vazio ("").`;
+  } else {
+    libraryPromptPart = `Você deve sugerir de 5 a 8 exercícios altamente específicos e estruturados de forma coerente. Dê preferência absoluta aos exercícios da nossa biblioteca de elite quando aplicável, especificando seus IDs:
 - "Agachamento Traseiro (Back Squat)" (ID: lib-1) - Usar para Força Máxima Bilateral. RPE 8-9.5, VBT: 0.45 - 0.60 m/s.
 - "Flexão Nórdica (Nordic Hamstring)" (ID: lib-2) - Usar para Força Excêntrica e prevenção de lesão de LCA/Posterior. 3-4 séries de 4-6 reps de alta qualidade.
 - "Adução de Copenhagen (Copenhagen Adduction)" (ID: lib-3) - Usar para pubalgia e estabilidade de adutores. Unilateral.
@@ -2322,7 +2319,20 @@ Você deve sugerir de 5 a 8 exercícios altamente específicos e estruturados de
 - "Arremesso de Medicine Ball" (ID: lib-17) - Potência rotacional.
 - "Caminhada do Fazendeiro (Farmer Walk)" (ID: lib-18) - Estabilidade postural, core.
 - "Agachamento Unilateral no BOSU" (ID: lib-19) - Evitar para atletas de potência máxima (usar somente se houver reabilitação ativa).
-- "Deslocamento Lateral com Cones" (ID: lib-20) - Agilidade lateral e COD.
+- "Deslocamento Lateral com Cones" (ID: lib-20) - Agilidade lateral e COD.`;
+  }
+
+  const prompt = `Gere uma prescrição de treino técnico de altíssima performance para a LB Sports, baseada estritamente em evidências científicas biomecânicas de elite e na metodologia de Treinamento Baseado em Velocidade (VBT).
+
+Fatores Atuais do Atleta:
+- Perfil/Nível: ${athleteData || 'Atleta geral de rendimento'}
+- Objetivo de Performance: ${objective || 'Desenvolvimento atlético integral'}
+- Histórico de lesões/Restrições: ${restrictions || 'Nenhuma restrição relatada'}
+- Tempo disponível para a sessão: ${timeAvailable || '60 minutos'}
+- Equipamentos disponíveis na sessão: ${equipment || 'Estrutura completa de academia'}
+- Fase de periodização recomendada: ${periodizationPhase || 'Preparação Geral'}
+
+${libraryPromptPart}
 
 Critérios Científicos Exigidos:
 1. Ordem do Treino: Potência e Pliometria sempre primeiro (ex: CMJ, Drop Jumps), seguidos de Força Máxima (ex: Back Squat), seguidos por exercícios unilaterais ou isolados, e finalizando com preventivos/core (ex: Flexão Nórdica, Copenhagen, Pallof Press).

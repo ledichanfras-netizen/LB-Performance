@@ -253,6 +253,7 @@ export async function prescribeWorkoutWithAi(params: {
   timeAvailable: string;
   equipment: string;
   periodizationPhase: string;
+  library?: any[];
 }): Promise<any | null> {
   const token = getSessionToken();
   try {

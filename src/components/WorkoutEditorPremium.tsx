@@ -23,6 +23,8 @@ interface WorkoutEditorPremiumProps {
   athleteGoal?: string;
   athleteName?: string;
   athlete?: any;
+  updateAthlete?: (id: string, data: any) => Promise<void> | void;
+  generateAIWorkouts?: (athlete: any, coachInstructions?: string) => Promise<void>;
 }
 
 export function getYouTubeEmbedUrl(url?: string): string | null {
@@ -278,7 +280,9 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   athleteModality = "Futebol",
   athleteGoal = "Explosão e Força",
   athleteName = "Leandro Barbosa",
-  athlete
+  athlete,
+  updateAthlete,
+  generateAIWorkouts
 }) => {
   const [edited, setEdited] = useState<Workout>({
     id: workout.id || `wk-man-${Date.now()}`,
@@ -333,6 +337,11 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   const [aiFocusGoal, setAiFocusGoal] = useState(athleteGoal);
   const [aiAgeRange, setAiAgeRange] = useState("Profissional");
   const [aiEquipmentSet, setAiEquipmentSet] = useState("Completo");
+  
+  // Periodization & Strategic Command States
+  const [iaInstructions, setIaInstructions] = useState("");
+  const [isPeriodizationExpanded, setIsPeriodizationExpanded] = useState(false);
+  const [iaWorkoutsLoading, setIaWorkoutsLoading] = useState(false);
 
   // Progression Studio States
   const [progressionMethod, setProgressionMethod] = useState<"linear" | "undulating" | "accumulation" | "deload" | "tapering">("linear");
@@ -858,6 +867,32 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
     setSearchQuery("");
   };
 
+  const handlePeriodizeWithAi = async () => {
+    if (!athlete) {
+      toast.error("Atleta não identificado no editor.");
+      return;
+    }
+    if (!athlete.modality) {
+      toast.error("Defina a modalidade do atleta antes de gerar treinos específicos.");
+      return;
+    }
+    if (!generateAIWorkouts) {
+      toast.error("Serviço de geração da IA indisponível.");
+      return;
+    }
+    setIaWorkoutsLoading(true);
+    try {
+      await generateAIWorkouts(athlete, iaInstructions);
+      setIaInstructions(""); // Clear after successful generation
+      toast.success("Periodização completa gerada com sucesso pela IA!");
+    } catch (error) {
+      console.error("Erro ao gerar periodização completa:", error);
+      toast.error("Erro ao processar periodização completa com IA.");
+    } finally {
+      setIaWorkoutsLoading(false);
+    }
+  };
+
   // Simulated Sports Science AI Agent Deep Generation
   const startAiPrescription = async () => {
     setAiLoading(true);
@@ -894,7 +929,14 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
         restrictions: "Nenhuma restrição de lesão relatada",
         timeAvailable: "60 minutos",
         equipment: aiEquipmentSet,
-        periodizationPhase: "Preparação Geral"
+        periodizationPhase: "Preparação Geral",
+        library: combinedLibrary.map(ex => ({
+          id: ex.id,
+          name: ex.name,
+          category: ex.category || "ALL",
+          muscleGroup: ex.muscleGroup || ex.physicalQuality || "",
+          description: (ex as any).description || ex.physiologicalGoal || ""
+        }))
       });
 
       if (response && response.exercises) {
@@ -1447,6 +1489,161 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
         {/* TAB CONTENT: IA PRESCRITOR (CO-PILOT) */}
         {sidebarTab === "ai" && (
           <div className="flex-1 flex flex-col min-h-0 space-y-4">
+            
+            {/* PERIODIZATION CONTROL CENTER */}
+            {athlete && updateAthlete && (
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsPeriodizationExpanded(!isPeriodizationExpanded)}
+                  className="w-full flex items-center justify-between text-left text-brand-primary"
+                >
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[#39FF14]" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-white">CENTRO DE COMANDO IA (PERIODIZAÇÃO)</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-350 ${isPeriodizationExpanded ? "rotate-180" : ""}`} />
+                </button>
+                
+                {isPeriodizationExpanded && (
+                  <div className="space-y-3.5 pt-2.5 border-t border-slate-900 animate-fade-in">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[7.5px] font-black text-slate-500 uppercase block mb-1">Início</label>
+                        <input
+                          type="date"
+                          value={athlete.periodizationStart || ""}
+                          onChange={(e) => updateAthlete(athlete.id, { periodizationStart: e.target.value })}
+                          className="w-full bg-[#161b26] text-[9px] font-black uppercase text-slate-200 border border-slate-850 p-2 rounded-lg focus:border-[#39FF14]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[7.5px] font-black text-slate-500 uppercase block mb-1">Término</label>
+                        <input
+                          type="date"
+                          value={athlete.periodizationEnd || ""}
+                          onChange={(e) => updateAthlete(athlete.id, { periodizationEnd: e.target.value })}
+                          className="w-full bg-[#161b26] text-[9px] font-black uppercase text-slate-200 border border-slate-850 p-2 rounded-lg focus:border-[#39FF14]"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Weekdays for Academy and Field */}
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-[7.5px] font-black text-slate-400 uppercase block mb-1.5">
+                          🏋️‍♂️ Academia (Fortalecimento & Força)
+                        </label>
+                        <div className="flex flex-wrap gap-1">
+                          {[
+                            { id: 0, label: "D" },
+                            { id: 1, label: "S" },
+                            { id: 2, label: "T" },
+                            { id: 3, label: "Q" },
+                            { id: 4, label: "Q" },
+                            { id: 5, label: "S" },
+                            { id: 6, label: "S" },
+                          ].map((day) => {
+                            const isSelected = (athlete.academyDays || []).includes(day.id);
+                            return (
+                              <button
+                                key={day.id}
+                                type="button"
+                                onClick={() => {
+                                  const academyDays = athlete.academyDays || [];
+                                  const newAcademy = academyDays.includes(day.id)
+                                    ? academyDays.filter((d: number) => d !== day.id)
+                                    : [...academyDays, day.id].sort();
+                                  const unionDays = Array.from(new Set([...newAcademy, ...(athlete.courtDays || [])])).sort();
+                                  updateAthlete(athlete.id, { academyDays: newAcademy, trainingDays: unionDays });
+                                }}
+                                className={`w-6 h-6 rounded-md text-[8px] font-black flex items-center justify-center border transition-all ${
+                                  isSelected
+                                    ? "bg-[#39FF14] border-[#39FF14] text-slate-950 font-black"
+                                    : "bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-700"
+                                }`}
+                              >
+                                {day.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[7.5px] font-black text-slate-400 uppercase block mb-1.5">
+                          ⚽ Campo/Quadra (Técnico & Tático)
+                        </label>
+                        <div className="flex flex-wrap gap-1">
+                          {[
+                            { id: 0, label: "D" },
+                            { id: 1, label: "S" },
+                            { id: 2, label: "T" },
+                            { id: 3, label: "Q" },
+                            { id: 4, label: "Q" },
+                            { id: 5, label: "S" },
+                            { id: 6, label: "S" },
+                          ].map((day) => {
+                            const isSelected = (athlete.courtDays || []).includes(day.id);
+                            return (
+                              <button
+                                key={day.id}
+                                type="button"
+                                onClick={() => {
+                                  const courtDays = athlete.courtDays || [];
+                                  const newCourt = courtDays.includes(day.id)
+                                    ? courtDays.filter((d: number) => d !== day.id)
+                                    : [...courtDays, day.id].sort();
+                                  const unionDays = Array.from(new Set([...(athlete.academyDays || []), ...newCourt])).sort();
+                                  updateAthlete(athlete.id, { courtDays: newCourt, trainingDays: unionDays });
+                                }}
+                                className={`w-6 h-6 rounded-md text-[8px] font-black flex items-center justify-center border transition-all ${
+                                  isSelected
+                                    ? "bg-brand-secondary border-brand-secondary text-brand-dark font-black"
+                                    : "bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-700"
+                                }`}
+                              >
+                                {day.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Strategic Directions Textarea */}
+                    <div>
+                      <label className="text-[7.5px] font-black text-slate-500 uppercase block mb-1">DIRETRIZES ESTRATÉGICAS DO TREINADOR</label>
+                      <textarea
+                        value={iaInstructions}
+                        onChange={(e) => setIaInstructions(e.target.value)}
+                        placeholder="Ex: Focar em força explosiva, reduzir volume se dor lombar persistir..."
+                        className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-[9px] font-bold text-white outline-none focus:border-[#39FF14] resize-none h-16 placeholder:text-slate-700"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handlePeriodizeWithAi}
+                      disabled={iaWorkoutsLoading}
+                      className="w-full bg-[#39FF14] hover:bg-[#32e00f] disabled:bg-slate-850 text-slate-950 font-black text-[9px] py-2.5 rounded-lg transition-all flex items-center justify-center gap-1.5 uppercase tracking-wider cursor-pointer shadow-lg shadow-[#39FF14]/5"
+                    >
+                      {iaWorkoutsLoading ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          PERIODIZANDO ATLETA...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3 stroke-[3]" />
+                          PERIODIZAR ATLETA (SISTEMA IA)
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             
             {/* AI CONFIGURATION FORM */}
             <div className="bg-slate-950 p-4 rounded-xl border border-slate-900 space-y-3.5 shrink-0">

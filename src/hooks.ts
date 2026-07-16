@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Athlete, AssessmentType, WellnessEntry, Workout, PrescribedExercise, ExerciseSet, ExternalSession } from './types';
 import { calculateReadiness, calculateWorkoutLoad, calculateAdvancedMetrics, calculateAge, getSafeDateTime, getLocalDateString } from './utils';
+import { ENRICHED_LIBRARY } from './data/exercises';
 import toast from 'react-hot-toast';
 import { GoogleGenAI, Type } from "@google/genai";
 import { supabaseService, logError, isNetworkError } from './services/supabaseService';
@@ -1067,6 +1068,40 @@ export const useAthletes = (token?: string | null) => {
 
       console.log("[AI] Contexto enviado:", JSON.stringify(context, null, 2));
 
+      // Build trainer's combined library list
+      let customLibrary: any[] = [];
+      try {
+        const stored = safeLocalStorage.getItem("LB_CUSTOM_LIBRARY_EXERCISES");
+        customLibrary = stored ? JSON.parse(stored) : [];
+      } catch (e) {}
+
+      let deletedIds: string[] = [];
+      try {
+        const stored = safeLocalStorage.getItem("LB_DELETED_LIBRARY_EXERCISES");
+        deletedIds = stored ? JSON.parse(stored) : [];
+      } catch (e) {}
+
+      const customMap = new Map(customLibrary.map(ex => [ex.id, ex]));
+      const combinedLibrary: any[] = [];
+      ENRICHED_LIBRARY.forEach(builtIn => {
+        if (deletedIds.includes(builtIn.id)) return;
+        if (customMap.has(builtIn.id)) {
+          combinedLibrary.push(customMap.get(builtIn.id)!);
+        } else {
+          combinedLibrary.push(builtIn);
+        }
+      });
+      customLibrary.forEach(custom => {
+        if (deletedIds.includes(custom.id)) return;
+        if (!ENRICHED_LIBRARY.some(b => b.id === custom.id)) {
+          combinedLibrary.push(custom);
+        }
+      });
+
+      const libraryText = combinedLibrary.map(ex => 
+        `- "${ex.name}" | Categoria: ${ex.category} | Valência: ${ex.physicalQuality || ex.muscleGroup || ''}`
+      ).join('\n');
+
       const prompt = `
         Você é um Treinador de Elite Mundial e Cientista do Esporte de referência.
         Sua missão é criar uma PERIODIZAÇÃO INDIVIDUALIZADA e ALTAMENTE ESTRUTURADA para o atleta ${context.name}.
@@ -1078,6 +1113,14 @@ export const useAthletes = (token?: string | null) => {
         - Objetivo Principal: ${context.goal || 'Performance de Elite'}
         - Histórico de Lesões (ATENÇÃO CRÍTICA): ${JSON.stringify(context.injuries)}
         
+        PREFERÊNCIA ABSOLUTA DA BIBLIOTECA DO TREINADOR:
+        Ao montar as sessões de treino e escolher os exercícios, você DEVE consultar a lista de exercícios cadastrados abaixo e dar preferência absoluta aos itens já cadastrados na biblioteca do treinador.
+        Se um exercício cadastrado preencher a função fisiológica/biomecânica desejada, use-o com o mesmo nome exato da lista abaixo.
+        Você PODE criar e prescrever novos exercícios específicos que não estão na lista abaixo caso considere que são mais adequados, específicos ou necessários para o atleta e seu esporte (assim o treinador poderá ir cadastrando novos exercícios), mas tente usar os da lista o máximo possível.
+
+        Exercícios cadastrados na Biblioteca:
+        ${libraryText}
+
         CRONOGRAMA DE DATAS DA PERIODIZAÇÃO E FOCO DOS TREINOS (MUITO IMPORTANTE):
         Você DEVE criar exatamente ${trainingDatesMeta.length} sessões de treino, combinando cada treino com uma data exclusiva do cronograma fornecido e respeitando rigorosamente o foco especificado para cada dia:
         - Dias rotulados como ACADEMIA: Elabore rotinas de musculação, fortalecimento, força máxima, RFD (taxa de desenvolvimento de força), potência muscular, força explosiva, estabilidade articular, core ou exercícios resistidos específicos.
@@ -1140,6 +1183,7 @@ export const useAthletes = (token?: string | null) => {
             muscleGroup: ex.muscleGroup,
             sets: Number(ex.sets) || 3,
             reps: String(ex.reps),
+            repsType: String(ex.reps).toLowerCase().includes("s") ? ("time" as const) : ("reps" as const),
             weight: String(ex.weight),
             rest: '60-90s',
             notes: '',

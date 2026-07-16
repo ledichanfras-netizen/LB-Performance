@@ -561,7 +561,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                       <span>{ex.name}</span>
                     </h4>
                     <span className="text-[8.5px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 block">
-                      Grupo: {ex.muscleGroup || "GERAL"} • Prescrição: {prescribedSets}x{ex.repsType === "time" ? `${prescribedReps}s` : prescribedReps} @ {prescribedWeight}
+                      Grupo: {ex.muscleGroup || "GERAL"} • Prescrição: {prescribedSets}x{ex.repsType === "time" ? `${String(prescribedReps).replace(/s/gi, "")}s` : prescribedReps} @ {prescribedWeight}
                     </span>
                   </div>
 
@@ -1034,7 +1034,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                 <div className="flex flex-col items-end shrink-0">
                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">PRESCRIÇÃO</span>
                   <span className="text-sm font-black text-[#39FF14] bg-[#39FF14]/10 border border-[#39FF14]/20 px-4 py-2 rounded-xl italic">
-                    {activeEx.sets}x{activeEx.repsType === "time" ? `${activeEx.reps}s` : activeEx.reps} @ {activeEx.weight}
+                    {activeEx.sets}x{activeEx.repsType === "time" ? `${String(activeEx.reps).replace(/s/gi, "")}s` : activeEx.reps} @ {activeEx.weight}
                   </span>
                 </div>
               </div>
@@ -1226,7 +1226,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                           Série {currentSetIndexForActiveEx + 1} de {(activeEx.performedSets || []).length}
                         </h3>
                         <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5 tracking-wider">
-                          Meta: {activeEx.repsType === "time" ? `${activeEx.reps}s (Tempo)` : `${activeEx.reps} Reps`} • Carga: {activeEx.performedSets?.[currentSetIndexForActiveEx]?.weight || activeEx.weight || 0} kg
+                          Meta: {activeEx.repsType === "time" ? `${String(activeEx.reps).replace(/s/gi, "")}s (Tempo)` : `${activeEx.reps} Reps`} • Carga: {activeEx.performedSets?.[currentSetIndexForActiveEx]?.weight || activeEx.weight || 0} kg
                         </p>
                       </div>
 
@@ -1300,7 +1300,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                             className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-3 px-2 text-center font-extrabold text-sm md:text-base text-white transition-all"
                             placeholder="0"
                           />
-                          <span className="text-[10px] font-black text-slate-400 uppercase">{activeEx.repsType === "time" ? "SEG" : "RPS"}</span>
+                          <span className="text-[10px] font-black text-slate-400 uppercase">{activeEx.repsType === "time" ? "SEG" : "REPS"}</span>
                         </div>
 
                         {/* RPE input */}

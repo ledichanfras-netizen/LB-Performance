@@ -2578,106 +2578,6 @@ const EliteHubApp: FC<{
                               </div>
                             </div>
                           </div>
-
-                          {activeTab === "training" && user.role === "coach" && (
-                            <div className="bg-slate-950/80 p-6 sm:p-8 md:p-10 border-t border-slate-800/50 flex flex-col justify-center md:col-span-12 lg:col-span-12 xl:col-span-12 transition-all shrink-0 relative overflow-hidden group/ia">
-                              <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-primary/5 rounded-full blur-[60px] group-hover/ia:bg-brand-primary/10 transition-all duration-700"></div>
-
-                              <div className="flex items-center gap-3 mb-6 relative z-10">
-                                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 shadow-[0_0_20px_rgba(57,255,20,0.1)]">
-                                  <Brain
-                                    size={20}
-                                    className="text-brand-primary"
-                                  />
-                                </div>
-                                <h5 className="text-[12px] sm:text-[14px] font-black text-white uppercase tracking-widest leading-none italic">
-                                  Centro de Comando{" "}
-                                  <span className="text-brand-primary">IA</span>
-                                </h5>
-                              </div>
-
-                              {/* SANFONA RETRÁTIL PARA CONFIGURAÇÃO DE PERIODIZAÇÃO */}
-                              <div className="mb-6 border border-slate-800 rounded-3xl bg-slate-900/10 overflow-hidden relative z-10 hover:border-slate-700/60 transition-colors">
-                                <button
-                                  type="button"
-                                  onClick={() => setIsPeriodizationExpanded(!isPeriodizationExpanded)}
-                                  className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-900/30 transition-colors"
-                                >
-                                  <div className="flex items-center gap-3.5">
-                                    <div className="w-8 h-8 rounded-xl bg-slate-800/40 flex items-center justify-center border border-slate-700/40">
-                                      <Calendar className="w-4 h-4 text-brand-primary" />
-                                    </div>
-                                    <div>
-                                      <span className="text-[11px] font-black text-white uppercase tracking-wider block">
-                                        Período e Dias de Treino da Periodização
-                                      </span>
-                                      <span className="text-[10px] font-bold text-slate-400 block mt-0.5">
-                                        {selected.periodizationStart && selected.periodizationEnd 
-                                          ? `${formatDate(selected.periodizationStart)} a ${formatDate(selected.periodizationEnd)} • ${(selected.trainingDays || []).length}x na semana`
-                                          : "Toque para definir datas de início/fim e dias de treino semanais"}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <ChevronRight
-                                    className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${
-                                      isPeriodizationExpanded ? "rotate-90" : "rotate-0"
-                                    }`}
-                                  />
-                                </button>
-
-                                {isPeriodizationExpanded && (
-                                  <div className="px-6 pb-6 pt-2 border-t border-slate-800/40 bg-slate-950/60">
-                                    <PeriodizationConfig
-                                      start={selected.periodizationStart}
-                                      end={selected.periodizationEnd}
-                                      days={selected.trainingDays || []}
-                                      academyDays={selected.academyDays || []}
-                                      courtDays={selected.courtDays || []}
-                                      onChange={(data) => {
-                                        updateAthlete(selected.id, {
-                                          periodizationStart: data.start,
-                                          periodizationEnd: data.end,
-                                          trainingDays: data.days,
-                                          academyDays: data.academyDays,
-                                          courtDays: data.courtDays,
-                                        });
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10 w-full items-center">
-                                <div className="lg:col-span-2 relative group/input">
-                                  <textarea
-                                    value={iaInstructions}
-                                    onChange={(e) =>
-                                      setIaInstructions(e.target.value)
-                                    }
-                                    placeholder="DIRETRIZES ESTRATÉGICAS (Ex: Focar em força explosiva, reduzir volume se dor lombar persistir...)"
-                                    className="w-full bg-slate-900/50 border border-slate-800 rounded-[2rem] p-6 text-[12px] font-bold text-white outline-none focus:ring-4 focus:ring-brand-primary/10 focus:border-brand-primary transition-all resize-none h-32 placeholder:text-slate-700 shadow-inner"
-                                  />
-                                  <div className="absolute top-4 right-4 opacity-10 group-focus-within/input:opacity-30 transition-opacity">
-                                    <Zap className="w-5 h-5 text-brand-primary" />
-                                  </div>
-                                </div>
-                                <div className="flex flex-col gap-3 justify-center">
-
-                                  <Button
-                                    onClick={handleGenerateIAWorkouts}
-                                    disabled={iaWorkoutsLoading}
-                                    variant="primary"
-                                    className="w-full py-5 text-[11px] font-black tracking-widest relative overflow-hidden group shadow-[0_20px_40px_rgba(57,255,20,0.25)] rounded-[1.25rem] sm:rounded-2xl"
-                                  >
-                                    <Sparkles className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 opacity-60 group-hover:scale-125 transition-transform text-brand-dark animate-pulse" />
-                                    {iaWorkoutsLoading
-                                      ? "PERIODIZANDO..."
-                                      : "SISTEMA DE PERIODIZAÇÃO"}
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </Card>
 
@@ -3426,6 +3326,8 @@ const EliteHubApp: FC<{
                   athleteModality={selected?.modality}
                   athleteGoal={selected?.goal}
                   athleteName={selected?.name}
+                  updateAthlete={updateAthlete}
+                  generateAIWorkouts={generateAIWorkouts}
                   onCancel={() => setModalState({ type: null })}
                   onSave={(updated) => {
                     if (modalState.type === "workout")
