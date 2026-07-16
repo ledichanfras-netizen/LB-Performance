@@ -639,7 +639,9 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       weight: libEx.defaultWeight,
       repsType: libEx.defaultReps.toLowerCase().includes("s") ? "time" : "reps",
       rest: libEx.recommendedRest || "90s",
-      notes: `Foco: ${libEx.physicalQuality} | RPE Alvo: ${libEx.recommendedRpe}`
+      notes: `Foco: ${libEx.physicalQuality} | RPE Alvo: ${libEx.recommendedRpe}`,
+      videoUrl: libEx.videoUrl || "",
+      imageUrl: libEx.imageUrl || ""
     };
 
     setEdited({ ...edited, exercises: [...(edited.exercises || []), newEx] });
@@ -654,15 +656,21 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       return;
     }
     const detectedCategory = detectCategoryFromName(customExerciseName.trim(), activeCategory);
+    
+    // Look up in the combined library (defaults + custom exercises)
+    const matchedEx = combinedLibrary.find(x => x.name.toLowerCase().trim() === customExerciseName.trim().toLowerCase());
+    
     const newEx: PrescribedExercise = {
       id: `ex-custom-${Date.now()}`,
       name: customExerciseName.trim(),
-      muscleGroup: detectedCategory !== "Geral" ? detectedCategory : "Geral",
+      muscleGroup: matchedEx?.muscleGroup || (detectedCategory !== "Geral" ? detectedCategory : "Geral"),
       sets: 3,
-      reps: "10",
-      weight: "BW",
-      repsType: "reps",
-      rest: "60s"
+      reps: matchedEx?.defaultReps || "10",
+      weight: matchedEx?.defaultWeight || "BW",
+      repsType: matchedEx?.defaultReps?.toLowerCase().includes("s") ? "time" : "reps",
+      rest: matchedEx?.recommendedRest || "60s",
+      videoUrl: matchedEx?.videoUrl || "",
+      imageUrl: matchedEx?.imageUrl || ""
     };
 
     setEdited({ ...edited, exercises: [...(edited.exercises || []), newEx] });
@@ -674,7 +682,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   const addDeficitCorrectiveBlock = (deficitName: string, exerciseNames: string[]) => {
     const toAdd: EnrichedExercise[] = [];
     exerciseNames.forEach(name => {
-      const match = ENRICHED_LIBRARY.find(x => x.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(x.name.toLowerCase()));
+      const match = combinedLibrary.find(x => x.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(x.name.toLowerCase()));
       if (match) toAdd.push(match);
     });
 
@@ -693,7 +701,9 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
         weight: libEx.defaultWeight,
         repsType: libEx.defaultReps.toLowerCase().includes("s") ? "time" : "reps",
         rest: libEx.recommendedRest || "90s",
-        notes: `Bloco Corretivo IA: Foco em Corrigir ${deficitName} | VBT: Máxima Velocidade`
+        notes: `Bloco Corretivo IA: Foco em Corrigir ${deficitName} | VBT: Máxima Velocidade`,
+        videoUrl: libEx.videoUrl || "",
+        imageUrl: libEx.imageUrl || ""
       };
       return newEx;
     });

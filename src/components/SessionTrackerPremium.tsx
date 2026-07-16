@@ -987,9 +987,20 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                   <h3 className="text-2xl md:text-3xl font-black uppercase italic text-white tracking-tight mt-2.5 flex flex-wrap items-center gap-3">
                     <span>{activeEx.name}</span>
                     {(() => {
+                      let customExs: any[] = [];
+                      try {
+                        const stored = localStorage.getItem("LB_CUSTOM_LIBRARY_EXERCISES");
+                        if (stored) {
+                          customExs = JSON.parse(stored);
+                        }
+                      } catch (err) {
+                        console.error("Erro ao carregar customLibraryExercises em SessionTrackerPremium:", err);
+                      }
+                      const matchingCustomEx = customExs.find((x: any) => x.name.toLowerCase().trim() === activeEx.name.toLowerCase().trim() || activeEx.name.toLowerCase().includes(x.name.toLowerCase()));
                       const matchingLibEx = ENRICHED_LIBRARY.find((x: any) => x.name.toLowerCase().trim() === activeEx.name.toLowerCase().trim() || activeEx.name.toLowerCase().includes(x.name.toLowerCase()));
-                      const videoUrl = activeEx.videoUrl || matchingLibEx?.videoUrl || `https://www.youtube.com/results?search_query=como+fazer+${encodeURIComponent(activeEx.name)}`;
-                      const hasDirectVideo = !!(activeEx.videoUrl || matchingLibEx?.videoUrl);
+                      
+                      const videoUrl = activeEx.videoUrl || matchingCustomEx?.videoUrl || matchingLibEx?.videoUrl || `https://www.youtube.com/results?search_query=como+fazer+${encodeURIComponent(activeEx.name)}`;
+                      const hasDirectVideo = !!(activeEx.videoUrl || matchingCustomEx?.videoUrl || matchingLibEx?.videoUrl);
 
                       return (
                         <a

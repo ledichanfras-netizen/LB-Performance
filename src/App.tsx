@@ -6614,9 +6614,19 @@ const SessionTracker: FC<{
                     
                     {/* Botão de Demonstração de Vídeo Inteligente */}
                     {(() => {
+                      let customExs: any[] = [];
+                      try {
+                        const stored = localStorage.getItem("LB_CUSTOM_LIBRARY_EXERCISES");
+                        if (stored) {
+                          customExs = JSON.parse(stored);
+                        }
+                      } catch (err) {
+                        console.error("Erro ao carregar customLibraryExercises em App:", err);
+                      }
+                      const matchingCustomEx = customExs.find((x: any) => x.name.toLowerCase().trim() === ex.name.toLowerCase().trim() || ex.name.toLowerCase().includes(x.name.toLowerCase()));
                       const matchingLibEx = ENRICHED_LIBRARY.find((x: any) => x.name.toLowerCase().trim() === ex.name.toLowerCase().trim() || ex.name.toLowerCase().includes(x.name.toLowerCase()));
-                      const videoUrl = ex.videoUrl || matchingLibEx?.videoUrl || `https://www.youtube.com/results?search_query=como+fazer+${encodeURIComponent(ex.name)}`;
-                      const hasDirectVideo = !!(ex.videoUrl || matchingLibEx?.videoUrl);
+                      const videoUrl = ex.videoUrl || matchingCustomEx?.videoUrl || matchingLibEx?.videoUrl || `https://www.youtube.com/results?search_query=como+fazer+${encodeURIComponent(ex.name)}`;
+                      const hasDirectVideo = !!(ex.videoUrl || matchingCustomEx?.videoUrl || matchingLibEx?.videoUrl);
 
                       return (
                         <a
