@@ -3396,6 +3396,7 @@ const EliteHubApp: FC<{
               <div className="fixed inset-0 z-[1100] flex items-start justify-center bg-slate-950/80 backdrop-blur-md overflow-y-auto p-0 sm:p-4 md:py-8">
                 <SessionTrackerPremium
                   workout={modalState.editingData}
+                  athleteWeight={selected?.assessments?.bioimpedance?.[0]?.weight || selected?.weight}
                   onCancel={() => setModalState({ type: null })}
                   onFinish={(updated) => {
                     updateWorkout(selected!.id, updated);

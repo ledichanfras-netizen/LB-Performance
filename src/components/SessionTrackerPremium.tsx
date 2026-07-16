@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { toast } from "react-hot-toast";
 import { Workout, PrescribedExercise, ExerciseSet } from "../types";
 import { ENRICHED_LIBRARY } from "../data/exercises";
+import { calculateWorkoutLoad } from "../utils";
 
 // TTS Voice announcer
 const speakText = (text: string, enabled: boolean) => {
@@ -60,12 +61,14 @@ interface SessionTrackerPremiumProps {
   workout: Workout;
   onFinish: (w: Workout) => void;
   onCancel: () => void;
+  athleteWeight?: number;
 }
 
 export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
   workout,
   onFinish,
-  onCancel
+  onCancel,
+  athleteWeight
 }) => {
   const isEditingCompleted = workout.status === "completed";
 
@@ -343,7 +346,8 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
     if (index < 0 || index >= session.exercises.length) return;
     setCurrentExerciseIndex(index);
     const targetEx = session.exercises[index];
-    speakText(`Próximo exercício: ${targetEx.name}. Prescrito: ${targetEx.sets} séries de ${targetEx.reps} repetições.`, isVoiceEnabled);
+    const unit = targetEx.repsType === "time" ? "segundos" : "repetições";
+    speakText(`Próximo exercício: ${targetEx.name}. Prescrito: ${targetEx.sets} séries de ${targetEx.reps} ${unit}.`, isVoiceEnabled);
   };
 
   const currentSetIndexForActiveEx = useMemo(() => {
@@ -392,10 +396,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
       durationMinutes: finalDuration,
       rpe: overallRpe,
       feedback: feedbackNotes || session.feedback || "Treino concluído com biofeedback de alta performance.",
-      totalLoad: session.exercises.reduce((acc, ex) => {
-        const setsVal = (ex.performedSets || []).reduce((accSets, s) => accSets + (s.weight * s.reps), 0);
-        return acc + setsVal;
-      }, 0)
+      totalLoad: calculateWorkoutLoad(session, athleteWeight)
     };
 
     onFinish(completedSession);
@@ -623,9 +624,12 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                           value={set.reps ?? ""}
                           onChange={(e) => updateSetField(ex.id, set.id, "reps", parseInt(e.target.value) || 0)}
                           onFocus={(e) => e.target.select()}
-                          className="w-full bg-slate-950 border border-slate-900 focus:border-[#39FF14] rounded-lg py-1 text-center font-extrabold text-xs text-white outline-none transition-colors"
+                          className="w-full bg-slate-950 border border-slate-900 focus:border-[#39FF14] rounded-lg py-1 pr-6 text-center font-extrabold text-xs text-white outline-none transition-colors"
                           placeholder="0"
                         />
+                        <span className="absolute right-2 text-[9px] font-black text-slate-500 uppercase select-none pointer-events-none">
+                          {ex.repsType === "time" ? "s" : "r"}
+                        </span>
                       </div>
 
                       {/* RPE input */}
@@ -1118,7 +1122,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                 // SIMPLE ENTRY FORM FOR EASY COACHING PRE-POPULATION
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-[#0c111d] p-5 rounded-2xl border border-slate-900">
                   <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-900">
-                    <label className="text-[9px] text-slate-500 uppercase font-black block tracking-widest text-center mb-1">REPETIÇÕES</label>
+                    <label className="text-[9px] text-slate-500 uppercase font-black block tracking-widest text-center mb-1">{activeEx.repsType === "time" ? "TEMPO (SEG)" : "REPETIÇÕES"}</label>
                     <div className="flex items-center justify-between">
                       <button onClick={() => adjustSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "reps", -1)} className="text-slate-400 hover:text-white text-base font-bold px-3 py-1 bg-slate-900 rounded-lg">-</button>
                       <input
