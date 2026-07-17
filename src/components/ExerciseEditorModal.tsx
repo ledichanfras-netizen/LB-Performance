@@ -18,10 +18,20 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
   onSave,
 }) => {
   const [formData, setFormData] = useState<Partial<EnrichedExercise>>({});
+  const [benefitsText, setBenefitsText] = useState("");
+  const [commonErrorsText, setCommonErrorsText] = useState("");
+  const [progressionsText, setProgressionsText] = useState("");
+  const [regressionsText, setRegressionsText] = useState("");
+  const [tagsText, setTagsText] = useState("");
 
   useEffect(() => {
     if (exercise) {
       setFormData({ ...exercise });
+      setBenefitsText((exercise.benefits || []).join("\n"));
+      setCommonErrorsText((exercise.commonErrors || []).join("\n"));
+      setProgressionsText((exercise.progressions || []).join("\n"));
+      setRegressionsText((exercise.regressions || []).join("\n"));
+      setTagsText((exercise.tags || []).join(", "));
     } else {
       setFormData({
         name: "",
@@ -39,13 +49,13 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
         recommendedRpe: "8",
         physiologicalGoal: "",
         scientificEvidence: "",
-        benefits: ["Melhora de força específica", "Prevenção de lesões"],
-        commonErrors: ["Fase excêntrica sem controle"],
-        progressions: ["Aumento de carga"],
-        regressions: ["Menor amplitude"],
         musclesInvolved: [],
-        tags: ["#Customizado"],
       });
+      setBenefitsText("Melhora de força específica\nPrevenção de lesões");
+      setCommonErrorsText("Fase excêntrica sem controle");
+      setProgressionsText("Aumento de carga");
+      setRegressionsText("Menor amplitude");
+      setTagsText("#Customizado");
     }
   }, [exercise, isOpen]);
 
@@ -55,20 +65,26 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleListChange = (field: "benefits" | "commonErrors" | "progressions" | "regressions" | "musclesInvolved" | "tags", valueString: string) => {
-    const list = valueString
-      .split("\n")
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
-    setFormData((prev) => ({ ...prev, [field]: list }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name?.trim()) {
       toast.error("O nome do exercício é obrigatório!");
       return;
     }
+
+    const parseList = (text: string) => {
+      return text
+        .split("\n")
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+    };
+
+    const parseTags = (text: string) => {
+      return text
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
+    };
 
     const finalExercise: EnrichedExercise = {
       ...((exercise || {}) as EnrichedExercise),
@@ -88,12 +104,12 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
       recommendedRpe: formData.recommendedRpe || "8",
       physiologicalGoal: formData.physiologicalGoal || "Foco no desenvolvimento neuromuscular, força e controle de padrão de movimento.",
       scientificEvidence: formData.scientificEvidence || "Diretrizes baseadas em evidências científicas de ciência esportiva.",
-      benefits: formData.benefits || ["Melhora de força específica", "Prevenção de lesões"],
-      commonErrors: formData.commonErrors || ["Desalinhamento postural", "Fase excêntrica sem controle"],
-      progressions: formData.progressions || ["Aumento de carga"],
-      regressions: formData.regressions || ["Menor amplitude"],
-      musclesInvolved: formData.musclesInvolved || [formData.muscleGroup || "Geral"],
-      tags: formData.tags || ["#Customizado"],
+      benefits: parseList(benefitsText),
+      commonErrors: parseList(commonErrorsText),
+      progressions: parseList(progressionsText),
+      regressions: parseList(regressionsText),
+      musclesInvolved: formData.musclesInvolved?.length ? formData.musclesInvolved : [formData.muscleGroup || "Geral"],
+      tags: parseTags(tagsText),
     };
 
     onSave(finalExercise);
@@ -308,8 +324,8 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
                   <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Tags (separadas por vírgula)</label>
                   <input
                     type="text"
-                    value={(formData.tags || []).join(", ")}
-                    onChange={(e) => handleInputChange("tags", e.target.value.split(",").map(t => t.trim()))}
+                    value={tagsText}
+                    onChange={(e) => setTagsText(e.target.value)}
                     placeholder="Ex: #Elite, #Força"
                     className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-medium outline-none focus:border-[#39FF14]"
                   />
@@ -338,8 +354,8 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
                 <div className="space-y-1">
                   <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Benefícios e Adaptações (Um por linha)</label>
                   <textarea
-                    value={(formData.benefits || []).join("\n")}
-                    onChange={(e) => handleListChange("benefits", e.target.value)}
+                    value={benefitsText}
+                    onChange={(e) => setBenefitsText(e.target.value)}
                     placeholder="Melhora de força excêntrica&#10;Melhora do padrão de agachamento"
                     rows={3}
                     className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-mono outline-none focus:border-[#39FF14] no-scrollbar"
@@ -349,8 +365,8 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
                 <div className="space-y-1">
                   <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Erros Comuns a Evitar (Um por linha)</label>
                   <textarea
-                    value={(formData.commonErrors || []).join("\n")}
-                    onChange={(e) => handleListChange("commonErrors", e.target.value)}
+                    value={commonErrorsText}
+                    onChange={(e) => setCommonErrorsText(e.target.value)}
                     placeholder="Valgo dinâmico acentuado&#10;Falta de controle excêntrico"
                     rows={3}
                     className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-mono outline-none focus:border-[#39FF14] no-scrollbar"
@@ -362,8 +378,8 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
                 <div className="space-y-1">
                   <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Sugerir Progressões (Uma por linha)</label>
                   <textarea
-                    value={(formData.progressions || []).join("\n")}
-                    onChange={(e) => handleListChange("progressions", e.target.value)}
+                    value={progressionsText}
+                    onChange={(e) => setProgressionsText(e.target.value)}
                     placeholder="Adicionar carga com colete de peso&#10;Executar em base instável"
                     rows={2}
                     className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-mono outline-none focus:border-[#39FF14] no-scrollbar"
@@ -373,8 +389,8 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
                 <div className="space-y-1">
                   <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Sugerir Regressões (Uma por linha)</label>
                   <textarea
-                    value={(formData.regressions || []).join("\n")}
-                    onChange={(e) => handleListChange("regressions", e.target.value)}
+                    value={regressionsText}
+                    onChange={(e) => setRegressionsText(e.target.value)}
                     placeholder="Agachamento búlgaro com apoio das mãos&#10;Reduzir amplitude"
                     rows={2}
                     className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-mono outline-none focus:border-[#39FF14] no-scrollbar"
