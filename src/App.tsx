@@ -15018,27 +15018,6 @@ const AssessmentView: FC<{
         <div className="flex gap-3 w-full md:w-auto">
           {role === "coach" && (
             <Button
-              onClick={onGenerateAI}
-              disabled={aiLoading}
-              className="flex-1 md:flex-none py-3 bg-gradient-to-br from-purple-600 to-indigo-700 text-white shadow-xl shadow-purple-200 border-none animate-pulse-slow font-black italic"
-            >
-              {aiLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Analisando...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4" />
-                    <span>Modelagem Elite</span>
-                  </div>
-                </div>
-              )}
-            </Button>
-          )}
-          {role === "coach" && (
-            <Button
               onClick={() => onAdd(filterType)}
               variant="secondary"
               className="flex-1 md:flex-none py-3"
