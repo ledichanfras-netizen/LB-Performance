@@ -444,13 +444,13 @@ const ReportPage: FC<{
 }> = ({ children, pageNumber, totalPages }) => (
   <div
     className="report-page page-break bg-white text-slate-950 shadow-2xl my-10 mx-auto overflow-hidden relative text-left"
-    style={{ width: "210mm", height: "297mm", padding: "20mm", boxSizing: "border-box" }}
+    style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box" }}
   >
     {/* Page Borders for design */}
     <div className="absolute top-0 left-0 w-full h-2 bg-emerald-600"></div>
     <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100"></div>
 
-    <div className="flex flex-col justify-between" style={{ height: "257mm" }}>
+    <div className="flex flex-col h-full min-h-[257mm] justify-between">
       <div className="flex-grow">{children}</div>
 
       <div className="mt-10 pt-6 border-t border-slate-100 flex justify-between items-center bg-white shrink-0">
@@ -1447,7 +1447,6 @@ const EliteHubApp: FC<{
               <button
                 onClick={() => {
                   setActiveTab("ai-modeling");
-                  handleGenerateAIModeling();
                 }}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black ${
                   activeTab === "ai-modeling" || aiModelingResult
@@ -1615,7 +1614,6 @@ const EliteHubApp: FC<{
                 <button
                   onClick={() => {
                     setActiveTab("ai-modeling");
-                    handleGenerateAIModeling();
                   }}
                   className={`flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
                     activeTab === "ai-modeling" || aiModelingResult
@@ -3393,27 +3391,27 @@ const EliteHubApp: FC<{
                                 ]}
                               />
 
-                              <div className="space-y-4 mt-4">
+                              <div className="space-y-8 mt-6">
                                 <div className="relative">
                                   <div className="absolute -left-4 top-0 bottom-0 w-1 bg-brand-primary/20 rounded-full"></div>
-                                  <h5 className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] mb-1 flex items-center gap-2 pl-2">
+                                  <h5 className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] mb-2 flex items-center gap-2 pl-2">
                                     <span className="w-1.5 h-1.5 bg-brand-primary rounded-full"></span>
                                     Resumo Executivo
                                   </h5>
-                                  <p className="text-[10px] text-slate-800 font-medium leading-relaxed italic pl-2">
+                                  <p className="text-[11px] text-slate-800 font-medium leading-relaxed italic pl-2">
                                     "{data.summary}"
                                   </p>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-3">
-                                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                <div className="grid grid-cols-3 gap-4">
+                                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                                       Performance Geral
                                     </p>
-                                    <p className="text-2xl font-black text-brand-primary italic">
+                                    <p className="text-3xl font-black text-brand-primary italic">
                                       {data.performanceScore || 0}%
                                     </p>
-                                    <div className="w-full bg-slate-200 h-1 rounded-full mt-1.5 overflow-hidden">
+                                    <div className="w-full bg-slate-200 h-1 rounded-full mt-2 overflow-hidden">
                                       <div
                                         className="bg-brand-primary h-full rounded-full"
                                         style={{
@@ -3422,14 +3420,14 @@ const EliteHubApp: FC<{
                                       ></div>
                                     </div>
                                   </div>
-                                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                                       Score de Prontidão
                                     </p>
-                                    <p className="text-2xl font-black text-emerald-600 italic">
+                                    <p className="text-3xl font-black text-emerald-600 italic">
                                       {data.readinessScore || 0}%
                                     </p>
-                                    <div className="w-full bg-slate-200 h-1 rounded-full mt-1.5 overflow-hidden">
+                                    <div className="w-full bg-slate-200 h-1 rounded-full mt-2 overflow-hidden">
                                       <div
                                         className="bg-emerald-500 h-full rounded-full"
                                         style={{
@@ -3438,14 +3436,14 @@ const EliteHubApp: FC<{
                                       ></div>
                                     </div>
                                   </div>
-                                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center">
+                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                                       Risco de Lesão
                                     </p>
-                                    <p className="text-2xl font-black text-red-650 italic">
+                                    <p className="text-3xl font-black text-red-650 italic">
                                       {data.injuryRiskScore || 0}%
                                     </p>
-                                    <div className="w-full bg-slate-200 h-1 rounded-full mt-1.5 overflow-hidden">
+                                    <div className="w-full bg-slate-200 h-1 rounded-full mt-2 overflow-hidden">
                                       <div
                                         className="bg-red-500 h-full rounded-full"
                                         style={{
@@ -3456,7 +3454,7 @@ const EliteHubApp: FC<{
                                   </div>
                                 </div>
 
-                                <div className="h-[220px] w-full bg-slate-50 rounded-[2rem] p-4 border border-slate-100">
+                                <div className="h-[280px] w-full bg-slate-50 rounded-[2rem] p-6 border border-slate-100">
                                   <h5 className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center">
                                     Radar de Capacidades Físicas
                                   </h5>
@@ -3525,15 +3523,15 @@ const EliteHubApp: FC<{
                                   <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
                                     components={{
-                                      h1: ({ children }) => <h1 className="text-[10.5px] font-black text-emerald-700 uppercase tracking-wider mt-2 mb-1 pb-0.5 border-b border-slate-100 leading-none">{children}</h1>,
-                                      h2: ({ children }) => <h2 className="text-[9.5px] font-black text-slate-900 uppercase tracking-wider mt-2 mb-1 leading-none">{children}</h2>,
-                                      h3: ({ children }) => <h3 className="text-[9px] font-black text-slate-800 uppercase tracking-wider mt-1.5 mb-1 leading-none">{children}</h3>,
-                                      p: ({ children }) => <p className="text-[9px] font-medium text-slate-600 leading-normal mb-1.5">{children}</p>,
-                                      ul: ({ children }) => <ul className="list-disc pl-4 space-y-0.5 mb-1.5 text-[9px] font-medium text-slate-600">{children}</ul>,
-                                      ol: ({ children }) => <ol className="list-decimal pl-4 space-y-0.5 mb-1.5 text-[9px] font-medium text-slate-600">{children}</ol>,
-                                      li: ({ children }) => <li className="leading-normal">{children}</li>,
+                                      h1: ({ children }) => <h1 className="text-[11px] font-black text-emerald-700 uppercase tracking-wider mt-4 mb-2 pb-1 border-b border-slate-100 leading-none">{children}</h1>,
+                                      h2: ({ children }) => <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-wider mt-4 mb-2 leading-none">{children}</h2>,
+                                      h3: ({ children }) => <h3 className="text-[9px] font-black text-slate-800 uppercase tracking-wider mt-3 mb-1.5 leading-none">{children}</h3>,
+                                      p: ({ children }) => <p className="text-[9.5px] font-medium text-slate-600 leading-relaxed mb-2.5">{children}</p>,
+                                      ul: ({ children }) => <ul className="list-disc pl-4 space-y-1 mb-2.5 text-[9.5px] font-medium text-slate-600">{children}</ul>,
+                                      ol: ({ children }) => <ol className="list-decimal pl-4 space-y-1 mb-2.5 text-[9.5px] font-medium text-slate-600">{children}</ol>,
+                                      li: ({ children }) => <li className="leading-relaxed">{children}</li>,
                                       strong: ({ children }) => <strong className="font-extrabold text-slate-900">{children}</strong>,
-                                      blockquote: ({ children }) => <blockquote className="border-l-2 border-emerald-600 pl-2 italic text-slate-500 my-1 text-[9px]">{children}</blockquote>
+                                      blockquote: ({ children }) => <blockquote className="border-l-2 border-emerald-600 pl-3 italic text-slate-500 my-2 text-[9.5px]">{children}</blockquote>
                                     }}
                                   >
                                     {data.detailedAnalysis}
@@ -3552,10 +3550,10 @@ const EliteHubApp: FC<{
                                 extraStats={[{ label: "PÁGINA", value: "03 DE 03" }]}
                               />
 
-                              <div className="space-y-3 mt-3">
+                              <div className="space-y-6 mt-4">
                                 {data.alerts && data.alerts.length > 0 && (
-                                  <div className="bg-red-50 border border-red-100 p-3 rounded-xl">
-                                    <h5 className="text-[9px] font-black text-red-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                  <div className="bg-red-50 border border-red-100 p-5 rounded-2xl">
+                                    <h5 className="text-[9px] font-black text-red-600 uppercase tracking-widest mb-3 flex items-center gap-2">
                                       <svg
                                         className="w-4 h-4"
                                         fill="none"
@@ -3571,7 +3569,7 @@ const EliteHubApp: FC<{
                                       </svg>
                                       Alertas Críticos de Risco e Saúde
                                     </h5>
-                                    <ul className="space-y-1">
+                                    <ul className="space-y-2">
                                       {data.alerts.map(
                                         (alert: string, i: number) => (
                                           <li
@@ -3587,17 +3585,17 @@ const EliteHubApp: FC<{
                                   </div>
                                 )}
 
-                                <div className="bg-emerald-50/40 border border-emerald-100 p-3 rounded-xl relative overflow-hidden">
-                                  <h5 className="text-[9px] font-black text-emerald-800 uppercase tracking-[0.2em] mb-2 flex items-center gap-2 relative z-10">
+                                <div className="bg-emerald-50/40 border border-emerald-100 p-5 rounded-2xl relative overflow-hidden">
+                                  <h5 className="text-[9px] font-black text-emerald-800 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10">
                                     <div className="w-1.5 h-1.5 bg-emerald-600 rounded-full"></div>
                                     Prescrição de Ajuste Imediato (Treino/Recuperação)
                                   </h5>
-                                  <div className="grid grid-cols-1 gap-1.5 relative z-10">
+                                  <div className="grid grid-cols-1 gap-2 relative z-10">
                                     {data.recommendations?.map(
                                       (r: string, i: number) => (
                                         <div
                                           key={i}
-                                          className="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm"
+                                          className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100 shadow-sm"
                                         >
                                           <div className="w-6 h-6 bg-emerald-50 text-emerald-700 rounded-lg flex items-center justify-center font-black text-xs shrink-0">
                                             {i + 1}
@@ -3611,8 +3609,8 @@ const EliteHubApp: FC<{
                                   </div>
                                 </div>
 
-                                <div className="pt-2 border-t border-slate-100">
-                                  <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1.5 leading-none">
+                                <div className="pt-4 border-t border-slate-100">
+                                  <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 leading-none">
                                     Conclusão Técnica Final
                                   </h5>
                                   <p className="text-[10px] text-slate-600 leading-relaxed font-bold italic">
@@ -7829,12 +7827,12 @@ const SpeedReport: FC<{
               extraStats={[{ label: "VELOCIDADE MÁXIMA", value: `${data.speed30m?.toFixed(2) || 0} m/s` }]}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 mt-6">
               <div className="bg-white p-6 rounded-[2rem] border border-slate-200">
-                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] mb-4">
+                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em] mb-8">
                   Perfil de Velocidade (m/s)
                 </h4>
-                <div className="h-[190px] w-full">
+                <div className="h-[250px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart
                       data={speedData}
@@ -7989,9 +7987,9 @@ const SpeedReport: FC<{
               extraStats={[{ label: "PÁGINA", value: "02 DE 03" }]}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
               <div className="md:col-span-2 bg-white p-8 rounded-[2rem] border border-slate-200">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-brand-primary" />
                     <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">
@@ -7999,7 +7997,7 @@ const SpeedReport: FC<{
                     </h4>
                   </div>
                 </div>
-                <div className="h-[190px] w-full mt-2">
+                <div className="h-[230px] w-full mt-2">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={evolutionData}
@@ -8124,52 +8122,52 @@ const SpeedReport: FC<{
               extraStats={[{ label: "PERFIL", value: speedClass.toUpperCase() }, { label: "PÁGINA", value: "03 DE 03" }]}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 font-sans">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 font-sans">
               
               {/* Column 1: Executive Summary & Performance Indexes */}
-              <div className="space-y-4 overflow-hidden">
+              <div className="space-y-6 overflow-hidden">
                 
                 {/* 1. STATUS DE SPRINT GERAL */}
-                <div className="bg-slate-900 text-white p-4 rounded-[2rem] border border-slate-850 shadow-xl relative overflow-hidden h-fit">
+                <div className="bg-slate-900 text-white p-5 rounded-[2rem] border border-slate-850 shadow-xl relative overflow-hidden h-fit">
                   <div className="absolute right-3 bottom-3 opacity-5">
                     <Sparkles className="w-16 h-16 text-indigo-400" />
                   </div>
                   <span className="text-[7px] font-black text-indigo-400 uppercase tracking-widest block mb-2 font-mono">
                     🔥 1. Status de Sprint Geral
                   </span>
-                  <h4 className="text-xs font-black uppercase italic tracking-wider mb-2 leading-tight border-b border-slate-800 pb-1.5">
+                  <h4 className="text-sm font-black uppercase italic tracking-wider mb-3 leading-tight border-b border-slate-800 pb-2">
                     Veredito do Especialista
                   </h4>
-                  <p className="text-[9px] text-slate-200 leading-relaxed font-bold uppercase">
+                  <p className="text-[10px] text-slate-200 leading-relaxed font-bold uppercase">
                     {veredictoResumo}
                   </p>
                 </div>
 
                 {/* 2. SCORE DE VELOCIDADE */}
-                <div className="bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm">
+                <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm">
                   <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest block mb-1 font-mono">
                     🎯 2. Score de Velocidade
                   </span>
-                  <div className="flex justify-between items-baseline mb-2">
-                    <h4 className="text-xs font-black uppercase italic tracking-wider text-slate-900">
+                  <div className="flex justify-between items-baseline mb-3">
+                    <h4 className="text-sm font-black uppercase italic tracking-wider text-slate-900">
                       Pontuação de Sprint
                     </h4>
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${speedScoreColor}`}>
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${speedScoreColor}`}>
                       {speedScoreClass}
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-3 py-1">
+                  <div className="flex items-center gap-4 py-2">
                     <div className="relative flex items-center justify-center font-sans">
-                      <svg className="w-14 h-14 transform -rotate-90">
-                        <circle cx="28" cy="28" r="24" stroke="#f1f5f9" strokeWidth="5" fill="transparent" />
-                        <circle cx="28" cy="28" r="24" stroke="#4f46e5" strokeWidth="5" fill="transparent"
-                          strokeDasharray={150.8}
-                          strokeDashoffset={150.8 - (150.8 * speedScore) / 100}
+                      <svg className="w-16 h-16 transform -rotate-90">
+                        <circle cx="32" cy="32" r="28" stroke="#f1f5f9" strokeWidth="6" fill="transparent" />
+                        <circle cx="32" cy="32" r="28" stroke="#4f46e5" strokeWidth="6" fill="transparent"
+                          strokeDasharray={175.9}
+                          strokeDashoffset={175.9 - (175.9 * speedScore) / 100}
                           className="transition-all duration-1000 ease-out"
                         />
                       </svg>
-                      <span className="absolute text-base font-black text-slate-900 italic">
+                      <span className="absolute text-lg font-black text-slate-900 italic">
                         {speedScore}
                       </span>
                     </div>
@@ -8185,11 +8183,11 @@ const SpeedReport: FC<{
                 </div>
 
                 {/* 🧬 ÍNDICE DE PERFORMANCE DE VELOCIDADE (IVA) */}
-                <div className="bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm">
-                  <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest block mb-1 font-mono">
+                <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm">
+                  <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest block mb-2 font-mono">
                     🧬 Índice de Aceleração & Velocidade (IVA)
                   </span>
-                  <h4 className="text-xs font-black uppercase italic tracking-wider text-slate-900 mb-2 border-b pb-1.5">
+                  <h4 className="text-sm font-black uppercase italic tracking-wider text-slate-900 mb-3 border-b pb-2">
                     Eficiência Dinâmica
                   </h4>
                   <div className={`p-3 rounded-2xl border ${efficiencyColor} flex items-center justify-between mb-4 transition-all duration-300`}>
@@ -8219,15 +8217,15 @@ const SpeedReport: FC<{
               </div>
 
               {/* Column 2: Technical Interpretation (Coach focus) */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 
                 {/* 3. INTERPRETAÇÃO TÉCNICA */}
-                <div className="bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm">
+                <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm">
                   <span className="text-[7px] font-black text-orange-600 uppercase tracking-widest block mb-1 font-mono">
                     📊 3. Interpretação Técnica (Treinador)
                   </span>
-                  <div className="flex justify-between items-baseline mb-2">
-                    <h4 className="text-xs font-black uppercase italic tracking-wider text-slate-900">
+                  <div className="flex justify-between items-baseline mb-3">
+                    <h4 className="text-sm font-black uppercase italic tracking-wider text-slate-900">
                       Metabolismo & Rampa de Velocidade
                     </h4>
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono">
@@ -8235,34 +8233,34 @@ const SpeedReport: FC<{
                     </span>
                   </div>
                   
-                  <div className="space-y-2 text-[9px] leading-relaxed">
-                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                      <span className="font-black text-slate-500 uppercase block mb-0.5">Aceleração e SDF:</span>
-                      <p className="text-slate-800 font-extrabold uppercase leading-tight">{sAcellAnalysis}</p>
+                  <div className="space-y-4 text-[9px] leading-relaxed">
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <span className="font-black text-slate-500 uppercase block mb-1">Aceleração e SDF:</span>
+                      <p className="text-slate-800 font-extrabold uppercase">{sAcellAnalysis}</p>
                     </div>
-                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                      <span className="font-black text-slate-500 uppercase block mb-0.5">Manutenção e Fadiga:</span>
-                      <p className="text-slate-800 font-extrabold uppercase leading-tight">{sFatiqueAnalysis}</p>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <span className="font-black text-slate-500 uppercase block mb-1">Manutenção e Fadiga:</span>
+                      <p className="text-slate-800 font-extrabold uppercase">{sFatiqueAnalysis}</p>
                     </div>
-                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                      <span className="font-black text-slate-500 uppercase block mb-0.5">Impactos Articulares & Eficácia:</span>
-                      <p className="text-slate-800 font-extrabold uppercase leading-tight">{sVelocityEfect}</p>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <span className="font-black text-slate-500 uppercase block mb-1">Impactos Articulares & Eficácia:</span>
+                      <p className="text-slate-800 font-extrabold uppercase">{sVelocityEfect}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* 6. IMPACTO NA PERFORMANCE */}
-                <div className="bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm">
-                  <span className="text-[7px] font-black text-rose-500 uppercase tracking-widest block mb-1 font-mono">
+                <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm">
+                  <span className="text-[7px] font-black text-rose-500 uppercase tracking-widest block mb-2 font-mono">
                     ⚡ 6. Impacto na Performance
                   </span>
-                  <h4 className="text-xs font-black uppercase italic tracking-wider text-slate-900 mb-2 border-b pb-1.5 font-bold">
+                  <h4 className="text-sm font-black uppercase italic tracking-wider text-slate-900 mb-3 border-b pb-2">
                     Respostas Motoras
                   </h4>
-                  <div className="flex gap-2 items-start bg-rose-50/20 p-2.5 rounded-2xl border border-rose-100/30">
-                    <Zap className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
+                  <div className="flex gap-3 items-start bg-rose-50/20 p-3 rounded-2xl border border-rose-100/30">
+                    <Zap className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
                     <div>
-                      <span className="text-[8px] font-black text-slate-500 uppercase block mb-0.5">Diferencial Competitivo Direto:</span>
+                      <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Diferencial Competitivo Direto:</span>
                       <p className="text-[9px] text-slate-800 font-bold uppercase leading-relaxed">
                         {sPerformanceImpactText}
                       </p>
@@ -8271,11 +8269,11 @@ const SpeedReport: FC<{
                 </div>
 
                 {/* 7. RAZÕES DE ACELERAÇÃO (Análise de Segmentação) */}
-                <div className="bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm">
-                  <span className="text-[7px] font-black text-green-600 uppercase tracking-widest block mb-1 font-mono">
+                <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm">
+                  <span className="text-[7px] font-black text-green-600 uppercase tracking-widest block mb-2 font-mono">
                     🧬 7. Divisão de Potência Linear
                   </span>
-                  <h4 className="text-xs font-black uppercase italic tracking-wider text-slate-900 mb-2 border-b pb-1.5">
+                  <h4 className="text-sm font-black uppercase italic tracking-wider text-slate-900 mb-3 border-b pb-2">
                     Aceleração vs Velocidade Máxima
                   </h4>
                   <p className="text-[9px] text-slate-600 font-bold uppercase leading-relaxed font-sans">
@@ -8296,25 +8294,25 @@ const SpeedReport: FC<{
               </div>
 
               {/* Column 3: Actions, Metas & Translations */}
-              <div className="space-y-4">
+              <div className="space-y-6">
 
                 {/* 8. PLANO DE AÇÃO */}
-                <div className="bg-white p-4 rounded-[2rem] border border-slate-200/85 shadow-sm">
+                <div className="bg-white p-5 rounded-[2rem] border border-slate-200/85 shadow-sm">
                   <span className="text-[7px] font-black text-indigo-600 uppercase tracking-widest block mb-1 font-mono">
                     🚀 8. Plano de Ação (4-8 Semanas)
                   </span>
-                  <div className="flex justify-between items-baseline border-b pb-1.5 mb-2">
-                    <h4 className="text-xs font-black uppercase italic tracking-wider text-slate-900">
+                  <div className="flex justify-between items-baseline border-b pb-2 mb-3">
+                    <h4 className="text-sm font-black uppercase italic tracking-wider text-slate-900">
                       Estratégia Imediata
                     </h4>
                   </div>
-                  <p className="text-[8px] font-black text-indigo-500 uppercase tracking-widest block mb-2 font-semibold font-mono">
+                  <p className="text-[8px] font-black text-indigo-500 uppercase tracking-widest block mb-3 font-semibold font-mono">
                     Foco: {sActionPlanFocus}
                   </p>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {sActionItems.map((item, idx) => (
-                      <div key={idx} className="flex gap-2 items-start text-[9px] border-b border-slate-5 pb-1.5 last:border-0 last:pb-0">
+                      <div key={idx} className="flex gap-2 items-start text-[9px] border-b border-slate-5 pb-2 last:border-0 last:pb-0">
                         <span className="w-4 h-4 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[8px] font-black text-slate-600 shrink-0 mt-0.5 font-mono">
                           {idx + 1}
                         </span>
@@ -8328,28 +8326,28 @@ const SpeedReport: FC<{
                 </div>
 
                 {/* 9. METAS DE EVOLUÇÃO */}
-                <div className="bg-slate-950 text-white p-4 rounded-[2rem] border border-slate-850 shadow-xl relative overflow-hidden">
+                <div className="bg-slate-950 text-white p-5 rounded-[2rem] border border-slate-850 shadow-xl relative overflow-hidden">
                   <div className="absolute right-3 top-3 opacity-5">
                     <Target className="w-16 h-16 text-emerald-400" />
                   </div>
-                  <span className="text-[7px] font-black text-emerald-400 uppercase tracking-widest block mb-1 font-mono">
+                  <span className="text-[7px] font-black text-emerald-400 uppercase tracking-widest block mb-2 font-mono">
                     🎯 9. Metas de Evolução
                   </span>
-                  <h4 className="text-xs font-black uppercase italic tracking-wider text-white mb-2 border-b border-slate-800 pb-1.5">
+                  <h4 className="text-sm font-black uppercase italic tracking-wider text-white mb-3 border-b border-slate-800 pb-2">
                     Objetivos Realistas
                   </h4>
                   
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <div className="p-2.5 bg-slate-900 rounded-2xl border border-slate-800 text-center">
-                      <span className="text-[7px] font-black text-slate-400 uppercase block mb-0.5">Meta Tempo 10m</span>
-                      <span className="text-sm font-black text-brand-primary italic font-sans">{bioTargetTime10m}s</span>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-center">
+                      <span className="text-[7px] font-black text-slate-400 uppercase block mb-1">Meta Tempo 10m</span>
+                      <span className="text-base font-black text-brand-primary italic font-sans">{bioTargetTime10m}s</span>
                     </div>
-                    <div className="p-2.5 bg-slate-900 rounded-2xl border border-slate-800 text-center">
-                      <span className="text-[7px] font-black text-slate-400 uppercase block mb-0.5">Meta Tempo 30m</span>
-                      <span className="text-sm font-black text-emerald-400 italic font-sans">{bioTargetTime30m}s</span>
+                    <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-center">
+                      <span className="text-[7px] font-black text-slate-400 uppercase block mb-1">Meta Tempo 30m</span>
+                      <span className="text-base font-black text-emerald-400 italic font-sans">{bioTargetTime30m}s</span>
                     </div>
                   </div>
-                  <div className="text-center bg-slate-900 p-2 rounded-xl border border-slate-800 text-[8px] font-black uppercase tracking-widest text-slate-400">
+                  <div className="text-center bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-[8px] font-black uppercase tracking-widest text-slate-400">
                     Prazo Estimado: <span className="text-white font-bold">{bioTargetTimeframe}</span>
                   </div>
                 </div>
@@ -8683,12 +8681,12 @@ const Vo2maxReport: FC<{
               ]}
             />
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 mt-2 font-sans">
-              <div className="bg-brand-primary p-4 rounded-3xl text-brand-dark shadow-xl relative overflow-hidden group flex flex-col justify-between">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 mt-4 font-sans">
+              <div className="bg-brand-primary p-6 rounded-3xl text-brand-dark shadow-xl relative overflow-hidden group flex flex-col justify-between">
                 <div className="absolute -right-4 -top-4 opacity-[0.05] group-hover:scale-110 transition-transform text-brand-dark">
                   <HeartPulse className="w-24 h-24" />
                 </div>
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex justify-between items-start mb-4">
                   <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60 italic font-bold">
                     VO2 MÁXIMO
                   </span>
@@ -8701,24 +8699,24 @@ const Vo2maxReport: FC<{
                 </div>
                 <div>
                   <div className="flex items-baseline gap-1">
-                    <h3 className="text-3xl font-black italic leading-none font-sans">
+                    <h3 className="text-4xl font-black italic leading-none font-sans">
                       {data.vo2max || 0}
                     </h3>
                     <span className="text-[10px] font-bold opacity-60 uppercase italic font-sans">
                       ml/kg/min
                     </span>
                   </div>
-                  <p className="text-[8px] mt-2 font-black uppercase italic leading-relaxed text-brand-dark/80 font-bold font-sans">
+                  <p className="text-[8px] mt-4 font-black uppercase italic leading-relaxed text-brand-dark/80 font-bold font-sans">
                     Consumo máximo de oxigênio relativo.
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 p-4 rounded-3xl relative overflow-hidden group flex flex-col justify-between">
+              <div className="bg-white border border-slate-200 p-6 rounded-3xl relative overflow-hidden group flex flex-col justify-between">
                 <div className="absolute -right-4 -top-4 text-orange-500 opacity-[0.03] group-hover:scale-110 transition-transform">
                   <Zap className="w-24 h-24" />
                 </div>
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex justify-between items-start mb-4">
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] italic font-bold font-sans">
                     VAM
                   </span>
@@ -8731,24 +8729,24 @@ const Vo2maxReport: FC<{
                 </div>
                 <div>
                   <div className="flex items-baseline gap-1">
-                    <h3 className="text-3xl font-black text-slate-900 italic leading-none font-sans">
+                    <h3 className="text-4xl font-black text-slate-900 italic leading-none font-sans">
                       {data.vam || data.thresholdSpeed || 0}
                     </h3>
                     <span className="text-xs font-bold text-slate-400 uppercase italic font-sans">
                       KM/H
                     </span>
                   </div>
-                  <p className="text-[8px] mt-2 font-black text-slate-400 uppercase italic leading-relaxed font-bold font-sans">
+                  <p className="text-[8px] mt-4 font-black text-slate-400 uppercase italic leading-relaxed font-bold font-sans">
                     Velocidade Aeróbica Máxima de corrida.
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 p-4 rounded-3xl relative overflow-hidden group flex flex-col justify-between">
+              <div className="bg-white border border-slate-200 p-6 rounded-3xl relative overflow-hidden group flex flex-col justify-between">
                 <div className="absolute -right-4 -top-4 text-rose-500 opacity-[0.03] group-hover:scale-110 transition-transform">
                   <Activity className="w-24 h-24" />
                 </div>
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex justify-between items-start mb-4">
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] italic font-bold font-sans">
                     FC MÁXIMA
                   </span>
@@ -8761,24 +8759,24 @@ const Vo2maxReport: FC<{
                 </div>
                 <div>
                   <div className="flex items-baseline gap-1">
-                    <h3 className="text-3xl font-black text-slate-900 italic leading-none font-sans">
+                    <h3 className="text-4xl font-black text-slate-900 italic leading-none font-sans">
                       {data.maxHeartRate || 0}
                     </h3>
                     <span className="text-xs font-bold text-slate-400 uppercase italic font-sans">
                       BPM
                     </span>
                   </div>
-                  <p className="text-[8px] mt-2 font-black text-slate-400 uppercase italic leading-relaxed font-bold font-sans">
+                  <p className="text-[8px] mt-4 font-black text-slate-400 uppercase italic leading-relaxed font-bold font-sans">
                     Frequência cardíaca máxima atingida.
                   </p>
                 </div>
               </div>
 
-              <div className="bg-white border border-slate-200 p-4 rounded-3xl relative overflow-hidden group flex flex-col justify-between">
+              <div className="bg-white border border-slate-200 p-6 rounded-3xl relative overflow-hidden group flex flex-col justify-between">
                 <div className="absolute -right-4 -top-4 text-purple-500 opacity-[0.03] group-hover:scale-110 transition-transform">
                   <Sparkles className="w-24 h-24" />
                 </div>
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex justify-between items-start mb-4">
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] italic font-bold font-sans">
                     FITNESS SCORE
                   </span>
@@ -8791,14 +8789,14 @@ const Vo2maxReport: FC<{
                 </div>
                 <div>
                   <div className="flex items-baseline gap-1">
-                    <h3 className="text-3xl font-black text-slate-900 italic leading-none font-sans">
+                    <h3 className="text-4xl font-black text-slate-900 italic leading-none font-sans">
                       {data.score || 0}
                     </h3>
                     <span className="text-xs font-bold text-slate-400 uppercase italic font-sans">
                       PTS
                     </span>
                   </div>
-                  <p className="text-[8px] mt-2 font-black text-slate-400 uppercase italic leading-relaxed font-bold font-sans">
+                  <p className="text-[8px] mt-4 font-black text-slate-400 uppercase italic leading-relaxed font-bold font-sans">
                     Pontuação de condicionamento aeróbico.
                   </p>
                 </div>
@@ -10810,8 +10808,8 @@ const DropJumpReport: FC<{
               extraStats={[{ label: "PÁGINA", value: "02 DE 03" }]}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-              <div className="md:col-span-2 bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              <div className="md:col-span-2 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2 font-sans">
@@ -10821,12 +10819,12 @@ const DropJumpReport: FC<{
                       </h4>
                     </div>
                   </div>
-                  <p className="text-[8.5px] text-slate-400 uppercase font-black tracking-wider mb-3 italic">
+                  <p className="text-[9.5px] text-slate-400 uppercase font-black tracking-wider mb-6 italic">
                     *Gráfico de Duplo Eixo: Barra mostra Rigidez (N/m - Eixo Dir.) e Linha mostra Reatividade (RSI - Eixo Esq.)
                   </p>
                 </div>
                 
-                <div className="h-[180px] w-full">
+                <div className="h-[230px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart
                       data={evolutionData}
@@ -14569,16 +14567,16 @@ const BioimpedanceReport: FC<{
               extraStats={[{ label: "PÁGINA", value: "02 DE 03" }]}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
               {/* HISTORICAL COMPOSITION HISTOGRAM/TREND CHART */}
-              <div className="md:col-span-2 bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm font-sans h-full">
-                <div className="flex items-center gap-2 mb-4">
+              <div className="md:col-span-2 bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-200 shadow-sm font-sans h-full">
+                <div className="flex items-center gap-2 mb-6">
                   <TrendingUp className="w-4 h-4 text-brand-primary animate-pulse" />
                   <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">
                     Evolução Temporal de Composição Corporal
                   </h4>
                 </div>
-                <div className="h-[185px] w-full">
+                <div className="h-[210px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={evolutionData}>
                       <defs>
@@ -14727,36 +14725,36 @@ const BioimpedanceReport: FC<{
               extraStats={[{ label: "PERFIL", value: "ELITE" }, { label: "PÁGINA", value: "03 DE 03" }]}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 font-sans">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 font-sans">
               
               {/* Column 1: Executive Summary & Performance Indexes */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 
                 {/* 2. SCORE CORPORAL */}
-                <div id="score-corp-card" className="bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm">
+                <div id="score-corp-card" className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm">
                   <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest block mb-1 font-mono">
                     🎯 2. Score Corporal
                   </span>
-                  <div className="flex justify-between items-baseline mb-2">
-                    <h4 className="text-xs font-black uppercase italic tracking-wider text-slate-900">
+                  <div className="flex justify-between items-baseline mb-3">
+                    <h4 className="text-sm font-black uppercase italic tracking-wider text-slate-900">
                       Pontuação de Composição
                     </h4>
-                    <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${bodyScoreColor}`}>
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${bodyScoreColor}`}>
                       {bodyScoreClass}
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-3 py-1">
+                  <div className="flex items-center gap-4 py-2">
                     <div className="relative flex items-center justify-center font-sans">
-                      <svg className="w-14 h-14 transform -rotate-90">
-                        <circle cx="28" cy="28" r="24" stroke="#f1f5f9" strokeWidth="5" fill="transparent" />
-                        <circle cx="28" cy="28" r="24" stroke="#4f46e5" strokeWidth="5" fill="transparent"
-                          strokeDasharray={150.8}
-                          strokeDashoffset={150.8 - (150.8 * bodyScore) / 100}
+                      <svg className="w-16 h-16 transform -rotate-90">
+                        <circle cx="32" cy="32" r="28" stroke="#f1f5f9" strokeWidth="6" fill="transparent" />
+                        <circle cx="32" cy="32" r="28" stroke="#4f46e5" strokeWidth="6" fill="transparent"
+                          strokeDasharray={175.9}
+                          strokeDashoffset={175.9 - (175.9 * bodyScore) / 100}
                           className="transition-all duration-1000 ease-out"
                         />
                       </svg>
-                      <span className="absolute text-base font-black text-slate-900 italic">
+                      <span className="absolute text-lg font-black text-slate-900 italic">
                         {bodyScore}
                       </span>
                     </div>
@@ -14772,22 +14770,22 @@ const BioimpedanceReport: FC<{
                 </div>
  
                 {/* 🧬 ÍNDICE DE PERFORMANCE CORPORAL (IPC) */}
-                <div id="index-perf-card" className="bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm">
-                  <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest block mb-1 font-mono">
+                <div id="index-perf-card" className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm">
+                  <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest block mb-2 font-mono">
                     🧬 Índice de Performance Corporal
                   </span>
-                  <h4 className="text-xs font-black uppercase italic tracking-wider text-slate-900 mb-2 border-b pb-1.5">
+                  <h4 className="text-sm font-black uppercase italic tracking-wider text-slate-900 mb-3 border-b pb-2">
                     Eficiência Corporal
                   </h4>
-                  <div className={`p-2.5 rounded-2xl border ${efficiencyColor} flex items-center justify-between mb-3 transition-all duration-300`}>
-                    <span className="text-[8px] font-black uppercase tracking-wider">
+                  <div className={`p-3 rounded-2xl border ${efficiencyColor} flex items-center justify-between mb-4 transition-all duration-300`}>
+                    <span className="text-[9px] font-black uppercase tracking-wider">
                       STATUS DE EFICIÊNCIA:
                     </span>
-                    <span className="text-[10px] font-black uppercase italic tracking-widest">
+                    <span className="text-xs font-black uppercase italic tracking-widest">
                       {totalEfficiency}% ({efficiencyLevel})
                     </span>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex justify-between items-center text-[9px] border-b pb-1.5 border-slate-50">
                       <span className="text-slate-400 uppercase font-black">Relação Massa Magra / Peso</span>
                       <span className="text-slate-900 italic font-black font-sans">{leanMassPct}%</span>
@@ -14806,15 +14804,15 @@ const BioimpedanceReport: FC<{
               </div>
  
               {/* Column 2: Technical Interpretation (Coach focus) */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 
                 {/* 3. INTERPRETAÇÃO TÉCNICA */}
-                <div id="tech-interpretation-card" className="bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm">
+                <div id="tech-interpretation-card" className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm">
                   <span className="text-[7px] font-black text-orange-600 uppercase tracking-widest block mb-1 font-mono">
                     📊 3. Interpretação Técnica (Treinador)
                   </span>
-                  <div className="flex justify-between items-baseline mb-2">
-                    <h4 className="text-xs font-black uppercase italic tracking-wider text-slate-900">
+                  <div className="flex justify-between items-baseline mb-3">
+                    <h4 className="text-sm font-black uppercase italic tracking-wider text-slate-900">
                       Metabolismo & Tecido Ativo
                     </h4>
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest font-mono">
@@ -14822,18 +14820,18 @@ const BioimpedanceReport: FC<{
                     </span>
                   </div>
                   
-                  <div className="space-y-2 text-[9px] leading-relaxed">
-                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                      <span className="font-black text-slate-400 uppercase block mb-0.5">Massa Muscular vs Gordura:</span>
-                      <p className="text-slate-600 font-bold uppercase leading-tight">{bioMuscleFatRatio}</p>
+                  <div className="space-y-4 text-[9px] leading-relaxed">
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <span className="font-black text-slate-400 uppercase block mb-1">Massa Muscular vs Gordura:</span>
+                      <p className="text-slate-600 font-bold uppercase">{bioMuscleFatRatio}</p>
                     </div>
-                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                      <span className="font-black text-slate-400 uppercase block mb-0.5">Eficiência de Metabolismo:</span>
-                      <p className="text-slate-600 font-bold uppercase leading-tight">{sMetabolicDescription}</p>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <span className="font-black text-slate-400 uppercase block mb-1">Eficiência de Metabolismo:</span>
+                      <p className="text-slate-600 font-bold uppercase">{sMetabolicDescription}</p>
                     </div>
-                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                      <span className="font-black text-slate-400 uppercase block mb-0.5">Indicador de Risco Fisiológico:</span>
-                      <p className="text-slate-600 font-bold uppercase leading-tight">{sPhysiologicalRisk}</p>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <span className="font-black text-slate-400 uppercase block mb-1">Indicador de Risco Fisiológico:</span>
+                      <p className="text-slate-650 font-bold uppercase">{sPhysiologicalRisk}</p>
                     </div>
                   </div>
                 </div>
@@ -14841,31 +14839,31 @@ const BioimpedanceReport: FC<{
               </div>
  
               {/* Column 3: Actions, Metas & Translations */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 
                 {/* 8. PLANO DE AÇÃO */}
-                <div id="action-plan-card" className="bg-white p-4 rounded-[2rem] border border-slate-200/85 shadow-sm">
+                <div id="action-plan-card" className="bg-white p-5 rounded-[2rem] border border-slate-200/85 shadow-sm">
                   <span className="text-[7px] font-black text-indigo-600 uppercase tracking-widest block mb-1 font-mono">
                     🚀 8. Plano de Ação (4-8 Semanas)
                   </span>
-                  <div className="flex justify-between items-baseline mb-2 border-b pb-1.5">
-                    <h4 className="text-xs font-black uppercase italic tracking-wider text-slate-900">
+                  <div className="flex justify-between items-baseline mb-3 border-b pb-2">
+                    <h4 className="text-sm font-black uppercase italic tracking-wider text-slate-900">
                       Estratégia Imediata
                     </h4>
                   </div>
-                  <p className="text-[8px] font-black text-indigo-500 uppercase tracking-widest block mb-2 font-semibold font-mono">
+                  <p className="text-[8px] font-black text-indigo-500 uppercase tracking-widest block mb-3 font-semibold font-mono">
                     Foco: {bioActionPlanFocus}
                   </p>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {bioActionItems.map((item, idx) => (
-                      <div key={idx} className="flex gap-2 items-start text-[9px] border-b border-slate-50 pb-1.5 last:border-0 last:pb-0">
+                      <div key={idx} className="flex gap-2 items-start text-[9px] border-b border-slate-50 pb-2 last:border-0 last:pb-0">
                         <span className="w-4 h-4 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[8px] font-black text-slate-600 shrink-0 mt-0.5 font-mono">
                           {idx + 1}
                         </span>
                         <div>
                           <span className="font-bold text-slate-800 uppercase block leading-tight">{item.title}</span>
-                          <span className="text-slate-455 font-medium text-[8px] leading-tight block mt-0.5 uppercase font-bold">{item.desc}</span>
+                          <span className="text-slate-400 font-medium text-[8px] leading-tight block mt-0.5 uppercase font-bold">{item.desc}</span>
                         </div>
                       </div>
                     ))}
@@ -14873,28 +14871,28 @@ const BioimpedanceReport: FC<{
                 </div>
  
                 {/* 9. METAS DE EVOLUÇÃO */}
-                <div id="future-goals-card" className="bg-slate-950 text-white p-4 rounded-[2rem] border border-slate-800 shadow-xl relative overflow-hidden">
+                <div id="future-goals-card" className="bg-slate-950 text-white p-5 rounded-[2rem] border border-slate-800 shadow-xl relative overflow-hidden">
                   <div className="absolute right-3 top-3 opacity-5">
                     <Target className="w-16 h-16 text-emerald-400" />
                   </div>
-                  <span className="text-[7px] font-black text-emerald-400 uppercase tracking-widest block mb-1 font-mono">
+                  <span className="text-[7px] font-black text-emerald-400 uppercase tracking-widest block mb-2 font-mono">
                     🎯 9. Metas de Evolução
                   </span>
-                  <h4 className="text-xs font-black uppercase italic tracking-wider text-white mb-2 border-b border-slate-800 pb-1.5">
+                  <h4 className="text-sm font-black uppercase italic tracking-wider text-white mb-3 border-b border-slate-800 pb-2">
                     Objetivos Realistas
                   </h4>
                   
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <div className="p-2.5 bg-slate-900 rounded-2xl border border-slate-800 text-center">
-                      <span className="text-[7px] font-black text-slate-400 uppercase block mb-0.5">Gordura Alvo</span>
-                      <span className="text-sm font-black text-brand-primary italic font-sans">{bioTargetFat}%</span>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-center">
+                      <span className="text-[7px] font-black text-slate-400 uppercase block mb-1">Gordura Alvo</span>
+                      <span className="text-base font-black text-brand-primary italic font-sans">{bioTargetFat}%</span>
                     </div>
-                    <div className="p-2.5 bg-slate-900 rounded-2xl border border-slate-800 text-center">
-                      <span className="text-[7px] font-black text-slate-400 uppercase block mb-0.5">Músculo Alvo</span>
-                      <span className="text-sm font-black text-emerald-400 italic font-sans">{bioTargetMuscle} kg</span>
+                    <div className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-center">
+                      <span className="text-[7px] font-black text-slate-400 uppercase block mb-1">Músculo Alvo</span>
+                      <span className="text-base font-black text-emerald-400 italic font-sans">{bioTargetMuscle} kg</span>
                     </div>
                   </div>
-                  <div className="text-center bg-slate-900 p-2 rounded-xl border border-slate-800 text-[8px] font-black uppercase tracking-widest text-slate-400">
+                  <div className="text-center bg-slate-900 p-2.5 rounded-xl border border-slate-800 text-[8px] font-black uppercase tracking-widest text-slate-400">
                     Prazo Estimado: <span className="text-white font-bold">{bioTargetTimeframe}</span>
                   </div>
                 </div>

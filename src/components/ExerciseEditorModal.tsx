@@ -57,7 +57,7 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
       setRegressionsText("Menor amplitude");
       setTagsText("#Customizado");
     }
-  }, [exercise, isOpen]);
+  }, [exercise?.id, isOpen]);
 
   if (!isOpen) return null;
 

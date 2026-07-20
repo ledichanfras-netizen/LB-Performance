@@ -282,6 +282,8 @@ export const supabaseService = {
               muscleGroup: ex.muscle_group,
               painLevel: ex.pain_level,
               repsType: ex.reps_type || 'reps',
+              videoUrl: ex.video_url || '',
+              imageUrl: ex.image_url || '',
               performedSets: (ex.performed_sets || [])
             })).sort((x: any, y: any) => (x.order_index || 0) - (y.order_index || 0))
           })).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
@@ -585,7 +587,9 @@ export const supabaseService = {
                notes: ex.notes,
                pain_level: ex.painLevel,
                reps_type: ex.repsType || 'reps',
-               order_index: idx
+               order_index: idx,
+               video_url: ex.videoUrl ?? null,
+               image_url: ex.imageUrl ?? null
              });
             if (exError) {
               logError('[Supabase] Erro ao salvar exercício:', exError);
