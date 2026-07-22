@@ -6,7 +6,7 @@ import { ENRICHED_LIBRARY } from './data/exercises';
 import toast from 'react-hot-toast';
 import { GoogleGenAI, Type } from "@google/genai";
 import { supabaseService, logError, isNetworkError } from './services/supabaseService';
-import { generateModelAthlete, generateFeaturedAthletes } from './seedData';
+import { generateModelAthlete } from './seedData';
 import { isSupabaseConfigured } from './lib/supabase';
 
 // Safely wrapped localStorage to prevent crashes on restricted engines/mobile frames/iframes
@@ -124,18 +124,19 @@ const ensureImtpAndMigrate = (a: any): Athlete => {
 
 export const useAthletes = (token?: string | null) => {
   const [rawAthletes, setRawAthletes] = useState<Athlete[]>(() => {
-    // Lazy initialization from cache for instant load
+    // Lazy initialization from cache for instant load.
+    // Avoid filling the app with demo athletes when there is no real data yet.
     const cached = safeLocalStorage.getItem('lb_athletes_cache');
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
         const list = Array.isArray(parsed) ? parsed.filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises') : [];
-        return list.length > 0 ? list : generateFeaturedAthletes();
+        return list.length > 0 ? list : [];
       } catch (e) {
-        return generateFeaturedAthletes();
+        return [];
       }
     }
-    return generateFeaturedAthletes();
+    return [];
   });
 
   const sortWorkoutExercises = (a: Athlete): Athlete => {
@@ -322,6 +323,13 @@ export const useAthletes = (token?: string | null) => {
       console.log('Buscando atletas do banco de forma resiliente...');
       const data = await api.loadAthletes();
       if (data) {
+        const filtered = data.filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises');
+        if (filtered.length === 0) {
+          setAthletes([]);
+          safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify([]));
+          console.log('[Sync] Nenhum atleta real retornado pelo banco. Mantendo a lista vazia.');
+          return;
+        }
         // Extract meta custom library if present
         const metaRow = data.find(a => a.id === 'meta-custom-library-exercises');
         if (metaRow && metaRow.injuryHistory) {
