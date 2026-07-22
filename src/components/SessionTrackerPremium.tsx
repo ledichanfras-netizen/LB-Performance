@@ -3,7 +3,7 @@ import {
   Play, Pause, RotateCcw, Volume2, VolumeX, Trophy, Zap, 
   Settings, Check, AlertCircle, ChevronRight, MessageSquare, 
   Smile, Dumbbell, Clock, Timer, Sparkles, Flame, ShieldAlert,
-  Sliders, ArrowRight, ArrowLeft, X, ChevronUp, ChevronDown
+  Sliders, ArrowRight, ArrowLeft, X, ChevronUp, ChevronDown, Plus, Trash2
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "react-hot-toast";
@@ -315,6 +315,97 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
             return { ...s, [field]: newVal };
           }),
         };
+      }),
+    }));
+  };
+
+  // Add new set replicating last set's reps and weight (or prescribed default)
+  const addSetToExercise = (exId: string) => {
+    setSession((prev) => ({
+      ...prev,
+      exercises: prev.exercises.map((ex) => {
+        if (ex.id !== exId) return ex;
+        const currentSets = ex.performedSets || [];
+        const lastSet = currentSets[currentSets.length - 1];
+        const targetReps = parseReps(ex.reps);
+        const targetWeight = parseWeight(ex.weight);
+
+        const newSet: ExerciseSet = {
+          id: `s-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          reps: lastSet ? (lastSet.reps || targetReps) : targetReps,
+          weight: lastSet ? (lastSet.weight || targetWeight) : targetWeight,
+          rpe: lastSet ? (lastSet.rpe || 0) : 0,
+          isCompleted: false,
+        };
+
+        return {
+          ...ex,
+          performedSets: [...currentSets, newSet],
+        };
+      }),
+    }));
+    toast.success("Nova série adicionada! Carga e repetições replicadas.");
+  };
+
+  // Remove set (either specific set or last set)
+  const removeSetFromExercise = (exId: string, setId?: string) => {
+    setSession((prev) => ({
+      ...prev,
+      exercises: prev.exercises.map((ex) => {
+        if (ex.id !== exId) return ex;
+        const currentSets = ex.performedSets || [];
+        if (currentSets.length <= 1) {
+          toast.error("O exercício deve ter pelo menos 1 série.");
+          return ex;
+        }
+
+        let updatedSets: ExerciseSet[];
+        if (setId) {
+          updatedSets = currentSets.filter((s) => s.id !== setId);
+        } else {
+          updatedSets = currentSets.slice(0, currentSets.length - 1);
+        }
+
+        return {
+          ...ex,
+          performedSets: updatedSets,
+        };
+      }),
+    }));
+  };
+
+  // Update total sets count in simple entry mode
+  const updateSimpleSetsCount = (exId: string, count: number) => {
+    setSession((prev) => ({
+      ...prev,
+      exercises: prev.exercises.map((ex) => {
+        if (ex.id !== exId) return ex;
+        const currentSets = ex.performedSets || [];
+        const targetCount = Math.max(1, count);
+        let updatedSets = [...currentSets];
+
+        if (targetCount > currentSets.length) {
+          const lastSet = currentSets[currentSets.length - 1];
+          const targetReps = parseReps(ex.reps);
+          const targetWeight = parseWeight(ex.weight);
+          const baseReps = lastSet ? (lastSet.reps || targetReps) : targetReps;
+          const baseWeight = lastSet ? (lastSet.weight || targetWeight) : targetWeight;
+          const baseRpe = lastSet ? (lastSet.rpe || 0) : 0;
+
+          for (let i = currentSets.length; i < targetCount; i++) {
+            updatedSets.push({
+              id: `s-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`,
+              reps: baseReps,
+              weight: baseWeight,
+              rpe: baseRpe,
+              isCompleted: false,
+            });
+          }
+        } else if (targetCount < currentSets.length) {
+          updatedSets = updatedSets.slice(0, targetCount);
+        }
+
+        return { ...ex, performedSets: updatedSets };
       }),
     }));
   };
@@ -1116,49 +1207,68 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
 
             {/* SETS EXECUTION MANAGER */}
             <div className="space-y-3">
-              <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest px-1">MÉTRICAS EXECUTADAS</h4>
+              <div className="flex items-center justify-between px-1">
+                <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">
+                  MÉTRICAS EXECUTADAS ({(activeEx.performedSets || []).length} SÉRIES)
+                </h4>
+              </div>
               
               {activeEx.isSimpleEntry ? (
                 // SIMPLE ENTRY FORM FOR EASY COACHING PRE-POPULATION
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-[#0c111d] p-5 rounded-2xl border border-slate-900">
-                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-900">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-[#0c111d] p-4 rounded-2xl border border-slate-900">
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-900">
+                    <label className="text-[9px] text-slate-500 uppercase font-black block tracking-widest text-center mb-1">SÉRIES ATIVAS</label>
+                    <div className="flex items-center justify-between">
+                      <button onClick={() => removeSetFromExercise(activeEx.id)} className="text-slate-400 hover:text-white text-base font-bold px-2.5 py-1 bg-slate-900 rounded-lg cursor-pointer">-</button>
+                      <input
+                        type="number"
+                        value={activeEx.performedSets?.length || 0}
+                        onChange={(e) => updateSimpleSetsCount(activeEx.id, parseInt(e.target.value) || 1)}
+                        onFocus={(e) => e.target.select()}
+                        className="w-12 bg-transparent text-center font-black text-white text-base outline-none"
+                      />
+                      <button onClick={() => addSetToExercise(activeEx.id)} className="text-slate-400 hover:text-white text-base font-bold px-2.5 py-1 bg-slate-900 rounded-lg cursor-pointer">+</button>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-900">
                     <label className="text-[9px] text-slate-500 uppercase font-black block tracking-widest text-center mb-1">{activeEx.repsType === "time" ? "TEMPO (SEG)" : "REPETIÇÕES"}</label>
                     <div className="flex items-center justify-between">
-                      <button onClick={() => adjustSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "reps", -1)} className="text-slate-400 hover:text-white text-base font-bold px-3 py-1 bg-slate-900 rounded-lg">-</button>
+                      <button onClick={() => adjustSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "reps", -1)} className="text-slate-400 hover:text-white text-base font-bold px-2.5 py-1 bg-slate-900 rounded-lg">-</button>
                       <input
                         type="number"
                         value={activeEx.performedSets?.[0]?.reps || 0}
                         onChange={(e) => updateSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "reps", parseInt(e.target.value) || 0)}
                         onFocus={(e) => e.target.select()}
-                        className="w-16 bg-transparent text-center font-black text-white text-base outline-none"
+                        className="w-14 bg-transparent text-center font-black text-white text-base outline-none"
                       />
-                      <button onClick={() => adjustSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "reps", 1)} className="text-slate-400 hover:text-white text-base font-bold px-3 py-1 bg-slate-900 rounded-lg">+</button>
+                      <button onClick={() => adjustSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "reps", 1)} className="text-slate-400 hover:text-white text-base font-bold px-2.5 py-1 bg-slate-900 rounded-lg">+</button>
                     </div>
                   </div>
 
-                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-900">
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-900">
                     <label className="text-[9px] text-slate-500 uppercase font-black block tracking-widest text-center mb-1">CARGA (KG)</label>
                     <div className="flex items-center justify-between">
-                      <button onClick={() => adjustSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "weight", -1)} className="text-slate-400 hover:text-white text-base font-bold px-3 py-1 bg-slate-900 rounded-lg">-</button>
+                      <button onClick={() => adjustSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "weight", -1)} className="text-slate-400 hover:text-white text-base font-bold px-2.5 py-1 bg-slate-900 rounded-lg">-</button>
                       <input
                         type="number"
                         value={activeEx.performedSets?.[0]?.weight || 0}
                         onChange={(e) => updateSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "weight", parseFloat(e.target.value) || 0)}
                         onFocus={(e) => e.target.select()}
-                        className="w-16 bg-transparent text-center font-black text-white text-base outline-none"
+                        className="w-14 bg-transparent text-center font-black text-white text-base outline-none"
                       />
-                      <button onClick={() => adjustSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "weight", 1)} className="text-slate-400 hover:text-white text-base font-bold px-3 py-1 bg-slate-900 rounded-lg">+</button>
+                      <button onClick={() => adjustSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "weight", 1)} className="text-slate-400 hover:text-white text-base font-bold px-2.5 py-1 bg-slate-900 rounded-lg">+</button>
                     </div>
                   </div>
 
-                  <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-900 flex flex-col justify-center items-center gap-2">
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-900 flex flex-col justify-center items-center gap-2">
                     {isCurrentExCompleted ? (
                       <>
                         <button
                           disabled
-                          className="w-full bg-slate-900 text-slate-500 border border-slate-800/60 font-black text-xs uppercase py-3.5 px-4 rounded-xl tracking-wider select-none cursor-not-allowed opacity-50 flex items-center justify-center gap-1.5"
+                          className="w-full bg-slate-900 text-slate-500 border border-slate-800/60 font-black text-xs uppercase py-3.5 px-3 rounded-xl tracking-wider select-none cursor-not-allowed opacity-50 flex items-center justify-center gap-1.5"
                         >
-                          EXERCÍCIO CONCLUÍDO ✔️
+                          CONCLUÍDO ✔️
                         </button>
                         <button
                           onClick={() => {
@@ -1169,7 +1279,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                           }}
                           className="text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-colors cursor-pointer"
                         >
-                          DESMARCAR CONCLUSÃO 🔄
+                          REABRIR 🔄
                         </button>
                       </>
                     ) : (
@@ -1198,9 +1308,9 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                             }, 1500);
                           }
                         }}
-                        className="w-full bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase py-3.5 px-4 rounded-xl tracking-wider transition-colors shadow-lg shadow-[#39FF14]/10 cursor-pointer"
+                        className="w-full bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase py-3.5 px-3 rounded-xl tracking-wider transition-colors shadow-lg shadow-[#39FF14]/10 cursor-pointer"
                       >
-                        CONCLUIR EXERCÍCIO ✅
+                        CONCLUIR ✅
                       </button>
                     )}
                   </div>
@@ -1252,7 +1362,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                       return (
                         <div
                           key={set.id}
-                          className={`grid grid-cols-12 gap-3 items-center p-3.5 rounded-xl border transition-all ${
+                          className={`grid grid-cols-12 gap-2.5 items-center p-3.5 rounded-xl border transition-all ${
                             isCompleted 
                               ? "bg-[#39FF14]/5 border-[#39FF14]/20 shadow-inner" 
                               : isActive
@@ -1260,68 +1370,87 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                                 : "bg-[#0c111d] border-slate-900"
                           }`}
                         >
-                          {/* Checkbox button */}
-                          <div className="col-span-2 flex items-center gap-3">
+                          {/* Checkbox button & Set label */}
+                          <div className="col-span-2 flex items-center gap-2.5">
                             <button
                               onClick={() => toggleSetCompletion(activeEx.id, set.id)}
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
                                 isCompleted 
                                   ? "bg-[#39FF14] text-slate-950 border-[#39FF14] shadow-lg shadow-[#39FF14]/20" 
                                   : "bg-slate-950 border border-slate-800 text-slate-600 hover:border-slate-500"
                               }`}
                             >
-                              <Check className={`w-5 h-5 stroke-[3] transition-transform duration-200 ${isCompleted ? "scale-100" : "scale-0"}`} />
+                              <Check className={`w-4 h-4 stroke-[3] transition-transform duration-200 ${isCompleted ? "scale-100" : "scale-0"}`} />
                             </button>
-                            <span className={`text-sm font-black uppercase tracking-wider ${isCompleted ? "text-[#39FF14]" : isActive ? "text-white font-extrabold" : "text-slate-400"}`}>
+                            <span className={`text-xs md:text-sm font-black uppercase tracking-wider ${isCompleted ? "text-[#39FF14]" : isActive ? "text-white font-extrabold" : "text-slate-400"}`}>
                               S{index + 1}
                             </span>
                           </div>
 
-                        {/* Weight input */}
-                        <div className="col-span-3 flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            value={set.weight || ""}
-                            onChange={(e) => updateSetField(activeEx.id, set.id, "weight", parseFloat(e.target.value) || 0)}
-                            onFocus={(e) => e.target.select()}
-                            className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-3 px-2 text-center font-extrabold text-sm md:text-base text-white transition-all"
-                            placeholder="0"
-                          />
-                          <span className="text-[10px] font-black text-slate-400 uppercase">KG</span>
-                        </div>
+                          {/* Weight input */}
+                          <div className="col-span-3 flex items-center gap-1">
+                            <input
+                              type="number"
+                              value={set.weight || ""}
+                              onChange={(e) => updateSetField(activeEx.id, set.id, "weight", parseFloat(e.target.value) || 0)}
+                              onFocus={(e) => e.target.select()}
+                              className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-2.5 px-2 text-center font-extrabold text-sm md:text-base text-white transition-all"
+                              placeholder="0"
+                            />
+                            <span className="text-[9px] font-black text-slate-500 uppercase">KG</span>
+                          </div>
 
-                        {/* Reps input */}
-                        <div className="col-span-3 flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            value={set.reps || ""}
-                            onChange={(e) => updateSetField(activeEx.id, set.id, "reps", parseInt(e.target.value) || 0)}
-                            onFocus={(e) => e.target.select()}
-                            className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-3 px-2 text-center font-extrabold text-sm md:text-base text-white transition-all"
-                            placeholder="0"
-                          />
-                          <span className="text-[10px] font-black text-slate-400 uppercase">{activeEx.repsType === "time" ? "SEG" : "REPS"}</span>
-                        </div>
+                          {/* Reps input */}
+                          <div className="col-span-3 flex items-center gap-1">
+                            <input
+                              type="number"
+                              value={set.reps || ""}
+                              onChange={(e) => updateSetField(activeEx.id, set.id, "reps", parseInt(e.target.value) || 0)}
+                              onFocus={(e) => e.target.select()}
+                              className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-2.5 px-2 text-center font-extrabold text-sm md:text-base text-white transition-all"
+                              placeholder="0"
+                            />
+                            <span className="text-[9px] font-black text-slate-500 uppercase">{activeEx.repsType === "time" ? "SEG" : "REPS"}</span>
+                          </div>
 
-                        {/* RPE input */}
-                        <div className="col-span-4 flex items-center gap-2">
-                          <span className="text-[10px] font-black text-slate-400 uppercase shrink-0">PSE</span>
-                          <select
-                            value={set.rpe || 0}
-                            onChange={(e) => updateSetField(activeEx.id, set.id, "rpe", parseInt(e.target.value))}
-                            className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-3 px-2 text-center font-extrabold text-sm md:text-base text-white transition-all"
-                          >
-                            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => (
-                              <option key={v} value={v}>{v}</option>
-                            ))}
-                          </select>
+                          {/* RPE input */}
+                          <div className="col-span-3 flex items-center gap-1.5">
+                            <span className="text-[9px] font-black text-slate-500 uppercase shrink-0">PSE</span>
+                            <select
+                              value={set.rpe || 0}
+                              onChange={(e) => updateSetField(activeEx.id, set.id, "rpe", parseInt(e.target.value))}
+                              className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-2.5 px-1 text-center font-extrabold text-xs md:text-sm text-white transition-all"
+                            >
+                              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(v => (
+                                <option key={v} value={v}>{v}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Remove set button */}
+                          <div className="col-span-1 flex justify-end">
+                            <button
+                              onClick={() => removeSetFromExercise(activeEx.id, set.id)}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer"
+                              title="Excluir esta série"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+
+                    <button
+                      onClick={() => addSetToExercise(activeEx.id)}
+                      className="w-full py-3 px-4 bg-slate-950 hover:bg-[#39FF14]/10 border border-dashed border-slate-800 hover:border-[#39FF14]/50 text-slate-400 hover:text-[#39FF14] font-black text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer group shadow-sm mt-3"
+                    >
+                      <Plus className="w-4 h-4 stroke-[3] text-[#39FF14] group-hover:scale-125 transition-transform" />
+                      ACRESCENTAR SÉRIE AO EXERCÍCIO (+ REPLICAR REPS E CARGA)
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
             </div>
 
           </div>

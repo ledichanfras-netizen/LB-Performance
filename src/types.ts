@@ -88,6 +88,7 @@ export interface ExerciseSet {
   reps: number;
   weight: number;
   rpe: number; 
+  isCompleted?: boolean;
 }
 
 export interface PrescribedExercise {

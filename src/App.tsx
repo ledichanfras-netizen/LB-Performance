@@ -1794,13 +1794,13 @@ const EliteHubApp: FC<{
                 </div>
               )}
               {/* Dashboard Contextual Header / Hero Area */}
-              <section className="mb-8 md:mb-12">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 p-6 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-800/50 backdrop-blur-3xl relative group">
+              <section className="mb-8 md:mb-10">
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 p-6 sm:p-8 md:p-9 rounded-[2rem] sm:rounded-[2.5rem] bg-gradient-to-br from-slate-900/80 to-slate-900/40 border border-slate-800/50 backdrop-blur-3xl relative group overflow-hidden">
                   {/* Abstract decorative elements */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-brand-primary/10 transition-all duration-700"></div>
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-brand-primary/10 transition-all duration-700 pointer-events-none"></div>
 
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                  <div className="relative z-10 min-w-0">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 shrink-0">
                         <img
                           src="/192x192.png"
@@ -1814,7 +1814,7 @@ const EliteHubApp: FC<{
                             ? "Portal do Treinador"
                             : "Perfil do Atleta"}
                         </span>
-                        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-white leading-tight truncate">
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black italic uppercase tracking-tighter text-white leading-tight truncate">
                           {activeTab === "dash" && "Performance Lab"}
                           {activeTab === "training" && "Training Zone"}
                           {activeTab === "assessment" && "Elite Testing"}
@@ -1828,17 +1828,17 @@ const EliteHubApp: FC<{
                   </div>
 
                   {/* Action Center */}
-                  <div className="flex flex-col sm:flex-row items-center gap-4 relative z-[30] w-full md:w-auto">
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 relative z-[30] w-full xl:w-auto shrink-0 justify-start sm:justify-end">
                     {user.role === "coach" && (
                       <>
-                        <div className="relative group w-full sm:w-72">
+                        <div className="relative group w-full sm:w-60 lg:w-64">
                           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-primary/50 group-focus-within:text-brand-primary transition-colors">
-                            <Users className="w-5 h-5" />
+                            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                           </div>
                           <input
                             type="text"
                             placeholder="BUSCAR ATLETA..."
-                            className="w-full bg-slate-950/50 border border-slate-800 rounded-[1.5rem] py-4 pl-12 pr-12 text-[11px] font-black text-white hover:border-slate-700 focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all shadow-2xl uppercase tracking-widest placeholder:text-slate-600"
+                            className="w-full bg-slate-950/80 border border-slate-800 rounded-2xl py-3.5 pl-11 pr-10 text-[10px] sm:text-[11px] font-black text-white hover:border-slate-700 focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all shadow-xl uppercase tracking-widest placeholder:text-slate-600"
                             value={searchTerm}
                             onChange={(e) => {
                               setSearchTerm(e.target.value);
@@ -1852,9 +1852,9 @@ const EliteHubApp: FC<{
                                 setSearchTerm("");
                                 setShowDropdown(false);
                               }}
-                              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
                             >
-                              <X className="w-5 h-5" />
+                              <X className="w-4 h-4" />
                             </button>
                           )}
 
@@ -1864,7 +1864,7 @@ const EliteHubApp: FC<{
                                 className="fixed inset-0 z-[900]"
                                 onClick={() => setShowDropdown(false)}
                               />
-                              <div className="absolute top-full left-0 right-0 mt-3 bg-slate-900 border border-slate-800 rounded-3xl shadow-[0_25px_50px_rgba(0,0,0,0.8)] overflow-hidden z-[901] max-h-72 overflow-y-auto backdrop-blur-2xl border-t-brand-primary/40 animate-in">
+                              <div className="absolute top-full left-0 right-0 mt-3 bg-slate-900 border border-slate-800 rounded-2xl shadow-[0_25px_50px_rgba(0,0,0,0.8)] overflow-hidden z-[901] max-h-72 overflow-y-auto backdrop-blur-2xl border-t-brand-primary/40 animate-in">
                                 {athletes
                                   .filter((a) =>
                                     a.name
@@ -1874,7 +1874,7 @@ const EliteHubApp: FC<{
                                   .map((a) => (
                                     <button
                                       key={a.id}
-                                      className={`w-full text-left px-6 py-4 text-[11px] font-black uppercase tracking-widest transition-all border-b border-slate-800/50 last:border-0 hover:pl-8 ${selectedId === a.id ? "bg-brand-primary text-brand-dark" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
+                                      className={`w-full text-left px-5 py-3.5 text-[10px] sm:text-[11px] font-black uppercase tracking-widest transition-all border-b border-slate-800/50 last:border-0 hover:pl-7 ${selectedId === a.id ? "bg-brand-primary text-brand-dark" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
                                       onClick={() => {
                                         setSelectedId(a.id);
                                         setSearchTerm("");
@@ -1905,23 +1905,24 @@ const EliteHubApp: FC<{
 
                         <button
                           onClick={() => setModalState({ type: "athlete" })}
-                          className="flex items-center justify-center gap-3 w-full sm:w-auto bg-brand-primary text-brand-dark px-8 py-4 rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.15em] hover:brightness-110 active:scale-95 transition-all shadow-[0_0_30px_rgba(57,255,20,0.3)] group"
+                          className="flex items-center justify-center gap-2.5 w-full sm:w-auto bg-brand-primary text-brand-dark px-5 py-3.5 rounded-2xl font-black text-[10px] sm:text-[11px] uppercase tracking-[0.15em] hover:brightness-110 active:scale-95 transition-all shadow-[0_0_25px_rgba(57,255,20,0.25)] group shrink-0 cursor-pointer"
                         >
-                          <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-                          <span>Novo Atleta</span>
+                          <Plus className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform" />
+                          <span className="whitespace-nowrap">Novo Atleta</span>
                         </button>
                       </>
                     )}
 
                     {/* Notification Bell */}
-                    <div className="relative ml-2">
+                    <div className="relative shrink-0">
                       <button
                         onClick={() => setShowNotifications(!showNotifications)}
-                        className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${showNotifications ? "bg-brand-primary text-brand-dark shadow-[0_0_30px_rgba(57,255,20,0.5)]" : "bg-slate-950/50 border border-slate-800 text-brand-primary hover:border-brand-primary/50"}`}
+                        className={`w-12 h-12 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all cursor-pointer ${showNotifications ? "bg-brand-primary text-brand-dark shadow-[0_0_25px_rgba(57,255,20,0.4)]" : "bg-slate-950/80 border border-slate-800 text-brand-primary hover:border-brand-primary/50"}`}
+                        title="Central de Notificações"
                       >
-                        <Bell className="w-6 h-6" />
+                        <Bell className="w-5 h-5" />
                         {notifications.length > 0 && (
-                          <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-600 text-white text-[10px] font-black flex items-center justify-center rounded-full border-4 border-slate-900 animate-bounce">
+                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white text-[9px] font-black flex items-center justify-center rounded-full border-2 border-slate-900 animate-bounce">
                             {notifications.length}
                           </span>
                         )}
@@ -2918,16 +2919,14 @@ const EliteHubApp: FC<{
                                     startWorkoutFlow(w);
                                   }
                                 }}
-                                className={`flex flex-col border-l-4 md:border-l-8 transition-all hover:scale-[1.02] hover:shadow-lg cursor-pointer relative group ${w.status === "completed" ? "border-emerald-500 opacity-95 hover:opacity-100 duration-200" : "border-brand-primary"}`}
+                                className={`flex flex-col border-l-4 md:border-l-8 transition-all hover:scale-[1.02] hover:shadow-lg cursor-pointer relative group overflow-hidden ${w.status === "completed" ? "border-emerald-500 opacity-95 hover:opacity-100 duration-200" : "border-brand-primary"}`}
                               >
-                                <div className="flex justify-between items-start mb-6">
-                                  <div>
-                                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                                      <span className="text-[9px] md:text-[10px] font-black bg-slate-100 text-slate-500 px-3 py-1.5 rounded-full uppercase tracking-widest border border-slate-200/50">
+                                <div className="flex flex-col mb-5 w-full">
+                                  {/* Metadata Header Badges */}
+                                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3 w-full">
+                                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                                      <span className="text-[9px] md:text-[10px] font-black bg-slate-900/90 text-slate-300 px-2.5 py-1 rounded-lg uppercase tracking-wider border border-slate-800">
                                         {w.phase}
-                                      </span>
-                                      <span className="text-[9px] md:text-[10px] font-black text-brand-primary uppercase tracking-widest">
-                                        {formatDate(w.date)}
                                       </span>
                                       {(() => {
                                         const workoutDateStr =
@@ -2943,7 +2942,7 @@ const EliteHubApp: FC<{
                                         if (wellnessEntry) {
                                           return (
                                             <span
-                                              className={`text-[9px] md:text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest border border-slate-200/50 ${getReadinessInsight(wellnessEntry.readinessScore || 0).color} bg-slate-50`}
+                                              className={`text-[9px] md:text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest border border-slate-800 ${getReadinessInsight(wellnessEntry.readinessScore || 0).color} bg-slate-900/90`}
                                             >
                                               Prontidão:{" "}
                                               {wellnessEntry.readinessScore}%
@@ -2953,150 +2952,156 @@ const EliteHubApp: FC<{
                                         return null;
                                       })()}
                                     </div>
-                                    <div className="flex items-center gap-2 mt-2">
-                                      <h5 className="text-xl md:text-2xl font-black uppercase italic text-brand-primary leading-tight tracking-tight drop-shadow-[0_0_8px_rgba(75,222,5,0.3)]">
-                                        {w.name}
-                                      </h5>
-                                      {user.role === "coach" && (
-                                        <div className="flex gap-2">
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setModalState({
-                                                type: w.status === "completed" ? "active-session" : "edit-workout",
-                                                editingData: w,
-                                              });
-                                            }}
-                                            className="p-3 text-slate-300 hover:text-brand-primary transition-colors bg-slate-800 rounded-xl border border-slate-700 shadow-sm"
-                                            title="Editar"
+                                    <span className="text-[9px] md:text-[10px] font-black text-[#39FF14] bg-[#39FF14]/10 border border-[#39FF14]/20 px-2.5 py-1 rounded-lg uppercase tracking-widest shrink-0">
+                                      {formatDate(w.date)}
+                                    </span>
+                                  </div>
+
+                                  {/* Workout Name & Action Buttons Row */}
+                                  <div className="flex items-center justify-between gap-2 w-full mt-1">
+                                    <h5 className="text-xl md:text-2xl font-black uppercase italic text-brand-primary leading-tight tracking-tight drop-shadow-[0_0_8px_rgba(75,222,5,0.3)] truncate min-w-0 flex-1">
+                                      {w.name}
+                                    </h5>
+                                    {user.role === "coach" && (
+                                      <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setModalState({
+                                              type: w.status === "completed" ? "active-session" : "edit-workout",
+                                              editingData: w,
+                                            });
+                                          }}
+                                          className="p-2 text-slate-300 hover:text-brand-primary transition-colors bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 shadow-sm cursor-pointer"
+                                          title="Editar"
+                                        >
+                                          <svg
+                                            className="w-4 h-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
                                           >
-                                            <svg
-                                              className="w-5 h-5"
-                                              fill="none"
-                                              viewBox="0 0 24 24"
-                                              stroke="currentColor"
-                                            >
-                                              <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2.5}
-                                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                                              />
-                                            </svg>
-                                          </button>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setModalState({
-                                                type: "clone-workout",
-                                                editingData: w,
-                                              });
-                                            }}
-                                            className="p-3 text-slate-300 hover:text-brand-secondary transition-colors bg-slate-800 rounded-xl border border-slate-700 shadow-sm"
-                                            title="Duplicar / Clonar"
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={2.5}
+                                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                                            />
+                                          </svg>
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setModalState({
+                                              type: "clone-workout",
+                                              editingData: w,
+                                            });
+                                          }}
+                                          className="p-2 text-slate-300 hover:text-brand-secondary transition-colors bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 shadow-sm cursor-pointer"
+                                          title="Duplicar / Clonar"
+                                        >
+                                          <svg
+                                            className="w-4 h-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
                                           >
-                                            <svg
-                                              className="w-5 h-5"
-                                              fill="none"
-                                              viewBox="0 0 24 24"
-                                              stroke="currentColor"
-                                            >
-                                              <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2.5}
-                                                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
-                                              />
-                                            </svg>
-                                          </button>
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              if (
-                                                window.confirm(
-                                                  "Deseja excluir permanentemente este treino?",
-                                                )
-                                              ) {
-                                                deleteWorkout(
-                                                  selected.id,
-                                                  w.id,
-                                                );
-                                              }
-                                            }}
-                                            className="p-3 text-slate-300 hover:text-red-500 transition-colors bg-slate-800 rounded-xl border border-slate-700 shadow-sm hover:bg-red-500/10"
-                                            title="Excluir"
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={2.5}
+                                              d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"
+                                            />
+                                          </svg>
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (
+                                              window.confirm(
+                                                "Deseja excluir permanentemente este treino?",
+                                              )
+                                            ) {
+                                              deleteWorkout(
+                                                selected.id,
+                                                w.id,
+                                              );
+                                            }
+                                          }}
+                                          className="p-2 text-slate-300 hover:text-red-400 transition-colors bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 shadow-sm hover:bg-red-500/10 cursor-pointer"
+                                          title="Excluir"
+                                        >
+                                          <svg
+                                            className="w-4 h-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
                                           >
-                                            <svg
-                                              className="w-5 h-5"
-                                              fill="none"
-                                              viewBox="0 0 24 24"
-                                              stroke="currentColor"
-                                            >
-                                              <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2.5}
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                              />
-                                            </svg>
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth={2.5}
+                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                            />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
+
                                 <div className="mb-6 flex-grow">
-                                  <p className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
+                                  <p className="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2.5">
                                     Foco da Sessão
                                   </p>
-                                  <div className="flex flex-wrap gap-2">
+                                  <div className="flex flex-wrap gap-1.5">
                                     {(w.exercises || [])
                                       .slice(0, 4)
                                       .map((ex) => (
                                         <span
                                           key={ex.id}
-                                          className="text-[9px] md:text-[10px] bg-slate-50 text-slate-600 px-3 py-1 rounded-full border border-slate-200/50 font-bold"
+                                          className="text-[9px] md:text-[10px] bg-slate-900/90 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-800 font-bold max-w-full truncate"
                                         >
                                           {ex.name}
                                         </span>
                                       ))}
                                     {(w.exercises || []).length > 4 && (
-                                      <span className="text-[9px] md:text-[10px] text-slate-400 font-black tracking-widest">
+                                      <span className="text-[9px] md:text-[10px] bg-slate-900/60 text-slate-400 px-2 py-1 rounded-lg border border-slate-800 font-black tracking-widest">
                                         +{(w.exercises || []).length - 4}
                                       </span>
                                     )}
                                   </div>
                                 </div>
                                 {w.status === "completed" ? (
-                                  <div className="mt-auto pt-4 border-t border-slate-200/60 flex flex-col gap-3">
-                                    <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/50">
+                                  <div className="mt-auto pt-4 border-t border-slate-800 flex flex-col gap-3">
+                                    <div className="grid grid-cols-2 gap-2 bg-slate-950/80 p-2.5 rounded-2xl border border-slate-800">
                                       {/* Duration */}
-                                      <div className="flex flex-col p-2 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                                      <div className="flex flex-col p-2 bg-slate-900/90 rounded-xl border border-slate-800/80">
                                         <div className="flex items-center gap-1 text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">
                                           <Clock className="w-3 h-3 text-slate-400" />
                                           <span>Duração</span>
                                         </div>
-                                        <span className="text-[11px] font-black text-slate-800">
+                                        <span className="text-[11px] font-black text-white">
                                           {w.durationMinutes || '--'} min
                                         </span>
                                       </div>
 
                                       {/* PSE (RPE) */}
-                                      <div className="flex flex-col p-2 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                                      <div className="flex flex-col p-2 bg-slate-900/90 rounded-xl border border-slate-800/80">
                                         <div className="flex items-center gap-1 text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">
                                           <Activity className="w-3 h-3 text-slate-400" />
                                           <span>PSE Atleta</span>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                          <span className="text-[11px] font-black text-slate-800">
+                                          <span className="text-[11px] font-black text-white">
                                             {w.rpe || '--'}/10
                                           </span>
                                           {w.rpe && (
                                             <span className={`text-[7px] font-bold px-1 py-0.5 rounded-md uppercase tracking-wider ${
-                                              w.rpe <= 3 ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                                              w.rpe <= 6 ? "bg-amber-50 text-amber-600 border border-amber-100" :
-                                              w.rpe <= 8 ? "bg-orange-50 text-orange-600 border border-orange-100" :
-                                              "bg-rose-50 text-rose-600 border border-rose-100"
+                                              w.rpe <= 3 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                                              w.rpe <= 6 ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" :
+                                              w.rpe <= 8 ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" :
+                                              "bg-rose-500/10 text-rose-400 border border-rose-500/20"
                                             }`}>
                                               {w.rpe <= 3 ? "Leve" : w.rpe <= 6 ? "Mod." : w.rpe <= 8 ? "Int." : "Ext."}
                                             </span>
@@ -3105,23 +3110,23 @@ const EliteHubApp: FC<{
                                       </div>
 
                                       {/* Total Volume */}
-                                      <div className="flex flex-col p-2 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                                      <div className="flex flex-col p-2 bg-slate-900/90 rounded-xl border border-slate-800/80">
                                         <div className="flex items-center gap-1 text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">
                                           <Dumbbell className="w-3 h-3 text-slate-400" />
                                           <span>Volume</span>
                                         </div>
-                                        <span className="text-[11px] font-black text-slate-800 truncate" title={`${w.totalLoad?.toLocaleString() || '0'} kg`}>
+                                        <span className="text-[11px] font-black text-white truncate" title={`${w.totalLoad?.toLocaleString() || '0'} kg`}>
                                           {w.totalLoad?.toLocaleString() || '0'} kg
                                         </span>
                                       </div>
 
                                       {/* Internal Load (PSE * Time) */}
-                                      <div className="flex flex-col p-2 bg-white rounded-xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+                                      <div className="flex flex-col p-2 bg-slate-900/90 rounded-xl border border-slate-800/80">
                                         <div className="flex items-center gap-1 text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">
-                                          <Zap className="w-3 h-3 text-amber-500" />
+                                          <Zap className="w-3 h-3 text-amber-400" />
                                           <span>Carga Int.</span>
                                         </div>
-                                        <span className="text-[11px] font-black text-slate-800" title={`${((w.durationMinutes || 0) * (w.rpe || 0)).toLocaleString()} u.a.`}>
+                                        <span className="text-[11px] font-black text-white" title={`${((w.durationMinutes || 0) * (w.rpe || 0)).toLocaleString()} u.a.`}>
                                           {((w.durationMinutes || 0) * (w.rpe || 0)).toLocaleString()} u.a.
                                         </span>
                                       </div>
@@ -3134,8 +3139,8 @@ const EliteHubApp: FC<{
                                         return (
                                           <div className={`flex items-center gap-2 p-2 rounded-xl border text-[9px] font-bold uppercase tracking-wider ${
                                             maxPain <= 3 
-                                              ? "bg-amber-50/50 text-amber-600 border-amber-100" 
-                                              : "bg-rose-50/50 text-rose-600 border-rose-100"
+                                              ? "bg-amber-500/10 text-amber-400 border-amber-500/20" 
+                                              : "bg-rose-500/10 text-rose-400 border-rose-500/20"
                                           }`}>
                                             <span className="flex h-1.5 w-1.5 relative">
                                               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${maxPain <= 3 ? "bg-amber-400" : "bg-rose-400"}`}></span>
@@ -3150,7 +3155,7 @@ const EliteHubApp: FC<{
 
                                     {/* Subjective Biofeedback Text */}
                                     {w.feedback && w.feedback !== "Treino concluído com biofeedback de alta performance." && (
-                                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/50 text-[10px] text-slate-500 font-medium italic leading-relaxed">
+                                      <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-[10px] text-slate-300 font-medium italic leading-relaxed">
                                         <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest not-italic mb-1">Feedback do Atleta</p>
                                         "{w.feedback}"
                                       </div>
@@ -6430,6 +6435,46 @@ const SessionTracker: FC<{
           : ex,
       ),
     });
+  };
+
+  const addSetToEx = (exId: string) => {
+    setSession((prev) => ({
+      ...prev,
+      exercises: prev.exercises.map((ex) => {
+        if (ex.id !== exId) return ex;
+        const currentSets = ex.performedSets || [];
+        const lastSet = currentSets[currentSets.length - 1];
+        const baseReps = lastSet ? (lastSet.reps || parseInt(ex.reps) || 0) : (parseInt(ex.reps) || 0);
+        const baseWeight = lastSet ? (lastSet.weight || parseFloat(ex.weight) || 0) : (parseFloat(ex.weight) || 0);
+        const baseRpe = lastSet ? (lastSet.rpe || 0) : 0;
+
+        return {
+          ...ex,
+          performedSets: [
+            ...currentSets,
+            {
+              id: `s-add-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              reps: baseReps,
+              weight: baseWeight,
+              rpe: baseRpe,
+            },
+          ],
+        };
+      }),
+    }));
+  };
+
+  const removeSetFromEx = (exId: string, setId?: string) => {
+    setSession((prev) => ({
+      ...prev,
+      exercises: prev.exercises.map((ex) => {
+        if (ex.id !== exId) return ex;
+        const currentSets = ex.performedSets || [];
+        if (currentSets.length <= 1) return ex;
+        const updated = setId ? currentSets.filter((s) => s.id !== setId) : currentSets.slice(0, -1);
+        return { ...ex, performedSets: updated };
+      }),
+    }));
   };
 
   const updatePain = (exId: string, val: number) => {
