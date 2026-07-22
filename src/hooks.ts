@@ -350,8 +350,6 @@ export const useAthletes = (token?: string | null) => {
           }
         }
 
-        const filtered = data.filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises');
-        
         // Prevent accidental data deletion on temporary connection/empty-response quirks
         if (filtered.length === 0 && athletes.length > 0) {
           console.warn('[Sync] Supabase/API retornou lista vazia de atletas, mas já temos dados na memória. Evitando sobrescrever dados locais.');
