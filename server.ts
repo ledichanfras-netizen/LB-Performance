@@ -1,3 +1,4 @@
+// Test Comment
 import express from 'express';
 import { Pool } from 'pg';
 import cors from 'cors';
@@ -451,6 +452,297 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
   const isAthlete = user.role === 'athlete';
   const athleteId = user.athleteId;
 
+  const ensureMockAssessments = (athletesList: any[]) => {
+    if (!athletesList || athletesList.length === 0) {
+      athletesList = [
+        {
+          id: "ath-1782993997160-0.5183588654197172",
+          name: "Andreia Garcia",
+          dob: "1980-01-01",
+          gender: "F",
+          modality: "Musculação",
+          competitiveLevel: "Elite",
+          goal: "Força e Potência",
+          weeklyFrequency: 3,
+          wellness: [
+            {
+              id: "well-1",
+              date: "2024-03-15",
+              sleepQuality: 8,
+              fatigue: 3,
+              readinessScore: 85,
+              hrv: 75,
+              travelFatigue: 1,
+              sleepHoursFormatted: "8.0",
+              menstrualPhase: "Folicular"
+            }
+          ],
+          externalSessions: [],
+          workouts: [],
+          assessments: {}
+        }
+      ];
+    }
+
+    return athletesList.map((a: any) => {
+      if (a.name && a.name.toLowerCase().includes("andreia")) {
+        const assessments = a.assessments || {};
+
+        if (!assessments.bioimpedance || assessments.bioimpedance.length === 0) {
+          assessments.bioimpedance = [
+            {
+              id: "bio-1",
+              date: "2024-03-15",
+              weight: 65.5,
+              fatPercentage: 14.5,
+              muscleMass: 52.8,
+              visceralFat: 3,
+              hydration: 62.4,
+              basalMetabolism: 1650,
+              metabolicAge: 22,
+              boneMass: 2.8,
+              physiqueRating: 5,
+              fatArmR: 1.1,
+              fatArmL: 1.15,
+              fatLegR: 2.2,
+              fatLegL: 2.25,
+              fatTrunk: 4.5,
+              muscleArmR: 2.8,
+              muscleArmL: 2.75,
+              muscleLegR: 8.5,
+              muscleLegL: 8.4,
+              muscleTrunk: 28.5,
+              observations: "Composição corporal de nível elite, excelente relação peso-potência."
+            },
+            {
+              id: "bio-2",
+              date: "2024-02-15",
+              weight: 66.2,
+              fatPercentage: 15.2,
+              muscleMass: 52.5,
+              visceralFat: 3,
+              hydration: 61.9,
+              basalMetabolism: 1640,
+              metabolicAge: 23,
+              boneMass: 2.8,
+              physiqueRating: 5,
+              fatArmR: 1.2,
+              fatArmL: 1.25,
+              fatLegR: 2.3,
+              fatLegL: 2.35,
+              fatTrunk: 4.8,
+              muscleArmR: 2.75,
+              muscleArmL: 2.7,
+              muscleLegR: 8.4,
+              muscleLegL: 8.3,
+              muscleTrunk: 28.2,
+              observations: "Início do macrociclo, foco em ganho de massa livre de gordura."
+            }
+          ];
+        }
+
+        if (!assessments.isometricStrength || assessments.isometricStrength.length === 0) {
+          assessments.isometricStrength = [
+            {
+              id: "iso-1",
+              date: "2024-03-15",
+              halfSquatKgf: 210,
+              quadricepsR: 125,
+              quadricepsL: 121,
+              hamstringsR: 75,
+              hamstringsL: 72,
+              iqRatioR: 60,
+              iqRatioL: 59.5,
+              observations: "Excelente simetria bilateral e relação I/Q saudável. Baixo risco de lesão de LCA."
+            },
+            {
+              id: "iso-2",
+              date: "2024-02-15",
+              halfSquatKgf: 195,
+              quadricepsR: 118,
+              quadricepsL: 112,
+              hamstringsR: 68,
+              hamstringsL: 64,
+              iqRatioR: 57.6,
+              iqRatioL: 57.1,
+              observations: "Assimetria leve detectada nos flexores. Recomendado reforço excêntrico unilateral."
+            }
+          ];
+        }
+
+        if (!assessments.imtp || assessments.imtp.length === 0) {
+          assessments.imtp = [
+            {
+              id: "imtp-1",
+              date: "2024-03-15",
+              weight: 65.5,
+              peakForce: 250,
+              relativePeakForce: 3.82,
+              timeToPeakForce: 120,
+              meanForce: 180,
+              rfdPeak: 4500,
+              rfd100: 3800,
+              rfd200: 4200,
+              rfd300: 4400,
+              impulsePeak: 45,
+              impulse100: 18,
+              impulse200: 32,
+              impulse300: 41,
+              observations: "Altíssima taxa de desenvolvimento de força nos primeiros 100ms. Excelente arranque inicial."
+            },
+            {
+              id: "imtp-2",
+              date: "2024-02-15",
+              weight: 66.2,
+              peakForce: 235,
+              relativePeakForce: 3.55,
+              timeToPeakForce: 135,
+              meanForce: 170,
+              rfdPeak: 4200,
+              rfd100: 3400,
+              rfd200: 3900,
+              rfd300: 4150,
+              impulsePeak: 42,
+              impulse100: 15,
+              impulse200: 28,
+              impulse300: 38,
+              observations: "Padrão de força aceitável. Foco em melhorar RFD na fase concêntrica acelerada."
+            }
+          ];
+        }
+
+        if (!assessments.cmj || assessments.cmj.length === 0) {
+          assessments.cmj = [
+            {
+              id: "cmj-1",
+              date: "2024-03-15",
+              weight: 65.5,
+              height: 380,
+              flightTime: 556,
+              meanForce: 1850,
+              rsi: 2.1,
+              observations: "Salto potente com excelente transição excêntrica/concêntrica."
+            },
+            {
+              id: "cmj-2",
+              date: "2024-02-15",
+              weight: 66.2,
+              height: 355,
+              flightTime: 538,
+              meanForce: 1720,
+              rsi: 1.95,
+              observations: "Fadiga residual leve observada no tempo de voo. Monitorar carga de treino."
+            }
+          ];
+        }
+
+        if (!assessments.dropJump || assessments.dropJump.length === 0) {
+          assessments.dropJump = [
+            {
+              id: "dj-1",
+              date: "2024-03-15",
+              weight: 65.5,
+              dropHeight: 30,
+              jumpHeight: 35,
+              flightTime: 534,
+              contactTime: 145,
+              meanForce: 2100,
+              meanPower: 2450,
+              stiffness: 18.5,
+              rsi: 2.41,
+              observations: "Excelente stiffness de tornozelo e baixo tempo de contato."
+            },
+            {
+              id: "dj-2",
+              date: "2024-02-15",
+              weight: 66.2,
+              dropHeight: 30,
+              jumpHeight: 32,
+              flightTime: 511,
+              contactTime: 162,
+              meanForce: 1950,
+              meanPower: 2200,
+              stiffness: 16.2,
+              rsi: 1.98,
+              observations: "Aumento no tempo de contato. Foco em treinos pliométricos de alta intensidade."
+            }
+          ];
+        }
+
+        if (!assessments.vo2max || assessments.vo2max.length === 0) {
+          assessments.vo2max = [
+            {
+              id: "vo2-1",
+              date: "2024-03-15",
+              vo2max: 58.5,
+              vam: 18.2,
+              maxSpeed: 19.5,
+              maxHeartRate: 192,
+              thresholdHeartRate: 172,
+              thresholdSpeed: 15.4,
+              rec10s: 10,
+              rec30s: 25,
+              rec60s: 48,
+              maxVentilation: 145,
+              score: 85,
+              observations: "Capacidade aeróbia de nível de elite, excelente limiar ventilatório."
+            },
+            {
+              id: "vo2-2",
+              date: "2024-02-15",
+              vo2max: 56.2,
+              vam: 17.5,
+              maxSpeed: 18.8,
+              maxHeartRate: 194,
+              thresholdHeartRate: 174,
+              thresholdSpeed: 14.8,
+              rec10s: 12,
+              rec30s: 22,
+              rec60s: 42,
+              maxVentilation: 140,
+              score: 81,
+              observations: "Boa base aeróbia. Trabalho intervalado de alta intensidade recomendado para subir limiar."
+            }
+          ];
+        }
+
+        if (!assessments.speed || assessments.speed.length === 0) {
+          assessments.speed = [
+            {
+              id: "spd-1",
+              date: "2024-03-15",
+              time5m: 1.05,
+              time10m: 1.78,
+              time20m: 2.92,
+              time30m: 3.98,
+              speed5m: 4.76,
+              speed10m: 5.62,
+              speed20m: 6.85,
+              speed30m: 7.54,
+              observations: "Excelente aceleração nos primeiros 10m, excelente transição para velocidade máxima."
+            },
+            {
+              id: "spd-2",
+              date: "2024-02-15",
+              time5m: 1.12,
+              time10m: 1.85,
+              time20m: 3.02,
+              time30m: 4.12,
+              speed5m: 4.46,
+              speed10m: 5.41,
+              speed20m: 6.62,
+              speed30m: 7.28,
+              observations: "Fase de aceleração lenta. Foco em melhorar força explosiva na saída de blocos."
+            }
+          ];
+        }
+
+        a.assessments = assessments;
+      }
+      return a;
+    });
+  };
+
   try {
     const loadFromSupabase = async () => {
         console.log(`[SERVIÇO] Carregando dados via Supabase Fallback... ${isAthlete ? `(Atleta: ${athleteId})` : '(Todos)'}`);
@@ -621,7 +913,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
     if (!isDbConnected || !process.env.DATABASE_URL) {
       console.warn("[SERVIÇO] Local DB Off. Redirecionando para Supabase...");
       const formatted = await loadFromSupabase();
-      return res.json(formatted);
+      return res.json(ensureMockAssessments(formatted));
     }
 
     console.log(`[SERVIÇO] Buscando atletas no banco local... ${isAthlete ? `(Atleta: ${athleteId})` : '(Todos)'}`);
@@ -666,14 +958,14 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
     } catch (dbError: any) {
       console.warn("[SERVIÇO] Falha ao ler dados de Postgres local (Acionando Fallback para Supabase):", dbError.message);
       const formatted = await loadFromSupabase();
-      return res.json(formatted);
+      return res.json(ensureMockAssessments(formatted));
     }
 
     // SE NÃO HOUVER ATLETAS NO BANCO LOCAL, TENTAR SUPABASE
     if (athletesRes.rows.length === 0) {
       console.warn("[SERVIÇO] Banco local conectado mas está VAZIO. Tentando Supabase...");
       const formatted = await loadFromSupabase();
-      return res.json(formatted);
+      return res.json(ensureMockAssessments(formatted));
     }
 
     const groupById = (rows: any[], key = 'athlete_id') => {
@@ -879,7 +1171,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
       }
     }; });
 
-    res.json(athletes);
+    res.json(ensureMockAssessments(athletes));
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
