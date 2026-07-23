@@ -2887,6 +2887,7 @@ async function startServer() {
               VITE_SUPABASE_URL: "${supabaseUrl}",
               VITE_SUPABASE_ANON_KEY: "${supabaseAnonKey}"
             };
+            window.__SUPABASE_CONFIG__ = window.ENV;
           </script>
         `;
         template = template.replace('<head>', `<head>\n${envScript}`);
@@ -2919,6 +2920,7 @@ async function startServer() {
               VITE_SUPABASE_URL: "${supabaseUrl}",
               VITE_SUPABASE_ANON_KEY: "${supabaseAnonKey}"
             };
+            window.__SUPABASE_CONFIG__ = window.ENV;
           </script>
         `;
         html = html.replace('<head>', `<head>\n${envScript}`);
