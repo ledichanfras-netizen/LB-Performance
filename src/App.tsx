@@ -444,14 +444,14 @@ const ReportPage: FC<{
 }> = ({ children, pageNumber, totalPages }) => (
   <div
     className="report-page page-break bg-white text-slate-950 shadow-2xl my-10 mx-auto overflow-hidden relative text-left"
-    style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box" }}
+    style={{ width: "210mm", height: "297mm", padding: "20mm", boxSizing: "border-box" }}
   >
     {/* Page Borders for design */}
     <div className="absolute top-0 left-0 w-full h-2 bg-emerald-600"></div>
     <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100"></div>
 
-    <div className="flex flex-col h-full min-h-[257mm] justify-between">
-      <div className="flex-grow">{children}</div>
+    <div className="flex flex-col h-full justify-between" style={{ height: "257mm" }}>
+      <div className="flex-grow overflow-hidden">{children}</div>
 
       <div className="mt-10 pt-6 border-t border-slate-100 flex justify-between items-center bg-white shrink-0">
         <div className="flex items-center gap-4">
