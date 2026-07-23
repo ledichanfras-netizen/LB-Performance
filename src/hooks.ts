@@ -6,7 +6,7 @@ import { ENRICHED_LIBRARY } from './data/exercises';
 import toast from 'react-hot-toast';
 import { GoogleGenAI, Type } from "@google/genai";
 import { supabaseService, logError, isNetworkError } from './services/supabaseService';
-import { generateModelAthlete } from './seedData';
+import { generateModelAthlete, generateFeaturedAthletes } from './seedData';
 import { isSupabaseConfigured } from './lib/supabase';
 
 // Safely wrapped localStorage to prevent crashes on restricted engines/mobile frames/iframes
@@ -124,19 +124,18 @@ const ensureImtpAndMigrate = (a: any): Athlete => {
 
 export const useAthletes = (token?: string | null) => {
   const [rawAthletes, setRawAthletes] = useState<Athlete[]>(() => {
-    // Lazy initialization from cache for instant load.
-    // Avoid filling the app with demo athletes when there is no real data yet.
+    // Lazy initialization from cache for instant load
     const cached = safeLocalStorage.getItem('lb_athletes_cache');
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
         const list = Array.isArray(parsed) ? parsed.filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises') : [];
-        return list.length > 0 ? list : [];
+        return list.length > 0 ? list : generateFeaturedAthletes();
       } catch (e) {
-        return [];
+        return generateFeaturedAthletes();
       }
     }
-    return [];
+    return generateFeaturedAthletes();
   });
 
   const sortWorkoutExercises = (a: Athlete): Athlete => {
@@ -166,16 +165,19 @@ export const useAthletes = (token?: string | null) => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [iframeCookieWarning, setIframeCookieWarning] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date>(new Date());
 
   // Refs for tracking synchronization state and avoiding stale closures / timer resets
   const syncDataRef = useRef<(isSilent?: boolean) => Promise<void>>(async () => {});
   const syncingRef = useRef(false);
   const lastSyncTimeRef = useRef<number>(Date.now());
+  const athletesRef = useRef<Athlete[]>(athletes);
 
   // Keep references updated on every render
   useEffect(() => {
     syncingRef.current = syncing;
     syncDataRef.current = syncData;
+    athletesRef.current = athletes;
   });
 
   // Update cache whenever athletes change
@@ -323,13 +325,6 @@ export const useAthletes = (token?: string | null) => {
       console.log('Buscando atletas do banco de forma resiliente...');
       const data = await api.loadAthletes();
       if (data) {
-        const filtered = data.filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises');
-        if (filtered.length === 0) {
-          setAthletes([]);
-          safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify([]));
-          console.log('[Sync] Nenhum atleta real retornado pelo banco. Mantendo a lista vazia.');
-          return;
-        }
         // Extract meta custom library if present
         const metaRow = data.find(a => a.id === 'meta-custom-library-exercises');
         if (metaRow && metaRow.injuryHistory) {
@@ -350,14 +345,29 @@ export const useAthletes = (token?: string | null) => {
           }
         }
 
+        const filtered = data.filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises');
+        
         // Prevent accidental data deletion on temporary connection/empty-response quirks
         if (filtered.length === 0 && athletes.length > 0) {
           console.warn('[Sync] Supabase/API retornou lista vazia de atletas, mas já temos dados na memória. Evitando sobrescrever dados locais.');
           return;
         }
 
+        // Detect if new workouts or wellness items arrived from another device during silent background sync
+        if (isSilent && athletesRef.current.length > 0) {
+          const currentTotalWorkouts = athletesRef.current.reduce((acc, a) => acc + (a.workouts?.length || 0), 0);
+          const newTotalWorkouts = filtered.reduce((acc, a) => acc + (a.workouts?.length || 0), 0);
+          const currentTotalWellness = athletesRef.current.reduce((acc, a) => acc + (a.wellness?.length || 0), 0);
+          const newTotalWellness = filtered.reduce((acc, a) => acc + (a.wellness?.length || 0), 0);
+
+          if (newTotalWorkouts > currentTotalWorkouts || newTotalWellness > currentTotalWellness) {
+            toast.success("📱 Treino ou Prontidão atualizado por outro dispositivo!", { id: "live-sync-update-toast" });
+          }
+        }
+
         setAthletes(filtered);
         safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(filtered));
+        setLastSyncedAt(new Date());
         console.log('Dados dos atletas atualizados e cacheados.');
         lastSyncTimeRef.current = Date.now();
       }
@@ -404,7 +414,7 @@ export const useAthletes = (token?: string | null) => {
   useEffect(() => {
     syncData();
 
-    // Auto-sync when page recovers focus, online connection, or visibility change
+    // Auto-sync when page recovers focus, online connection, visibility change, or page show (mobile return)
     const handleRefocusOrOnline = () => {
       if (navigator.onLine && document.visibilityState === 'visible') {
         console.log('[Auto-Sync] Janela ativa e online. Sincronizando dados em background...');
@@ -413,12 +423,12 @@ export const useAthletes = (token?: string | null) => {
       }
     };
 
-    // Intelligent sync on user activity (ideal for tablets waking up from sleep/stand-by)
+    // Intelligent sync on user activity (ideal for tablets/mobiles waking up from sleep/stand-by)
     const handleUserActivity = () => {
       const now = Date.now();
-      // If the last sync was more than 15 seconds ago, trigger a background sync on interaction
-      if (now - lastSyncTimeRef.current > 15000 && navigator.onLine && !syncingRef.current) {
-        console.log('[Activity-Sync] Interação do usuário detectada após 15s de inatividade. Sincronizando dados...');
+      // If the last sync was more than 5 seconds ago, trigger a background sync on interaction
+      if (now - lastSyncTimeRef.current > 5000 && navigator.onLine && !syncingRef.current) {
+        console.log('[Activity-Sync] Interação do usuário detectada após inatividade. Sincronizando dados...');
         lastSyncTimeRef.current = now; // Update timestamp immediately to prevent concurrent triggers
         syncDataRef.current(true); // Silent sync
       }
@@ -426,27 +436,46 @@ export const useAthletes = (token?: string | null) => {
 
     window.addEventListener('focus', handleRefocusOrOnline);
     window.addEventListener('online', handleRefocusOrOnline);
+    window.addEventListener('pageshow', handleRefocusOrOnline);
     document.addEventListener('visibilitychange', handleRefocusOrOnline);
+
+    // BroadcastChannel for cross-tab/multi-window synchronization on the same device
+    let bc: BroadcastChannel | null = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('lb_sports_data_sync');
+        bc.onmessage = (event) => {
+          if (event.data === 'sync_requested' || event.data === 'data_saved') {
+            console.log('[Broadcast-Sync] Notificação de sincronização recebida de outra aba.');
+            syncDataRef.current(true);
+          }
+        };
+      }
+    } catch (e) {
+      console.warn("BroadcastChannel não suportado neste navegador.");
+    }
 
     // Add user interaction listeners to instantly trigger background sync on tablets/mobiles waking up from stand-by
     window.addEventListener('mousedown', handleUserActivity, { passive: true });
     window.addEventListener('touchstart', handleUserActivity, { passive: true });
 
-    // Configura um intervalo periódico de atualização (pooling) em background para sincronizar salvamentos de outros IPs/dispositivos
+    // Configura um intervalo periódico rápido de atualização (polling) em background a cada 6 segundos
     const intervalId = setInterval(() => {
       if (navigator.onLine && document.visibilityState === 'visible' && !syncingRef.current) {
         console.log('[Interval-Sync] Sincronizando dados de outros dispositivos/IPs em background...');
         lastSyncTimeRef.current = Date.now();
         syncDataRef.current(true); // Silent sync
       }
-    }, 15000); // Executa a cada 15 segundos
+    }, 6000); // Executa a cada 6 segundos para atualização ágil entre dispositivos
 
     return () => {
       window.removeEventListener('focus', handleRefocusOrOnline);
       window.removeEventListener('online', handleRefocusOrOnline);
+      window.removeEventListener('pageshow', handleRefocusOrOnline);
       document.removeEventListener('visibilitychange', handleRefocusOrOnline);
       window.removeEventListener('mousedown', handleUserActivity);
       window.removeEventListener('touchstart', handleUserActivity);
+      if (bc) bc.close();
       clearInterval(intervalId);
     };
   }, [token]);
@@ -531,6 +560,14 @@ export const useAthletes = (token?: string | null) => {
       } else {
         await api.saveAthletes(newAthletes);
       }
+      setLastSyncedAt(new Date());
+      try {
+        if (typeof BroadcastChannel !== 'undefined') {
+          const bc = new BroadcastChannel('lb_sports_data_sync');
+          bc.postMessage('data_saved');
+          bc.close();
+        }
+      } catch (e) {}
       console.log("Sincronização concluída com sucesso.");
     } catch (e: any) {
       logError("Erro na sincronização:", e);
@@ -1326,7 +1363,7 @@ export const useAthletes = (token?: string | null) => {
   };
 
   return { 
-    athletes, loading, syncing, setAthletes, save, addAthlete, updateAthlete, deleteAthlete, addWellness, updateWellness, deleteWellness,
+    athletes, loading, syncing, lastSyncedAt, setAthletes, save, addAthlete, updateAthlete, deleteAthlete, addWellness, updateWellness, deleteWellness,
     addWorkout, addWorkouts, updateWorkout, deleteWorkout, addAssessment, updateAssessment, 
     removeAssessment, analyzePerformance, generateAIWorkouts, addExternalSession, updateExternalSession, deleteExternalSession,
     importDemoAthlete, syncData, iframeCookieWarning

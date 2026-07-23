@@ -1,4 +1,3 @@
-// Test Comment
 import express from 'express';
 import { Pool } from 'pg';
 import cors from 'cors';
@@ -452,19 +451,6 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
   const isAthlete = user.role === 'athlete';
   const athleteId = user.athleteId;
 
-  const normalizeAthletePayload = (athletesList: any[]) => {
-    if (!Array.isArray(athletesList)) {
-      return [];
-    }
-
-    return athletesList
-      .filter((a: any) => a && typeof a === 'object')
-      .map((a: any) => ({
-        ...a,
-        assessments: a.assessments || {}
-      }));
-  };
-
   try {
     const loadFromSupabase = async () => {
         console.log(`[SERVIÇO] Carregando dados via Supabase Fallback... ${isAthlete ? `(Atleta: ${athleteId})` : '(Todos)'}`);
@@ -635,7 +621,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
     if (!isDbConnected || !process.env.DATABASE_URL) {
       console.warn("[SERVIÇO] Local DB Off. Redirecionando para Supabase...");
       const formatted = await loadFromSupabase();
-      return res.json(normalizeAthletePayload(formatted));
+      return res.json(formatted);
     }
 
     console.log(`[SERVIÇO] Buscando atletas no banco local... ${isAthlete ? `(Atleta: ${athleteId})` : '(Todos)'}`);
@@ -680,14 +666,14 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
     } catch (dbError: any) {
       console.warn("[SERVIÇO] Falha ao ler dados de Postgres local (Acionando Fallback para Supabase):", dbError.message);
       const formatted = await loadFromSupabase();
-      return res.json(normalizeAthletePayload(formatted));
+      return res.json(formatted);
     }
 
     // SE NÃO HOUVER ATLETAS NO BANCO LOCAL, TENTAR SUPABASE
     if (athletesRes.rows.length === 0) {
       console.warn("[SERVIÇO] Banco local conectado mas está VAZIO. Tentando Supabase...");
       const formatted = await loadFromSupabase();
-      return res.json(normalizeAthletePayload(formatted));
+      return res.json(formatted);
     }
 
     const groupById = (rows: any[], key = 'athlete_id') => {
@@ -893,7 +879,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
       }
     }; });
 
-    res.json(normalizeAthletePayload(athletes));
+    res.json(athletes);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -2887,7 +2873,6 @@ async function startServer() {
               VITE_SUPABASE_URL: "${supabaseUrl}",
               VITE_SUPABASE_ANON_KEY: "${supabaseAnonKey}"
             };
-            window.__SUPABASE_CONFIG__ = window.ENV;
           </script>
         `;
         template = template.replace('<head>', `<head>\n${envScript}`);
@@ -2920,7 +2905,6 @@ async function startServer() {
               VITE_SUPABASE_URL: "${supabaseUrl}",
               VITE_SUPABASE_ANON_KEY: "${supabaseAnonKey}"
             };
-            window.__SUPABASE_CONFIG__ = window.ENV;
           </script>
         `;
         html = html.replace('<head>', `<head>\n${envScript}`);

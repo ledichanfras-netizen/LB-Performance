@@ -23,7 +23,7 @@ interface DynamicReportProps {
   hideTOC?: boolean;
 }
 
-// Fixed Header for every report page with a premium elite look and consistent spacing
+// Fixed Header for every report page with green background and full bleed (bleed to borders)
 export const ReportHeader: FC<{
   title: string;
   subTitle: string;
@@ -31,25 +31,25 @@ export const ReportHeader: FC<{
   date: string;
   extraStats?: { label: string; value: string | number }[];
 }> = ({ title, subTitle, athlete, date, extraStats }) => (
-  <div className="relative overflow-hidden rounded-[24px] border border-emerald-500/20 bg-gradient-to-br from-emerald-700 via-emerald-600 to-emerald-500 p-5 md:p-6 mb-5 shadow-[0_18px_45px_rgba(6,78,59,0.24)]">
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_45%)]"></div>
-    <div className="absolute -right-10 -top-10 w-28 h-28 rounded-full bg-white/10 blur-3xl"></div>
-    <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-white/0 via-white/25 to-white/0"></div>
-
+  <div className="bg-emerald-600 -mx-[20mm] -mt-[20mm] p-8 mb-8 flex justify-between items-end relative overflow-hidden shrink-0 text-left">
+    {/* Subtle design gradient overlays */}
+    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-emerald-700/30 to-transparent pointer-events-none"></div>
+    
     <div className="relative z-10 w-full">
-      <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-3">
-        <div className="w-12 h-12 rounded-2xl bg-white/95 flex items-center justify-center p-1 shadow-lg border border-white/40">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-1 shadow-md">
           <img
             src="/192x192.png"
             className="w-10 h-10 object-contain"
             alt="Logo"
           />
         </div>
-        <div className="min-w-0">
-          <h4 className="text-[9px] font-black text-white/80 uppercase tracking-[0.35em] leading-none mb-1">
+        <div>
+          <h4 className="text-[10px] font-black text-white/80 uppercase tracking-[0.3em] leading-none mb-1">
             Elite Performance Lab
           </h4>
-          <h3 className="text-lg md:text-xl font-black text-white italic uppercase tracking-tight leading-none">
+          <h3 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter leading-none">
             {title}
           </h3>
           <p className="text-[8px] font-black text-white/70 uppercase tracking-[0.4em] mt-1.5 leading-none">
@@ -57,19 +57,19 @@ export const ReportHeader: FC<{
           </p>
         </div>
       </div>
-      <div className="flex flex-wrap gap-3 md:gap-5 mt-3 pt-3 border-t border-white/15">
+      <div className="flex flex-wrap gap-5 mt-4 pt-4 border-t border-white/10">
         <div className="flex flex-col">
-          <span className="text-[7px] font-black text-white/60 uppercase tracking-[0.3em] mb-0.5">Atleta</span>
-          <span className="text-[10px] font-black text-white uppercase italic">{athlete.name}</span>
+          <span className="text-[8px] font-black text-white/50 uppercase tracking-widest mb-0.5">Atleta</span>
+          <span className="text-xs font-black text-white uppercase italic">{athlete.name}</span>
         </div>
         <div className="flex flex-col">
-          <span className="text-[7px] font-black text-white/60 uppercase tracking-[0.3em] mb-0.5">Data de Emissão</span>
-          <span className="text-[10px] font-black text-white uppercase italic">{date}</span>
+          <span className="text-[8px] font-black text-white/50 uppercase tracking-widest mb-0.5 font-bold">Data de Emissão</span>
+          <span className="text-xs font-black text-white uppercase italic">{date}</span>
         </div>
         {extraStats?.map((stat, idx) => (
           <div key={idx} className="flex flex-col">
-            <span className="text-[7px] font-black text-white/60 uppercase tracking-[0.3em] mb-0.5">{stat.label}</span>
-            <span className="text-[10px] font-black text-white uppercase italic">{stat.value}</span>
+            <span className="text-[8px] font-black text-white/50 uppercase tracking-widest mb-0.5">{stat.label}</span>
+            <span className="text-xs font-black text-white uppercase italic">{stat.value}</span>
           </div>
         ))}
       </div>
@@ -89,31 +89,31 @@ export const ReportFooter: FC<{
   technicalResponsibleName = "Prof. Leandro Barbosa",
   technicalResponsibleCred = "036202-G/PR"
 }) => (
-  <div className="mt-6 pt-4 border-t border-slate-200/80 flex justify-between items-center bg-white/95 shrink-0 text-left">
-    <div className="flex items-center gap-3">
-      <div className="w-9 h-9 bg-slate-900 rounded-xl flex items-center justify-center shadow-md">
+  <div className="mt-10 pt-6 border-t border-slate-100 flex justify-between items-center bg-white shrink-0 text-left">
+    <div className="flex items-center gap-4">
+      <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg">
         <img
           src="/192x192.png"
-          className="w-5 h-5 object-contain"
+          className="w-6 h-6 object-contain"
           alt="LB"
         />
       </div>
       <div>
-        <p className="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em] leading-none mb-1">
+        <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.3em] leading-none mb-1">
           Responsável Técnico
         </p>
-        <p className="text-[9px] font-black text-slate-900 uppercase italic leading-none">
+        <p className="text-[10px] font-black text-slate-900 uppercase italic leading-none">
           {technicalResponsibleName} ({technicalResponsibleCred})
         </p>
       </div>
     </div>
     <div className="text-right">
-      <p className="text-[7px] font-black text-slate-400 uppercase tracking-[0.35em] leading-none mb-1">
+      <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] leading-none mb-1">
         Página {pageNumber} de {totalPages}
       </p>
       <div className="flex items-center justify-end gap-2">
         <span className="w-1 h-1 bg-emerald-500 rounded-full"></span>
-        <p className="text-[6px] font-bold text-slate-400 uppercase tracking-[0.25em] leading-none">
+        <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest leading-none">
           LB HUB v3.0 • ELITE PERFORMANCE
         </p>
       </div>
@@ -144,9 +144,15 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
 
   // USABLE HEIGHT CALCULATION:
   // A4 Page Height = 297mm.
-  // The page uses a premium shell with consistent margins and slightly tighter typography,
-  // so the usable content area is intentionally smaller to preserve a clean visual rhythm.
-  const maxContentHeight = 640;
+  // 1mm = 3.7795px (at 96 DPI screen scaling for standard PDF generation)
+  // Total A4 Height = 1122.5px.
+  // Margins top/bottom: 20mm + 20mm = 40mm = 151px.
+  // Header: ~180px.
+  // Footer: ~70px.
+  // Usable content area height = 1122.5px - 151px - 180px - 70px = 721.5px.
+  // We use 680px to be absolutely safe and avoid unwanted blank overflows, leaving
+  // a small robust buffer to keep high-quality header/footers without clipping.
+  const maxContentHeight = 680;
 
   // Measure block heights in a layout effect to get layout-ready pixel sizes
   useLayoutEffect(() => {
@@ -309,13 +315,13 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
           {/* 1. AUTOMATIC INDEX PAGE (TOC) - Shown only when report has multiple sections */}
           {tocSections.length >= 2 && (
             <div
-              className="report-page page-break bg-white text-slate-950 my-10 mx-auto overflow-hidden relative text-left rounded-[28px] border border-slate-200/70"
-              style={{ width: "210mm", height: "297mm", padding: "14mm 16mm 14mm 16mm", boxSizing: "border-box" }}
+              className="report-page page-break bg-white text-slate-950 shadow-2xl my-10 mx-auto overflow-hidden relative text-left"
+              style={{ width: "210mm", height: "297mm", padding: "20mm", boxSizing: "border-box" }}
             >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.05),transparent_38%)]"></div>
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400"></div>
+              {/* Decorative top green border */}
+              <div className="absolute top-0 left-0 w-full h-2 bg-emerald-600"></div>
 
-              <div className="flex flex-col h-full justify-between relative z-10" style={{ height: "269mm" }}>
+              <div className="flex flex-col h-full justify-between" style={{ height: "257mm" }}>
                 <div>
                   <ReportHeader
                     title={reportTitle}
@@ -325,7 +331,7 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
                     extraStats={extraStats}
                   />
 
-                  <div className="report-content-stack space-y-6 mt-6">
+                  <div className="space-y-8 mt-12">
                     <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
                       <BookOpen className="w-5 h-5 text-emerald-600" />
                       <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">
@@ -390,13 +396,13 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
             return (
               <div
                 key={pageIndex}
-                className="report-page page-break bg-white text-slate-950 my-10 mx-auto overflow-hidden relative text-left rounded-[28px] border border-slate-200/70"
-                style={{ width: "210mm", height: "297mm", padding: "14mm 16mm 14mm 16mm", boxSizing: "border-box" }}
+                className="report-page page-break bg-white text-slate-950 shadow-2xl my-10 mx-auto overflow-hidden relative text-left"
+                style={{ width: "210mm", height: "297mm", padding: "20mm", boxSizing: "border-box" }}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.05),transparent_38%)]"></div>
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-400"></div>
+                {/* Decorative top green border */}
+                <div className="absolute top-0 left-0 w-full h-2 bg-emerald-600"></div>
 
-                <div className="flex flex-col h-full justify-between relative z-10" style={{ height: "269mm" }}>
+                <div className="flex flex-col h-full justify-between" style={{ height: "257mm" }}>
                   <div className="flex-grow">
                     <ReportHeader
                       title={reportTitle}
@@ -407,9 +413,9 @@ export const DynamicReportEngine: FC<DynamicReportProps> = ({
                     />
 
                     {/* Content Blocks for this specific page */}
-                    <div className="report-content-stack space-y-4">
+                    <div className="space-y-6">
                       {pageBlocks.map((block) => (
-                        <div key={block.id} className="w-full break-inside-avoid report-block-card">
+                        <div key={block.id} className="w-full break-inside-avoid">
                           {block.content}
                         </div>
                       ))}

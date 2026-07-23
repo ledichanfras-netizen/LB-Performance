@@ -580,6 +580,7 @@ const EliteHubApp: FC<{
     generateAIWorkouts,
     importDemoAthlete,
     syncData,
+    lastSyncedAt,
     iframeCookieWarning,
   } = useAthletes(user?.token);
 
@@ -1341,6 +1342,21 @@ const EliteHubApp: FC<{
           {/* Mobile Bottom Navigation Bar (Fixed modern layout as requested) */}
           <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#070b14]/95 backdrop-blur-3xl border-t border-slate-850/90 z-[1010] items-center px-4 shadow-[0_-12px_36px_rgba(0,0,0,0.85)] overflow-x-auto no-scrollbar select-none">
             <div className="flex flex-row items-center gap-2.5 w-max py-1.5 pr-4">
+              {/* 0. SINCRONIZAR EM TEMPO REAL item */}
+              <button
+                onClick={async () => {
+                  const toastId = toast.loading("Sincronizando banco de dados...");
+                  await syncData();
+                  toast.success("Dados sincronizados com o banco!", { id: toastId });
+                }}
+                disabled={syncing}
+                className="flex items-center gap-2 px-3.5 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary hover:text-brand-dark cursor-pointer shadow-[0_0_12px_rgba(57,255,20,0.2)]"
+                title="Sincronizar imediatamente com o banco de dados"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 shrink-0 text-[#39FF14] ${syncing ? "animate-spin" : ""}`} />
+                <span>SINCRONIZAR</span>
+              </button>
+
               {/* 1. PAINEL GERAL item */}
               <button
                 onClick={() => {
@@ -1912,6 +1928,29 @@ const EliteHubApp: FC<{
                         </button>
                       </>
                     )}
+
+                    {/* Quick Database Sync Button */}
+                    <div className="relative shrink-0">
+                      <button
+                        onClick={async () => {
+                          const toastId = toast.loading("Sincronizando com banco de dados...");
+                          await syncData();
+                          toast.success("Dados sincronizados com sucesso!", { id: toastId });
+                        }}
+                        disabled={syncing}
+                        className="flex items-center gap-2 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 hover:border-brand-primary/50 text-brand-primary hover:text-white transition-all cursor-pointer shadow-lg group"
+                        title="Sincronização em tempo real (Auto-sync a cada 6s)"
+                      >
+                        <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 text-brand-primary ${syncing ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-700"}`} />
+                        <span className="hidden md:inline text-[10px] sm:text-[11px] font-black uppercase tracking-wider">
+                          {syncing ? "Sincronizando..." : "Sincronizar"}
+                        </span>
+                        <span className="flex h-2 w-2 relative" title="Auto-Sync em Tempo Real Ativo">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#39FF14] opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#39FF14]"></span>
+                        </span>
+                      </button>
+                    </div>
 
                     {/* Notification Bell */}
                     <div className="relative shrink-0">
