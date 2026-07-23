@@ -444,14 +444,14 @@ const ReportPage: FC<{
 }> = ({ children, pageNumber, totalPages }) => (
   <div
     className="report-page page-break bg-white text-slate-950 shadow-2xl my-10 mx-auto overflow-hidden relative text-left"
-    style={{ width: "210mm", height: "297mm", padding: "20mm", boxSizing: "border-box" }}
+    style={{ width: "210mm", minHeight: "297mm", padding: "20mm", boxSizing: "border-box" }}
   >
     {/* Page Borders for design */}
     <div className="absolute top-0 left-0 w-full h-2 bg-emerald-600"></div>
     <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100"></div>
 
-    <div className="flex flex-col h-full justify-between" style={{ height: "257mm" }}>
-      <div className="flex-grow overflow-hidden">{children}</div>
+    <div className="flex flex-col h-full min-h-[257mm] justify-between">
+      <div className="flex-grow">{children}</div>
 
       <div className="mt-10 pt-6 border-t border-slate-100 flex justify-between items-center bg-white shrink-0">
         <div className="flex items-center gap-4">
@@ -1342,21 +1342,6 @@ const EliteHubApp: FC<{
           {/* Mobile Bottom Navigation Bar (Fixed modern layout as requested) */}
           <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#070b14]/95 backdrop-blur-3xl border-t border-slate-850/90 z-[1010] items-center px-4 shadow-[0_-12px_36px_rgba(0,0,0,0.85)] overflow-x-auto no-scrollbar select-none">
             <div className="flex flex-row items-center gap-2.5 w-max py-1.5 pr-4">
-              {/* 0. SINCRONIZAR EM TEMPO REAL item */}
-              <button
-                onClick={async () => {
-                  const toastId = toast.loading("Sincronizando banco de dados...");
-                  await syncData();
-                  toast.success("Dados sincronizados com o banco!", { id: toastId });
-                }}
-                disabled={syncing}
-                className="flex items-center gap-2 px-3.5 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black bg-brand-primary/10 text-brand-primary border border-brand-primary/30 hover:bg-brand-primary hover:text-brand-dark cursor-pointer shadow-[0_0_12px_rgba(57,255,20,0.2)]"
-                title="Sincronizar imediatamente com o banco de dados"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 shrink-0 text-[#39FF14] ${syncing ? "animate-spin" : ""}`} />
-                <span>SINCRONIZAR</span>
-              </button>
-
               {/* 1. PAINEL GERAL item */}
               <button
                 onClick={() => {
