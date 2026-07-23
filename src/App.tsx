@@ -1339,7 +1339,7 @@ const EliteHubApp: FC<{
   return (
     <div className="min-h-screen bg-brand-dark text-slate-100 font-sans flex flex-col md:flex-row overflow-x-hidden relative no-scrollbar">
         <>
-          {/* Mobile Bottom Navigation Bar (Fixed modern layout as requested) */}
+          {/* Mobile Bottom Navigation Bar (Fixed modern layout in requested order) */}
           <div className="flex md:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#070b14]/95 backdrop-blur-3xl border-t border-slate-850/90 z-[1010] items-center px-4 shadow-[0_-12px_36px_rgba(0,0,0,0.85)] overflow-x-auto no-scrollbar select-none">
             <div className="flex flex-row items-center gap-2.5 w-max py-1.5 pr-4">
               {/* 1. PAINEL GERAL item */}
@@ -1362,7 +1362,56 @@ const EliteHubApp: FC<{
                 <span>PAINEL GERAL</span>
               </button>
 
-              {/* 2. PRONTIDÃO item */}
+              {/* 2. AVALIAÇÕES item */}
+              <button
+                onClick={() => {
+                  setActiveTab("assessment");
+                  setAiModelingResult(null);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black ${
+                  activeTab === "assessment"
+                    ? "bg-[#10b981] text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)] scale-102"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <ClipboardList className="w-4 h-4 shrink-0" />
+                <span>AVALIAÇÕES</span>
+              </button>
+
+              {/* 3. TREINOS item */}
+              <button
+                onClick={() => {
+                  setActiveTab("training");
+                  setAiModelingResult(null);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black ${
+                  activeTab === "training"
+                    ? "bg-[#10b981] text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)] scale-102"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Dumbbell className="w-4 h-4 shrink-0" />
+                <span>TREINOS</span>
+              </button>
+
+              {/* 4. CARGA item */}
+              <button
+                onClick={() => {
+                  setActiveTab("dash");
+                  setDashboardSubTab("elite-monitoring");
+                  setAiModelingResult(null);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black ${
+                  activeTab === "dash" && dashboardSubTab === "elite-monitoring" && !aiModelingResult
+                    ? "bg-[#10b981] text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)] scale-102"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <TrendingUp className="w-4 h-4 shrink-0" />
+                <span>CARGA</span>
+              </button>
+
+              {/* 5. PRONTIDÃO item */}
               <button
                 onClick={() => {
                   setActiveTab("dash");
@@ -1379,39 +1428,7 @@ const EliteHubApp: FC<{
                 <span>PRONTIDÃO</span>
               </button>
 
-              {/* 3. AVALIAÇÕES item */}
-              <button
-                onClick={() => {
-                  setActiveTab("assessment");
-                  setAiModelingResult(null);
-                }}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black ${
-                  activeTab === "assessment"
-                    ? "bg-[#10b981] text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)] scale-102"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                <ClipboardList className="w-4 h-4 shrink-0" />
-                <span>AVALIAÇÕES</span>
-              </button>
- 
-              {/* 4. TREINOS item */}
-              <button
-                onClick={() => {
-                  setActiveTab("training");
-                  setAiModelingResult(null);
-                }}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black ${
-                  activeTab === "training"
-                    ? "bg-[#10b981] text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)] scale-102"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                <Dumbbell className="w-4 h-4 shrink-0" />
-                <span>TREINOS</span>
-              </button>
- 
-              {/* 5. DM E SAÚDE item */}
+              {/* 6. DM E SAÚDE item */}
               <button
                 onClick={() => {
                   setActiveTab("injuries");
@@ -1426,24 +1443,7 @@ const EliteHubApp: FC<{
                 <Activity className="w-4 h-4 shrink-0" />
                 <span>DM E SAÚDE</span>
               </button>
- 
-              {/* 6. CARGA item */}
-              <button
-                onClick={() => {
-                  setActiveTab("dash");
-                  setDashboardSubTab("elite-monitoring");
-                  setAiModelingResult(null);
-                }}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black ${
-                  activeTab === "dash" && dashboardSubTab === "elite-monitoring" && !aiModelingResult
-                    ? "bg-[#10b981] text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)] scale-102"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                <TrendingUp className="w-4 h-4 shrink-0" />
-                <span>CARGA</span>
-              </button>
- 
+
               {/* 7. MODELAGEM item */}
               <button
                 onClick={() => {
@@ -1475,10 +1475,10 @@ const EliteHubApp: FC<{
                 <span>GUIA</span>
               </button>
 
-              {/* logout item */}
+              {/* 9. SAIR item */}
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black text-rose-400 hover:bg-rose-500/10"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black text-rose-400 hover:bg-rose-500/10 cursor-pointer"
               >
                 <LogOut className="w-4 h-4 shrink-0 text-red-500" />
                 <span>SAIR</span>
@@ -1505,28 +1505,29 @@ const EliteHubApp: FC<{
                 </div>
               </div>
 
-              {/* Sidebar Menu - Desktop */}
+              {/* Sidebar Menu - Desktop (In requested order) */}
               <div className="hidden md:flex flex-col gap-1.5 w-full">
-                {/* 1. Dashboard Tab */}
+                {/* 1. Painel Geral Tab */}
                 <button
                   onClick={() => {
                     setActiveTab("dash");
+                    setDashboardSubTab("pro");
                     setAiModelingResult(null);
                     if (user?.role === "coach") {
                       setSelectedId(null);
                     }
                   }}
                   className={`flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
-                    activeTab === "dash" && !aiModelingResult
+                    activeTab === "dash" && dashboardSubTab === "pro" && !aiModelingResult
                       ? "border border-brand-primary/20 bg-gradient-to-r from-brand-primary/10 to-transparent text-brand-primary shadow-[0_0_15px_rgba(16,185,129,0.06)]"
                       : "text-slate-400 hover:text-white hover:bg-slate-900/40 border border-transparent"
                   }`}
                 >
-                  <LayoutDashboard className={`w-4 h-4 shrink-0 ${activeTab === "dash" && !aiModelingResult ? "text-brand-primary" : "text-slate-500"}`} />
-                  <span>Dashboard</span>
+                  <LayoutDashboard className={`w-4 h-4 shrink-0 ${activeTab === "dash" && dashboardSubTab === "pro" && !aiModelingResult ? "text-brand-primary" : "text-slate-500"}`} />
+                  <span>Painel Geral</span>
                 </button>
 
-                {/* 2. Atletas Management Dropdown Tab */}
+                {/* Atletas Management Dropdown Tab */}
                 {user?.role !== "athlete" && (
                   <div className="flex flex-col w-full relative">
                     <button
@@ -1579,7 +1580,7 @@ const EliteHubApp: FC<{
                   </div>
                 )}
 
-                {/* 3. Avaliações Tab */}
+                {/* 2. Avaliações Tab */}
                 <button
                   onClick={() => {
                     setActiveTab("assessment");
@@ -1595,7 +1596,7 @@ const EliteHubApp: FC<{
                   <span>Avaliações</span>
                 </button>
 
-                {/* 4. Treinamentos Tab */}
+                {/* 3. Treinos Tab */}
                 <button
                   onClick={() => {
                     setActiveTab("training");
@@ -1608,25 +1609,44 @@ const EliteHubApp: FC<{
                   }`}
                 >
                   <Dumbbell className={`w-4 h-4 shrink-0 ${activeTab === "training" ? "text-brand-primary" : "text-slate-500"}`} />
-                  <span>Treinamentos</span>
+                  <span>Treinos</span>
                 </button>
 
-                {/* 5. Análises Tab */}
+                {/* 4. Carga Tab */}
                 <button
                   onClick={() => {
-                    setActiveTab("ai-modeling");
+                    setActiveTab("dash");
+                    setDashboardSubTab("elite-monitoring");
+                    setAiModelingResult(null);
                   }}
                   className={`flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
-                    activeTab === "ai-modeling" || aiModelingResult
+                    activeTab === "dash" && dashboardSubTab === "elite-monitoring" && !aiModelingResult
                       ? "border border-brand-primary/20 bg-gradient-to-r from-brand-primary/10 to-transparent text-brand-primary shadow-[0_0_15px_rgba(16,185,129,0.06)]"
                       : "text-slate-400 hover:text-white hover:bg-slate-900/40 border border-transparent"
                   }`}
                 >
-                  <Sparkles className={`w-4 h-4 shrink-0 ${activeTab === "ai-modeling" || aiModelingResult ? "text-brand-primary" : "text-slate-500"}`} />
-                  <span>Análises</span>
+                  <TrendingUp className={`w-4 h-4 shrink-0 ${activeTab === "dash" && dashboardSubTab === "elite-monitoring" && !aiModelingResult ? "text-brand-primary" : "text-slate-500"}`} />
+                  <span>Carga</span>
                 </button>
 
-                {/* 7. Alertas Tab */}
+                {/* 5. Prontidão Tab */}
+                <button
+                  onClick={() => {
+                    setActiveTab("dash");
+                    setDashboardSubTab("classic");
+                    setAiModelingResult(null);
+                  }}
+                  className={`flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                    activeTab === "dash" && dashboardSubTab === "classic" && !aiModelingResult
+                      ? "border border-brand-primary/20 bg-gradient-to-r from-brand-primary/10 to-transparent text-brand-primary shadow-[0_0_15px_rgba(16,185,129,0.06)]"
+                      : "text-slate-400 hover:text-white hover:bg-slate-900/40 border border-transparent"
+                  }`}
+                >
+                  <ClipboardCheck className={`w-4 h-4 shrink-0 ${activeTab === "dash" && dashboardSubTab === "classic" && !aiModelingResult ? "text-brand-primary" : "text-slate-500"}`} />
+                  <span>Prontidão</span>
+                </button>
+
+                {/* 6. DM e Saúde Tab */}
                 <button
                   onClick={() => {
                     setActiveTab("injuries");
@@ -1639,12 +1659,27 @@ const EliteHubApp: FC<{
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Bell className={`w-4 h-4 shrink-0 ${activeTab === "injuries" ? "text-brand-primary" : "text-slate-500"}`} />
-                    <span>Alertas</span>
+                    <Activity className={`w-4 h-4 shrink-0 ${activeTab === "injuries" ? "text-brand-primary" : "text-slate-500"}`} />
+                    <span>DM e Saúde</span>
                   </div>
                   {(!selected?.wellness || selected.wellness.length === 0) && (
                     <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
                   )}
+                </button>
+
+                {/* 7. Modelagem Tab */}
+                <button
+                  onClick={() => {
+                    setActiveTab("ai-modeling");
+                  }}
+                  className={`flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                    activeTab === "ai-modeling" || aiModelingResult
+                      ? "border border-brand-primary/20 bg-gradient-to-r from-brand-primary/10 to-transparent text-brand-primary shadow-[0_0_15px_rgba(16,185,129,0.06)]"
+                      : "text-slate-400 hover:text-white hover:bg-slate-900/40 border border-transparent"
+                  }`}
+                >
+                  <Sparkles className={`w-4 h-4 shrink-0 ${activeTab === "ai-modeling" || aiModelingResult ? "text-brand-primary" : "text-slate-500"}`} />
+                  <span>Modelagem</span>
                 </button>
 
                 {/* 8. Guia Tab */}
@@ -1660,10 +1695,10 @@ const EliteHubApp: FC<{
                   }`}
                 >
                   <BookOpen className={`w-4 h-4 shrink-0 ${activeTab === "info" ? "text-brand-primary" : "text-slate-500"}`} />
-                  <span>Guia do Sistema</span>
+                  <span>Guia</span>
                 </button>
 
-                {/* 9. Configurações Tab */}
+                {/* Configurações Tab */}
                 {user?.role !== "athlete" && (
                   <button
                     onClick={() => {
@@ -1955,7 +1990,12 @@ const EliteHubApp: FC<{
                   </div>
                 </div>
               </section>
-              {!selected && user.role === "coach" ? (
+              {/* Render Guia directly without requiring an athlete selection */}
+              {activeTab === "info" ? (
+                <div className="w-full max-w-7xl mx-auto px-4 py-4 animate-in fade-in duration-500">
+                  <AthleteGuide />
+                </div>
+              ) : !selected && user.role === "coach" ? (
                 <div className="flex flex-col items-center px-4 max-w-7xl mx-auto">
                   {/* Dashboard Stats / Overview */}
                   <div className="w-full grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
