@@ -101,6 +101,7 @@ export interface Athlete {
   name: string;
   dob: string;
   gender: 'M' | 'F';
+  photoUrl?: string;
   injuryHistory: string; // Maintain for backward compatibility/summary
   injuries?: InjuryEntry[]; 
   bodyMapRecords?: BodyMapRecord[];

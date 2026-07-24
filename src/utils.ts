@@ -678,3 +678,48 @@ export const formatCompetitiveLevel = (level?: string, modality?: string): strin
   if (l === "elite") return isFutebol ? "Futebol Elite" : "Elite Mundial";
   return level || "Geral";
 };
+
+export function getEmbedVideoInfo(url?: string): {
+  type: "youtube" | "vimeo" | "direct" | "unknown";
+  embedUrl: string | null;
+  rawUrl: string;
+} | null {
+  if (!url || !url.trim()) return null;
+  const rawUrl = url.trim();
+
+  // YouTube match (watch, embed, shorts, youtu.be)
+  const ytMatch = rawUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|watch\?.+&v=))([\w-]{11})/);
+  if (ytMatch && ytMatch[1]) {
+    return {
+      type: "youtube",
+      embedUrl: `https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1`,
+      rawUrl,
+    };
+  }
+
+  // Vimeo match
+  const vimeoMatch = rawUrl.match(/(?:vimeo\.com\/)(\d+)/);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return {
+      type: "vimeo",
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}`,
+      rawUrl,
+    };
+  }
+
+  // Direct MP4 or WebM or OGG video
+  if (/\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(rawUrl)) {
+    return {
+      type: "direct",
+      embedUrl: rawUrl,
+      rawUrl,
+    };
+  }
+
+  return {
+    type: "unknown",
+    embedUrl: rawUrl,
+    rawUrl,
+  };
+}
+

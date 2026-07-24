@@ -37,6 +37,7 @@ export const MMII_EXERCISES: EnrichedExercise[] = [
     applicability: "Desenvolvimento da base de força absoluta em membros inferiores para atletas profissionais e adultos amadores.",
     evidenceLevel: "Nível I - Excelente (Recomendação Forte)",
     musclesInvolved: ["Glúteo Máximo", "Quadríceps Femoral", "Adutor Maior", "Eretores da Espinha"],
+    videoUrl: "https://www.youtube.com/watch?v=U0LgH7p28_E",
     tags: ["#ForçaMáxima", "#EXOS", "#VBT", "#TripleExtension", "#Barbell", "#Academia"]
   },
   {
@@ -75,6 +76,7 @@ export const MMII_EXERCISES: EnrichedExercise[] = [
     applicability: "Fundamental para atletas que necessitam de força máxima de membros inferiores com menor estresse lombar e alta demanda torácica.",
     evidenceLevel: "Nível I - Excelente",
     musclesInvolved: ["Quadríceps Femoral", "Glúteo Máximo", "Eretores da Espinha", "Reto Abdominal"],
+    videoUrl: "https://www.youtube.com/watch?v=v-mQm_driHA",
     tags: ["#FrontSquat", "#LPO", "#QuadDominant", "#Barbell", "#Academia"]
   },
   {
@@ -113,6 +115,7 @@ export const MMII_EXERCISES: EnrichedExercise[] = [
     applicability: "Padrão ouro para atletas que dependem de saltos, mudanças de direção rápidos e força explosiva unilateral.",
     evidenceLevel: "Nível I - Altamente Recomendado",
     musclesInvolved: ["Quadríceps Femoral", "Glúteo Máximo", "Glúteo Médio", "Adutor Maior"],
+    videoUrl: "https://www.youtube.com/watch?v=2C-uNgKwPLE",
     tags: ["#Unilateral", "#Bulgarian", "#EstabilidadePélvica", "#Halteres", "#Academia"]
   },
   {

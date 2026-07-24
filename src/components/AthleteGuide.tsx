@@ -24,13 +24,17 @@ import {
   Edit3,
   Trash2,
   Copy,
-  Plus
+  Plus,
+  Video,
+  Play,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { IMTPNormativos } from './IMTPNormativos';
 import { ENRICHED_LIBRARY, EnrichedExercise } from '../data/exercises';
 import { toast } from 'react-hot-toast';
 import { ExerciseEditorModal } from './ExerciseEditorModal';
+import { getEmbedVideoInfo } from '../utils';
 
 const GuideCard: FC<{ 
   icon: any, 
@@ -719,8 +723,16 @@ export const AthleteGuide: FC = () => {
                         {item.difficulty && (
                           <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">• {item.difficulty}</span>
                         )}
-                        {item.lateralType && (
-                          <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">• {item.lateralType}</span>
+                        {item.videoUrl ? (
+                          <span className="px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
+                            <Play className="w-2.5 h-2.5 fill-red-400" />
+                            <span>Vídeo HD</span>
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-500 border border-slate-700/50 text-[8px] font-bold uppercase tracking-widest flex items-center gap-1">
+                            <Video className="w-2.5 h-2.5 text-slate-500" />
+                            <span>Sem Vídeo</span>
+                          </span>
                         )}
                       </div>
                       <h4 className="text-sm font-black text-white italic uppercase tracking-tight">{item.name}</h4>
@@ -750,6 +762,114 @@ export const AthleteGuide: FC = () => {
                         className="border-t border-slate-800/80 overflow-hidden"
                       >
                         <div className="p-5 space-y-5 text-xs text-slate-300 bg-[#070c14]/40">
+                          {/* DEMONSTRAÇÃO EM VÍDEO DO EXERCÍCIO */}
+                          {(() => {
+                            const videoInfo = getEmbedVideoInfo(item.videoUrl);
+                            if (videoInfo) {
+                              return (
+                                <div className="space-y-2 bg-[#090e1a] p-4 rounded-2xl border border-red-500/25 shadow-2xl">
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-7 h-7 rounded-lg bg-red-600/20 text-red-400 flex items-center justify-center border border-red-500/30 shrink-0">
+                                        <Video className="w-4 h-4" />
+                                      </div>
+                                      <div>
+                                        <span className="text-[11px] font-black uppercase text-white tracking-wider block">
+                                          Vídeo de Execução Técnica
+                                        </span>
+                                        <span className="text-[9px] font-bold text-slate-400">
+                                          {videoInfo.type === 'youtube' ? 'YouTube HD' : videoInfo.type === 'vimeo' ? 'Vimeo HD' : 'Player de Vídeo'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <a
+                                      href={item.videoUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105"
+                                    >
+                                      <span>Abrir Player Externo</span>
+                                      <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  </div>
+
+                                  <div className="relative aspect-video w-full rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl mt-2">
+                                    {videoInfo.type === "direct" ? (
+                                      <video src={videoInfo.embedUrl!} controls className="w-full h-full object-contain" />
+                                    ) : videoInfo.embedUrl ? (
+                                      <iframe
+                                        src={videoInfo.embedUrl}
+                                        title={`Vídeo: ${item.name}`}
+                                        className="w-full h-full border-0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                      />
+                                    ) : (
+                                      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                                        <Video className="w-8 h-8 text-slate-600 mb-2" />
+                                        <p className="text-xs text-slate-400 mb-3">Não foi possível incorporar este vídeo diretamente.</p>
+                                        <a
+                                          href={item.videoUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-black text-xs rounded-xl transition-all"
+                                        >
+                                          Assistir Vídeo Externo ↗
+                                        </a>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <div className="bg-[#0e1322]/80 p-4 rounded-2xl border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-slate-800/80 text-slate-400 flex items-center justify-center shrink-0 border border-slate-700/60">
+                                      <Video className="w-4 h-4 text-slate-500" />
+                                    </div>
+                                    <div>
+                                      <span className="text-[11px] font-black uppercase text-white tracking-wider block">
+                                        Sem Vídeo de Execução Cadastrado
+                                      </span>
+                                      <p className="text-[9px] text-slate-400 font-medium">
+                                        Consulte o vídeo no YouTube ou adicione o link no cadastro do exercício.
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                                    <a
+                                      href={`https://www.youtube.com/results?search_query=como+fazer+${encodeURIComponent(item.name)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="px-3 py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                                      title="Buscar automaticamente no YouTube como realizar este exercício"
+                                    >
+                                      <Search className="w-3.5 h-3.5" />
+                                      <span>Buscar no YouTube</span>
+                                    </a>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setExerciseToEdit(item);
+                                        setIsEditorOpen(true);
+                                      }}
+                                      className="px-3 py-2 bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary border border-brand-primary/30 text-[9px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                                      title="Adicionar o link de vídeo para este exercício"
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                      <span>Add Link</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            }
+                          })()}
+
                           {/* Biomechanical Metadata Grid */}
                           <div className="grid grid-cols-2 gap-3 bg-[#0d1220]/60 p-4 rounded-2xl border border-slate-800">
                             {item.movementPattern && (

@@ -86,6 +86,7 @@ import { InjuriesView } from "./components/InjuriesView";
 import { MenstrualCycleDashboard } from "./components/MenstrualCycleDashboard";
 import { PosturalAssessmentPremium } from "./components/PosturalAssessmentPremium";
 import { CompetitionsCalendarView } from "./components/CompetitionsCalendarView";
+import { ProfilePhotoOptionsModal } from "./components/ProfilePhotoOptionsModal";
 import toast from "react-hot-toast";
 import { toJpeg } from "html-to-image";
 import ReactMarkdown from "react-markdown";
@@ -137,7 +138,7 @@ import {
   Search,
   Pencil,
   HeartPulse,
-  Timer, Clock, Trophy,
+  Timer, Clock, Trophy, Camera, Upload,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -178,6 +179,45 @@ const safeLocalStorage = {
       console.warn("Storage item removal failed:", e);
     }
   }
+};
+
+const processProfileImageFile = (file: File, callback: (base64: string) => void) => {
+  if (!file.type.startsWith("image/")) {
+    toast.error("Por favor, selecione um arquivo de imagem válido (JPG, PNG, WEBP).");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const MAX_SIZE = 500;
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > MAX_SIZE) {
+          height *= MAX_SIZE / width;
+          width = MAX_SIZE;
+        }
+      } else {
+        if (height > MAX_SIZE) {
+          width *= MAX_SIZE / height;
+          height = MAX_SIZE;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx?.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      callback(dataUrl);
+    };
+    img.onerror = () => {
+      toast.error("Erro ao processar imagem.");
+    };
+    img.src = e.target?.result as string;
+  };
+  reader.readAsDataURL(file);
 };
 
 // Helper for print action safe in iframe sandbox environment
@@ -1015,6 +1055,7 @@ const EliteHubApp: FC<{
     type:
       | "athlete"
       | "edit-athlete"
+      | "profile-photo-options"
       | "wellness"
       | "edit-wellness"
       | "workout"
@@ -1818,19 +1859,30 @@ const EliteHubApp: FC<{
               {selected && (
                 <div className="hidden md:flex flex-col gap-3.5 w-full mt-auto border-t border-slate-800/80 pt-6">
                   {/* Glowing user info widget */}
-                  <div className="flex flex-col gap-3 p-4 bg-[#111625]/60 border border-brand-primary/15 rounded-2xl relative overflow-hidden shadow-2xl">
+                  <div
+                    onClick={() => setModalState({ type: "profile-photo-options", editingData: selected })}
+                    className="flex flex-col gap-3 p-4 bg-[#111625]/60 hover:bg-[#111625] border border-brand-primary/15 hover:border-brand-primary/40 rounded-2xl relative overflow-hidden shadow-2xl cursor-pointer transition-all group"
+                    title="Clique para Editar Foto ou Dados do Perfil"
+                  >
                     <div className="absolute top-0 right-0 w-24 h-24 bg-brand-primary/5 rounded-full blur-xl" />
                     <div className="flex items-center gap-3">
-                      {/* Placeholder generic user figure / "boneco de foto" */}
-                      <div className="w-11 h-11 rounded-xl bg-slate-900 border border-brand-primary/20 shadow-md flex items-center justify-center shrink-0">
-                        <User className="w-5 h-5 text-brand-primary/80" />
+                      {/* Avatar picture */}
+                      <div className="w-11 h-11 rounded-xl bg-slate-900 border border-brand-primary/20 group-hover:border-brand-primary shadow-md flex items-center justify-center shrink-0 overflow-hidden relative transition-colors">
+                        {selected.photoUrl ? (
+                          <img src={selected.photoUrl} alt={selected.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        ) : (
+                          <User className="w-5 h-5 text-brand-primary/80" />
+                        )}
+                        <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                          <Camera className="w-4 h-4 text-brand-primary" />
+                        </div>
                       </div>
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-1">
                           <span className="text-xs font-black text-white uppercase italic tracking-tight truncate max-w-[130px]">
                             {selected.name}
                           </span>
-                          <span className="text-[9px] text-slate-500">▼</span>
+                          <Pencil className="w-2.5 h-2.5 text-brand-primary/70 group-hover:text-brand-primary transition-colors" />
                         </div>
                         <span className="text-[8px] font-black text-brand-primary mt-0.5 uppercase tracking-wider">
                           {selected.modality || "Futebol"}
@@ -2464,16 +2516,38 @@ const EliteHubApp: FC<{
 
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/30 shrink-0 shadow-lg">
-                            <User size={24} className="text-brand-primary" />
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setModalState({ type: "profile-photo-options", editingData: selected })}
+                            className="relative w-14 h-14 rounded-2xl bg-brand-primary/10 border border-brand-primary/30 hover:border-brand-primary flex items-center justify-center shrink-0 shadow-lg overflow-hidden group cursor-pointer transition-all"
+                            title="Clique para Opções do Perfil / Editar Foto"
+                          >
+                            {selected.photoUrl ? (
+                              <img src={selected.photoUrl} alt={selected.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <User size={24} className="text-brand-primary" />
+                            )}
+                            <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <Camera className="w-5 h-5 text-brand-primary" />
+                            </div>
+                          </button>
                           <div className="flex flex-col">
                             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold italic uppercase tracking-tight text-white leading-none">
                               Olá, {selected.name.split(" ")[0]}
                             </h1>
-                            <span className="text-[10px] sm:text-[11px] font-black tracking-widest text-brand-primary uppercase mt-1">
-                              {(selected.modality || "Preparação Física").toUpperCase()} | ELITE COMMAND CENTER
-                            </span>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <span className="text-[10px] sm:text-[11px] font-black tracking-widest text-brand-primary uppercase">
+                                {(selected.modality || "Preparação Física").toUpperCase()} | ELITE COMMAND CENTER
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setModalState({ type: "profile-photo-options", editingData: selected })}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[9px] font-black uppercase text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer shadow-sm"
+                              >
+                                <Pencil className="w-2.5 h-2.5 text-brand-primary" />
+                                <span>Editar Perfil</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
 
@@ -2638,27 +2712,41 @@ const EliteHubApp: FC<{
                         <div className="grid grid-cols-1 md:grid-cols-12 items-stretch overflow-hidden rounded-[2.4rem] min-h-[450px]">
                           <div className="flex flex-col p-6 sm:p-8 md:p-10 md:col-span-12 lg:col-span-12 xl:col-span-12 flex-grow">
                             <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8">
-                              <div className="w-16 h-16 md:w-24 md:h-24 bg-slate-800 rounded-2xl md:rounded-3xl flex items-center justify-center text-brand-primary border border-slate-700 shadow-2xl shrink-0">
-                                <User className="w-8 h-8 md:w-12 md:h-12" />
-                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setModalState({ type: "profile-photo-options", editingData: selected })}
+                                className="relative w-16 h-16 md:w-24 md:h-24 bg-slate-800 rounded-2xl md:rounded-3xl flex items-center justify-center text-brand-primary border border-slate-700 hover:border-brand-primary shadow-2xl shrink-0 overflow-hidden group cursor-pointer transition-all"
+                                title="Clique para Opções do Perfil e Foto"
+                              >
+                                {selected.photoUrl ? (
+                                  <img src={selected.photoUrl} alt={selected.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                ) : (
+                                  <User className="w-8 h-8 md:w-12 md:h-12" />
+                                )}
+                                <div className="absolute inset-0 bg-slate-950/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity">
+                                  <Camera className="w-5 h-5 md:w-6 md:h-6 text-brand-primary" />
+                                  <span className="text-[8px] font-black text-white uppercase tracking-wider hidden md:block">Editar Foto</span>
+                                </div>
+                              </button>
                               <div className="flex-grow min-w-0 w-full">
                                 <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
                                   <h2 className="text-2xl sm:text-3xl md:text-5xl font-black tracking-tight uppercase text-white leading-tight break-words pr-2 sm:pr-4">
                                     {selected.name}
                                   </h2>
                                   {user.role === "coach" && (
-                                    <div className="flex gap-2 shrink-0 mt-2 md:mt-0">
+                                    <div className="flex items-center gap-2 shrink-0 mt-2 md:mt-0">
                                       <button
                                         onClick={() =>
                                           setModalState({
-                                            type: "edit-athlete",
+                                            type: "profile-photo-options",
                                             editingData: selected,
                                           })
                                         }
-                                        className="p-2.5 sm:p-3 bg-slate-800 rounded-xl text-slate-400 hover:bg-brand-primary hover:text-brand-dark transition-all shadow-xl"
-                                        title="Editar Atleta"
+                                        className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-800 hover:bg-brand-primary text-slate-300 hover:text-slate-950 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-xl border border-slate-700 cursor-pointer group"
+                                        title="Opções de Editar Perfil e Foto"
                                       >
-                                        <Dumbbell className="w-4 h-4 sm:w-5 sm:h-5" />
+                                        <Pencil className="w-4 h-4 text-brand-primary group-hover:text-slate-950" />
+                                        <span>Editar Perfil</span>
                                       </button>
                                       <button
                                         onClick={() => {
@@ -3441,6 +3529,32 @@ const EliteHubApp: FC<{
                   }}
                 />
               </div>
+            )}
+
+            {modalState.type === "profile-photo-options" && (
+              <ProfilePhotoOptionsModal
+                isOpen={true}
+                athlete={modalState.editingData || selected}
+                onClose={() => setModalState({ type: null })}
+                onUploadPhoto={(base64) => {
+                  const targetAthlete = modalState.editingData || selected;
+                  if (targetAthlete) {
+                    updateAthlete(targetAthlete.id, { photoUrl: base64 });
+                  }
+                }}
+                onRemovePhoto={() => {
+                  const targetAthlete = modalState.editingData || selected;
+                  if (targetAthlete) {
+                    updateAthlete(targetAthlete.id, { photoUrl: undefined });
+                  }
+                }}
+                onEditProfileData={() => {
+                  setModalState({
+                    type: "edit-athlete",
+                    editingData: modalState.editingData || selected,
+                  });
+                }}
+              />
             )}
 
             {modalState.type === "active-session" && (
@@ -15900,6 +16014,57 @@ const AthleteForm: FC<{
             <h3 className="text-xs font-black uppercase text-slate-500 tracking-[0.2em] mb-4">
               Dados Básicos
             </h3>
+
+            {/* Foto de Perfil */}
+            <div>
+              <label className="text-[11px] font-black text-slate-500 uppercase block mb-3 px-1">
+                Foto de Perfil do Atleta
+              </label>
+              <div className="flex items-center gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden relative">
+                  {formData.photoUrl ? (
+                    <img src={formData.photoUrl} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <User className="w-8 h-8 text-slate-600" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 flex-grow">
+                  <div className="flex items-center gap-2">
+                    <label className="px-4 py-2 bg-brand-primary text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl cursor-pointer hover:bg-brand-primary/90 transition-all flex items-center gap-1.5 shadow-md">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{formData.photoUrl ? "Alterar Foto" : "Carregar Foto"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            processProfileImageFile(file, (base64) => {
+                              update({ photoUrl: base64 });
+                              toast.success("Foto carregada com sucesso!");
+                            });
+                          }
+                        }}
+                      />
+                    </label>
+                    {formData.photoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => update({ photoUrl: undefined })}
+                        className="px-3 py-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all"
+                      >
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[9px] text-slate-500 font-bold">
+                    Suporta JPG, PNG e WEBP. Otimização automática de tamanho.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <Field
               label="Nome Completo Atleta"
               value={formData.name || ""}
