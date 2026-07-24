@@ -13,7 +13,26 @@ export const calculateAge = (dob: string): number => {
   return age;
 };
 
-export const calculateReadiness = (w: Omit<WellnessEntry, 'id' | 'readinessScore' | 'date'>): number => {
+export const calculateSleepHoursFromTimes = (sleepStartTime?: string, wakeUpTime?: string): { hours: number; formatted: string } | null => {
+  if (!sleepStartTime || !wakeUpTime) return null;
+  const [startH, startM] = sleepStartTime.split(':').map(Number);
+  const [wakeH, wakeM] = wakeUpTime.split(':').map(Number);
+  if (isNaN(startH) || isNaN(startM) || isNaN(wakeH) || isNaN(wakeM)) return null;
+  
+  const startMin = startH * 60 + startM;
+  let wakeMin = wakeH * 60 + wakeM;
+  if (wakeMin <= startMin) {
+    wakeMin += 24 * 60; // DORMIR EM UM DIA E ACORDAR NO OUTRO (EX: 23:00 -> 07:00)
+  }
+  const diffMin = wakeMin - startMin;
+  const hours = Number((diffMin / 60).toFixed(2));
+  const h = Math.floor(diffMin / 60);
+  const m = diffMin % 60;
+  const formatted = m > 0 ? `${h}h ${m}m` : `${h}h`;
+  return { hours, formatted };
+};
+
+export const calculateReadiness = (w: Omit<WellnessEntry, 'id' | 'readinessScore' | 'date'> & { isMatchDay?: boolean; emotionalReadiness?: number; psychologicalReadiness?: number }): number => {
   // Escala de 0 a 10. Maior é melhor para: Sono (Qualidade) e Humor. 
   // Menor é melhor para: Fadiga, Estresse, Dor, Carga Cognitiva e Viagem.
   const moodPts = w.mood !== undefined && w.mood !== null ? Number(w.mood) : 10;
@@ -28,8 +47,20 @@ export const calculateReadiness = (w: Omit<WellnessEntry, 'id' | 'readinessScore
   const stressPts = 10 - (w.stress !== undefined && w.stress !== null ? Number(w.stress) : 0);
   const sorenessPts = 10 - (w.soreness !== undefined && w.soreness !== null ? Number(w.soreness) : 0);
   
+  const basePts = [moodPts, sleepPts, cognitivePts, fatiguePts, stressPts, sorenessPts];
+
+  // Em Dias de Jogo, inclua a Prontidão Emocional e Psicológica na composição do score
+  if (w.isMatchDay) {
+    if (w.emotionalReadiness !== undefined && w.emotionalReadiness !== null) {
+      basePts.push(Number(w.emotionalReadiness));
+    }
+    if (w.psychologicalReadiness !== undefined && w.psychologicalReadiness !== null) {
+      basePts.push(Number(w.psychologicalReadiness));
+    }
+  }
+
   // Média dos pontos (0 a 10)
-  const total = (moodPts + sleepPts + cognitivePts + fatiguePts + stressPts + sorenessPts) / 6;
+  const total = basePts.reduce((sum, p) => sum + p, 0) / basePts.length;
   
   // Transformar em 0-100%
   let score = total * 10;

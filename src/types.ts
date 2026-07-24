@@ -71,6 +71,13 @@ export interface WellnessEntry {
   menstrualSymptoms?: string[];
   hrv?: number;
   sleepHoursFormatted?: string;
+  sleepStartTime?: string;      // e.g. "23:00"
+  wakeUpTime?: string;          // e.g. "07:00"
+  calculatedSleepHours?: number; // e.g. 8.0
+  isMatchDay?: boolean;
+  emotionalReadiness?: number;  // 0-10
+  psychologicalReadiness?: number; // 0-10
+  psychologyNotes?: string;     // Parecer da Psicologia Esportiva
 }
 
 export interface ExternalSession {

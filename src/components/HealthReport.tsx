@@ -220,9 +220,24 @@ export const HealthReport: React.FC<HealthReportProps> = ({ athlete, onClose }) 
                   <div>
                     <span className="text-[7.5px] font-black text-slate-400 block uppercase mb-0.5">Sintomas Detalhados</span>
                     <p className="text-[11px] text-slate-600 font-bold leading-normal italic">
-                      "Estresse de <strong className="text-slate-900">{lastWellness.stress || 2}/5</strong>, dor tardia de <strong className="text-slate-900">{lastWellness.soreness || 2}/5</strong> e sono restaurador de <strong className="text-slate-900">{lastWellness.sleep || 8} horas</strong>."
+                      "Estresse de <strong className="text-slate-900">{lastWellness.stress || 2}/10</strong>, dor tardia de <strong className="text-slate-900">{lastWellness.soreness || 2}/10</strong> e sono de <strong className="text-slate-900">{lastWellness.sleepHoursFormatted || lastWellness.sleep + 'h'}</strong>
+                      {lastWellness.sleepStartTime && lastWellness.wakeUpTime ? ` (${lastWellness.sleepStartTime} ➔ ${lastWellness.wakeUpTime})` : ''}."
                     </p>
                   </div>
+                  {lastWellness.isMatchDay && (
+                    <div className="bg-amber-50 p-2.5 rounded-lg border border-amber-200 text-left space-y-1">
+                      <span className="text-[8px] font-black text-amber-700 uppercase tracking-wider block">🏆 DIA DE JOGO / COMPETIÇÃO</span>
+                      <div className="flex gap-3 text-[9.5px] font-bold text-slate-800">
+                        <span>Emocional: <strong className="text-amber-600">{lastWellness.emotionalReadiness ?? '--'}/10</strong></span>
+                        <span>Psicológica: <strong className="text-indigo-600">{lastWellness.psychologicalReadiness ?? '--'}/10</strong></span>
+                      </div>
+                      {lastWellness.psychologyNotes && (
+                        <p className="text-[9.5px] text-slate-700 italic border-l-2 border-amber-400 pl-2 mt-1">
+                          "{lastWellness.psychologyNotes}"
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {lastWellness.menstrualPhase && lastWellness.menstrualPhase !== 'Nenhuma' && (
                     <div className="bg-rose-50/50 p-2.5 rounded-lg border border-rose-100">
                       <span className="text-[7px] font-black text-rose-600 block uppercase mb-0.5">Fase Hormonal do Ciclo</span>

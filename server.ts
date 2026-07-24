@@ -198,6 +198,22 @@ async function ensureColumns() {
     // Users
     await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT \'free\'').catch(() => {});
 
+    // Wellness
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS readiness_score INTEGER').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS travel_fatigue INTEGER').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS sleep_quality INTEGER').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS menstrual_phase TEXT').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS menstrual_symptoms JSONB').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS hrv REAL').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS sleep_hours_formatted TEXT').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS sleep_start_time TEXT').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS wake_up_time TEXT').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS calculated_sleep_hours REAL').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS is_match_day BOOLEAN').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS emotional_readiness INTEGER').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS psychological_readiness INTEGER').catch(() => {});
+    await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS psychology_notes TEXT').catch(() => {});
+
     // Athletes
     await client.query('ALTER TABLE athletes DROP CONSTRAINT IF EXISTS athletes_competitive_level_check').catch(() => {});
     await client.query('ALTER TABLE athletes ADD COLUMN IF NOT EXISTS is_tournament_mode BOOLEAN DEFAULT FALSE').catch(() => {});
@@ -729,7 +745,14 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
           ? JSON.parse(w.menstrual_symptoms)
           : [],
         hrv: w.hrv,
-        sleepHoursFormatted: w.sleep_hours_formatted
+        sleepHoursFormatted: w.sleep_hours_formatted,
+        sleepStartTime: w.sleep_start_time || w.sleepStartTime,
+        wakeUpTime: w.wake_up_time || w.wakeUpTime,
+        calculatedSleepHours: w.calculated_sleep_hours ?? w.calculatedSleepHours,
+        isMatchDay: w.is_match_day ?? w.isMatchDay ?? false,
+        emotionalReadiness: w.emotional_readiness ?? w.emotionalReadiness,
+        psychologicalReadiness: w.psychological_readiness ?? w.psychologicalReadiness,
+        psychologyNotes: w.psychology_notes || w.psychologyNotes
       })),
       externalSessions: (externalByAth[a.id] || []).map((es: any) => ({
         ...es,
@@ -949,7 +972,10 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
                    'injuries', 'training_days', 'is_tournament_mode',
                    'periodization_start', 'periodization_end', 'weekly_frequency',
                    'pain_level', 'rest', 'notes',
-                   'ai_details', 'observations', 'cognitive_load', 'travel_fatigue', 'sleep_quality'
+                   'ai_details', 'observations', 'cognitive_load', 'travel_fatigue', 'sleep_quality',
+                   'sleep_start_time', 'wake_up_time', 'calculated_sleep_hours', 'is_match_day',
+                   'emotional_readiness', 'psychological_readiness', 'psychology_notes',
+                   'menstrual_phase', 'menstrual_symptoms', 'hrv', 'sleep_hours_formatted'
                  ];
                  let removed = false;
                  for (const col of commonMissingCols) {
@@ -1030,7 +1056,14 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
                 menstrual_phase: w.menstrualPhase || 'Nenhuma',
                 menstrual_symptoms: w.menstrualSymptoms || [],
                 hrv: w.hrv ?? null,
-                sleep_hours_formatted: w.sleepHoursFormatted || null
+                sleep_hours_formatted: w.sleepHoursFormatted || null,
+                sleep_start_time: w.sleepStartTime || null,
+                wake_up_time: w.wakeUpTime || null,
+                calculated_sleep_hours: w.calculatedSleepHours ?? null,
+                is_match_day: w.isMatchDay ?? false,
+                emotional_readiness: w.emotionalReadiness ?? null,
+                psychological_readiness: w.psychologicalReadiness ?? null,
+                psychology_notes: w.psychologyNotes || null
              })));
              if (upErr) throw upErr;
            }
@@ -1406,7 +1439,7 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
       for (const w of (athlete.wellness || [])) {
         if (!w.id) w.id = `wl-${Date.now()}-${Math.random()}`;
         await client.query(
-          'INSERT INTO wellness (id, athlete_id, date, fatigue, sleep, stress, soreness, mood, cognitive_load, readiness_score, travel_fatigue, sleep_quality, menstrual_phase, menstrual_symptoms, hrv, sleep_hours_formatted) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) ON CONFLICT (id) DO UPDATE SET date = $3, fatigue = $4, sleep = $5, stress = $6, soreness = $7, mood = $8, cognitive_load = $9, readiness_score = $10, travel_fatigue = $11, sleep_quality = $12, menstrual_phase = $13, menstrual_symptoms = $14, hrv = $15, sleep_hours_formatted = $16',
+          'INSERT INTO wellness (id, athlete_id, date, fatigue, sleep, stress, soreness, mood, cognitive_load, readiness_score, travel_fatigue, sleep_quality, menstrual_phase, menstrual_symptoms, hrv, sleep_hours_formatted, sleep_start_time, wake_up_time, calculated_sleep_hours, is_match_day, emotional_readiness, psychological_readiness, psychology_notes) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23) ON CONFLICT (id) DO UPDATE SET date = $3, fatigue = $4, sleep = $5, stress = $6, soreness = $7, mood = $8, cognitive_load = $9, readiness_score = $10, travel_fatigue = $11, sleep_quality = $12, menstrual_phase = $13, menstrual_symptoms = $14, hrv = $15, sleep_hours_formatted = $16, sleep_start_time = $17, wake_up_time = $18, calculated_sleep_hours = $19, is_match_day = $20, emotional_readiness = $21, psychological_readiness = $22, psychology_notes = $23',
           [
             w.id,
             athlete.id,
@@ -1423,7 +1456,14 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
             w.menstrualPhase || 'Nenhuma',
             w.menstrualSymptoms ? JSON.stringify(w.menstrualSymptoms) : '[]',
             w.hrv ?? null,
-            w.sleepHoursFormatted || null
+            w.sleepHoursFormatted || null,
+            w.sleepStartTime || null,
+            w.wakeUpTime || null,
+            w.calculatedSleepHours ?? null,
+            w.isMatchDay ?? false,
+            w.emotionalReadiness ?? null,
+            w.psychologicalReadiness ?? null,
+            w.psychologyNotes || null
           ]
         );
       }
@@ -2712,6 +2752,13 @@ async function runSetup(retries = 1) {
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS menstrual_symptoms JSONB;`).catch(() => {});
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS hrv REAL;`).catch(() => {});
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS sleep_hours_formatted TEXT;`).catch(() => {});
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS sleep_start_time TEXT;`).catch(() => {});
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS wake_up_time TEXT;`).catch(() => {});
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS calculated_sleep_hours REAL;`).catch(() => {});
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS is_match_day BOOLEAN;`).catch(() => {});
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS emotional_readiness INTEGER;`).catch(() => {});
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS psychological_readiness INTEGER;`).catch(() => {});
+    await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS psychology_notes TEXT;`).catch(() => {});
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`);
 
     await client.query(`CREATE TABLE IF NOT EXISTS workouts (
