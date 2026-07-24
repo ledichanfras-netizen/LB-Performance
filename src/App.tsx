@@ -2770,7 +2770,7 @@ const EliteHubApp: FC<{
 
                     {activeTab === "premium" && <PremiumHub />}
 
-                    {activeTab === "info" && <AthleteGuide />}
+                    {(activeTab as string) === "info" && <AthleteGuide />}
 
                     {activeTab === "ai-modeling" && selected && (
                       <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
