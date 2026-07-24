@@ -122,6 +122,56 @@ const ensureImtpAndMigrate = (a: any): Athlete => {
   };
 };
 
+const getPendingSyncIds = (): string[] => {
+  try {
+    const raw = localStorage.getItem('lb_pending_sync_athlete_ids');
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+const addPendingSyncId = (id: string) => {
+  try {
+    const ids = getPendingSyncIds();
+    if (!ids.includes(id)) {
+      localStorage.setItem('lb_pending_sync_athlete_ids', JSON.stringify([...ids, id]));
+    }
+  } catch (e) {}
+};
+
+const removePendingSyncId = (id: string) => {
+  try {
+    const ids = getPendingSyncIds();
+    localStorage.setItem('lb_pending_sync_athlete_ids', JSON.stringify(ids.filter(x => x !== id)));
+  } catch (e) {}
+};
+
+const getPendingDeleteIds = (): string[] => {
+  try {
+    const raw = localStorage.getItem('lb_pending_delete_athlete_ids');
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+const addPendingDeleteId = (id: string) => {
+  try {
+    const ids = getPendingDeleteIds();
+    if (!ids.includes(id)) {
+      localStorage.setItem('lb_pending_delete_athlete_ids', JSON.stringify([...ids, id]));
+    }
+  } catch (e) {}
+};
+
+const removePendingDeleteId = (id: string) => {
+  try {
+    const ids = getPendingDeleteIds();
+    localStorage.setItem('lb_pending_delete_athlete_ids', JSON.stringify(ids.filter(x => x !== id)));
+  } catch (e) {}
+};
+
 export const useAthletes = (token?: string | null) => {
   const [rawAthletes, setRawAthletes] = useState<Athlete[]>(() => {
     // Lazy initialization from cache for instant load
@@ -172,6 +222,8 @@ export const useAthletes = (token?: string | null) => {
   const syncingRef = useRef(false);
   const lastSyncTimeRef = useRef<number>(Date.now());
   const athletesRef = useRef<Athlete[]>(athletes);
+  const lastSyncRequestTimeRef = useRef<number>(0);
+  const lastSaveTimeRef = useRef<number>(0);
 
   // Keep references updated on every render
   useEffect(() => {
@@ -307,7 +359,73 @@ export const useAthletes = (token?: string | null) => {
 
   const syncData = async (isSilent = false) => {
     if (!isSilent) setLoading(true);
+    const startTime = Date.now();
+    lastSyncRequestTimeRef.current = startTime;
+
     try {
+      // 1. Handle pending local modifications first
+      if (navigator.onLine) {
+        // A. Handle pending athlete deletions
+        const pendingDeleteIds = getPendingDeleteIds();
+        if (pendingDeleteIds.length > 0) {
+          console.log(`[Sync] Detectados ${pendingDeleteIds.length} atletas pendentes de exclusão. Sincronizando...`);
+          try {
+            for (const id of pendingDeleteIds) {
+              if (token) {
+                await fetch(`/api/atletas/${id}`, {
+                  method: 'DELETE',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+              } else {
+                await supabaseService.deleteAthlete(id);
+              }
+              removePendingDeleteId(id);
+            }
+          } catch (e) {
+            console.warn("[Sync] Falha ao sincronizar exclusões pendentes:", e);
+          }
+        }
+
+        // B. Handle pending athlete modifications/updates
+        const pendingSyncIds = getPendingSyncIds();
+        if (pendingSyncIds.length > 0) {
+          console.log(`[Sync] Detectados ${pendingSyncIds.length} atletas com sincronização pendente. Sincronizando...`);
+          if (!isSilent) {
+            toast.loading("Enviando alterações locais pendentes...", { id: "pending-sync-toast" });
+          }
+          try {
+            for (const id of pendingSyncIds) {
+              const athlete = athletesRef.current.find(a => a.id === id);
+              if (athlete) {
+                await api.saveAthlete(athlete);
+                removePendingSyncId(id);
+              }
+            }
+            if (!isSilent) {
+              toast.success("Alterações pendentes sincronizadas com sucesso!", { id: "pending-sync-toast" });
+            }
+          } catch (e) {
+            console.warn("[Sync] Falha ao salvar alterações pendentes no banco:", e);
+            if (!isSilent) {
+              toast.error("Erro ao enviar alterações pendentes. Sincronização interrompida para proteger seus dados locais.", { id: "pending-sync-toast" });
+            }
+            // Skip loading/downloading to prevent overwriting user's offline changes with old server state
+            if (!isSilent) setLoading(false);
+            return;
+          }
+        }
+      } else {
+        // If totally offline and user pressed Sincronizar manually
+        const pendingSyncIds = getPendingSyncIds();
+        if (pendingSyncIds.length > 0 && !isSilent) {
+          toast.error("Você está offline. Suas alterações locais estão seguras e serão enviadas automaticamente assim que houver conexão.", { id: "pending-sync-toast", duration: 5000 });
+          setLoading(false);
+          return;
+        }
+      }
+
       if (!isSupabaseConfigured && !token) {
         console.log('[Sync] Banco/Supabase não configurado e sem token. Utilizando apenas cache local/armazenamento offline.');
         const cached = safeLocalStorage.getItem('lb_athletes_cache');
@@ -324,6 +442,19 @@ export const useAthletes = (token?: string | null) => {
 
       console.log('Buscando atletas do banco de forma resiliente...');
       const data = await api.loadAthletes();
+
+      // Race condition check: If a save operation occurred after we started fetching, do not apply
+      if (lastSaveTimeRef.current > startTime) {
+        console.warn(`[Sync] Descartando resultado do carregamento pois dados locais foram modificados no meio da sincronização.`);
+        return;
+      }
+
+      // Race condition check: If a newer sync has started, do not apply this one
+      if (lastSyncRequestTimeRef.current !== startTime) {
+        console.warn(`[Sync] Descartando resultado do carregamento pois uma nova sincronização foi iniciada.`);
+        return;
+      }
+
       if (data) {
         // Extract meta custom library if present
         const metaRow = data.find(a => a.id === 'meta-custom-library-exercises');
@@ -376,8 +507,11 @@ export const useAthletes = (token?: string | null) => {
       if (isIframeErr) {
         setIframeCookieWarning(true);
         console.warn('Falha ao sincronizar com Banco de Dados (Cookies bloqueados no iframe):', err.message);
-      } else if (isNetworkError(err)) {
+      } else if (isNetworkError(err) || !navigator.onLine) {
         console.warn('Falha ao sincronizar com Banco de Dados devido a erro de rede:', err.message || err);
+        if (!isSilent) {
+          toast.error("Você está offline ou com conexão instável. Utilizando dados locais salvos com segurança.", { id: "supabase-offline-toast" });
+        }
       } else {
         console.error('Falha ao sincronizar com Banco de Dados:', err);
       }
@@ -402,7 +536,7 @@ export const useAthletes = (token?: string | null) => {
       if (!isSilent) {
         if (!hasLocalCache) {
           toast.error('Banco de dados inacessível. Usando modo de segurança offline.', { id: 'supabase-offline-toast' });
-        } else {
+        } else if (!isSilent && !isNetworkError(err) && navigator.onLine) {
           console.warn('Conexão instável com o banco de dados. Utilizando dados locais/offline de forma transparente.');
         }
       }
@@ -543,8 +677,22 @@ export const useAthletes = (token?: string | null) => {
   }, [token]);
 
   const save = async (newAthletes: Athlete[], specificAthleteId?: string) => {
+    // Record current save operation timestamp
+    lastSaveTimeRef.current = Date.now();
+
     // Immediate local cache update for maximum responsiveness
     safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(newAthletes));
+
+    // Register pending sync for modified athlete(s)
+    if (specificAthleteId) {
+      addPendingSyncId(specificAthleteId);
+    } else {
+      newAthletes.forEach(a => {
+        if (!a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises') {
+          addPendingSyncId(a.id);
+        }
+      });
+    }
     
     console.log("Iniciando sincronização em segundo plano...");
     setSyncing(true);
@@ -554,11 +702,14 @@ export const useAthletes = (token?: string | null) => {
         if (athlete) {
           // Optimized: save only the relevant athlete
           await api.saveAthlete(athlete);
+          removePendingSyncId(specificAthleteId);
         } else {
           await api.saveAthletes(newAthletes);
+          newAthletes.forEach(a => removePendingSyncId(a.id));
         }
       } else {
         await api.saveAthletes(newAthletes);
+        newAthletes.forEach(a => removePendingSyncId(a.id));
       }
       setLastSyncedAt(new Date());
       try {
@@ -655,7 +806,9 @@ export const useAthletes = (token?: string | null) => {
       toast.success("Check-in removido!");
     } catch (e) {
       logError("Erro ao deletar wellness:", e);
-      toast.error("Erro ao sincronizar exclusão.");
+      addPendingSyncId(athleteId);
+      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
+      toast.success("Check-in removido localmente (será sincronizado em background).");
     } finally {
       setSyncing(false);
     }
@@ -717,7 +870,9 @@ export const useAthletes = (token?: string | null) => {
       toast.success("Treino removido!");
     } catch (e) {
       logError("Erro ao deletar treino:", e);
-      toast.error("Erro ao sincronizar exclusão.");
+      addPendingSyncId(athleteId);
+      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
+      toast.success("Treino removido localmente (será sincronizado em background).");
     } finally {
       setSyncing(false);
     }
@@ -813,7 +968,9 @@ export const useAthletes = (token?: string | null) => {
       toast.success(`Avaliação removida!`);
     } catch (e) {
       logError("Erro ao deletar avaliação:", e);
-      toast.error("Erro ao sincronizar exclusão.");
+      addPendingSyncId(athleteId);
+      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updatedAthletes));
+      toast.success(`Avaliação removida localmente (será sincronizada em background).`);
     } finally {
       setSyncing(false);
     }
@@ -851,10 +1008,13 @@ export const useAthletes = (token?: string | null) => {
         await supabaseService.deleteAthlete(athleteId);
       }
       setAthletes(prev => prev.filter(a => a.id !== athleteId));
+      removePendingDeleteId(athleteId);
       toast.success("Atleta removido com sucesso!");
     } catch (e) {
       logError("Delete Athlete Error:", e);
-      toast.error("Erro de conexão ao remover atleta.");
+      addPendingDeleteId(athleteId);
+      setAthletes(prev => prev.filter(a => a.id !== athleteId));
+      toast.success("Atleta removido localmente (será sincronizado em background).");
     } finally {
       setSyncing(false);
     }
@@ -1279,7 +1439,7 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updated);
-    await save(updated);
+    await save(updated, athleteId);
     toast.success("Treino de quadra registrado!");
   };
 
@@ -1334,7 +1494,9 @@ export const useAthletes = (token?: string | null) => {
       toast.success("Sessão removida!");
     } catch (e) {
       logError("Erro ao deletar sessão:", e);
-      toast.error("Erro ao sincronizar exclusão.");
+      addPendingSyncId(athleteId);
+      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
+      toast.success("Sessão removida localmente (será sincronizada em background).");
     } finally {
       setSyncing(false);
     }
