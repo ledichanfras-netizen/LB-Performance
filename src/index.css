@@ -64,7 +64,80 @@
   }
 }
 
-/* PWA App Feel */
+/* Light Mode Theme Overrides */
+html.light-theme, body.light-theme {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+body.light-theme aside {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.light-theme .premium-card,
+body.light-theme .glass-card,
+body.light-theme .cartao-de-vidro {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05) !important;
+  color: #0f172a !important;
+}
+
+body.light-theme .glass-header {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.light-theme select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+body.light-theme .bg-slate-900,
+body.light-theme .bg-slate-900\/60,
+body.light-theme .bg-slate-900\/80,
+body.light-theme .bg-slate-900\/90,
+body.light-theme .bg-slate-950,
+body.light-theme .bg-slate-950\/80,
+body.light-theme .bg-slate-950\/60,
+body.light-theme .bg-\[\#020617\],
+body.light-theme .bg-\[\#070b14\],
+body.light-theme .bg-\[\#0B0F19\],
+body.light-theme .bg-\[\#0A0D16\],
+body.light-theme .bg-brand-dark {
+  background-color: #ffffff !important;
+}
+
+body.light-theme .border-slate-800,
+body.light-theme .border-slate-800\/60,
+body.light-theme .border-slate-800\/40,
+body.light-theme .border-slate-800\/80,
+body.light-theme .border-slate-850\/90 {
+  border-color: #e2e8f0 !important;
+}
+
+body.light-theme .text-slate-400,
+body.light-theme .text-slate-500 {
+  color: #475569 !important;
+}
+
+body.light-theme .text-slate-300 {
+  color: #334155 !important;
+}
+
+body.light-theme .text-white {
+  color: #0f172a !important;
+}
+
+body.light-theme input,
+body.light-theme select,
+body.light-theme textarea {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
 html, body {
   overscroll-behavior-y: contain;
   -webkit-tap-highlight-color: transparent;

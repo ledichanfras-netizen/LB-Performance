@@ -24,6 +24,7 @@ import { Athlete, InjuryEntry } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { formatDate, getSafeDateTime, getLocalDateString } from "../utils";
 import { HealthReport } from "./HealthReport";
+import { InteractiveBodyMap } from "./InteractiveBodyMap";
 
 interface InjuriesViewProps {
   athlete: Athlete;
@@ -38,6 +39,7 @@ export const InjuriesView: FC<InjuriesViewProps> = ({
 }) => {
   const injuries = useMemo(() => athlete.injuries || [], [athlete.injuries]);
 
+  const [activeSubTab, setActiveSubTab] = useState<"body-map" | "occurrences" | "report">("body-map");
   const [showHealthReport, setShowHealthReport] = useState(false);
 
   // Form State
@@ -240,7 +242,55 @@ export const InjuriesView: FC<InjuriesViewProps> = ({
         </div>
       </div>
 
-      {/* 2. ACTIONS FOR COACH: ADD INJURY ENTRY */}
+      {/* DM SUB-TABS NAVIGATION */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/80 p-2 rounded-2xl border border-slate-800">
+        <div className="flex items-center gap-2 overflow-x-auto p-1">
+          <button
+            onClick={() => setActiveSubTab("body-map")}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+              activeSubTab === "body-map"
+                ? "bg-brand-primary text-slate-950 shadow-lg shadow-brand-primary/20"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Activity className="w-4 h-4" />
+            Mapa Corporal Interativo (Dores 0-10)
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab("occurrences")}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+              activeSubTab === "occurrences"
+                ? "bg-brand-primary text-slate-950 shadow-lg shadow-brand-primary/20"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <ClipboardList className="w-4 h-4" />
+            Ocorrências / Ficha Clínica ({injuries.length})
+          </button>
+        </div>
+
+        <button
+          onClick={() => setShowHealthReport(true)}
+          className="flex items-center gap-2 px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all text-slate-300 bg-slate-950 hover:bg-slate-800 border border-slate-800 shrink-0"
+        >
+          <FileText className="w-4 h-4 text-emerald-400" />
+          Relatório Fisiopatológico
+        </button>
+      </div>
+
+      {/* RENDER ACTIVE SUBTAB CONTENT */}
+      {activeSubTab === "body-map" && (
+        <InteractiveBodyMap
+          athlete={athlete}
+          onUpdateAthlete={onUpdateAthlete}
+          role={role}
+        />
+      )}
+
+      {activeSubTab === "occurrences" && (
+        <>
+          {/* 2. ACTIONS FOR COACH: ADD INJURY ENTRY */}
       {role === "coach" && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
@@ -967,6 +1017,8 @@ export const InjuriesView: FC<InjuriesViewProps> = ({
           </div>
         )}
       </AnimatePresence>
+        </>
+      )}
 
     </div>
   );

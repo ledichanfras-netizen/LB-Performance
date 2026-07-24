@@ -6,16 +6,94 @@ export interface UserWithPlan {
   plan?: 'free' | 'pro';
 }
 
+export type SideOption = 'Direito' | 'Esquerdo' | 'Bilateral';
+export type PainTypeOption = 'Muscular' | 'Articular' | 'Tendão' | 'Ligamento' | 'Trauma' | 'Dor Tardia (DOMS)';
+export type EvolutionStatusOption = 'Iniciou' | 'Aumentou' | 'Melhorou' | 'Resolvido';
+
+export interface BodyMapRecord {
+  id: string;
+  date: string;
+  regionId: string;
+  regionName: string;
+  side: SideOption;
+  painLevel: number; // 0-10
+  painType: PainTypeOption;
+  evolution: EvolutionStatusOption;
+  startDate?: string;
+  notes?: string;
+  recordedBy?: 'atleta' | 'coach' | 'fisioterapeuta';
+}
+
 export interface InjuryEntry {
   id: string;
   date: string;
   description: string;
   status: 'Ativa' | 'Recuperada' | 'Observação';
   notes?: string;
-  location?: 'Joelho' | 'Tornozelo' | 'Coxa Posterior' | 'Coxa Anterior' | 'Panturrilha' | 'Coluna/Lombar' | 'Ombro' | 'Pé/Articulação' | 'Outro';
+  location?: 'Joelho' | 'Tornozelo' | 'Coxa Posterior' | 'Coxa Anterior' | 'Panturrilha' | 'Coluna/Lombar' | 'Ombro' | 'Pé/Articulação' | 'Outro' | string;
   severity?: 'Leve' | 'Moderada' | 'Grave' | 'Cirúrgica';
   estimatedReturnDate?: string;
   rehabStage?: 'Fisioterapia' | 'Transição Física' | 'Treino Assistido' | 'Retorno Pleno';
+  side?: SideOption;
+  painLevel?: number;
+  painType?: PainTypeOption;
+  evolution?: EvolutionStatusOption;
+  startDate?: string;
+  regionId?: string;
+}
+
+export type SportOption = 'Futebol' | 'Vôlei' | 'Basquete' | 'Tênis' | 'Corrida / Atletismo' | 'Ciclismo' | 'Natação' | 'Triatlo' | 'Handebol' | 'Outro';
+export type MatchTypeOption = 'Jogo / Partida' | 'Prova / Corrida' | 'Torneio / Etapa' | 'Amistoso' | 'Treino Tático / Simulado';
+export type MatchPriorityOption = 'A' | 'B' | 'C'; // A = Alvo Principal, B = Preparatória, C = Secundária
+export type MatchResultOption = 'Vitória' | 'Derrota' | 'Empate' | 'Concluído' | 'Pódio' | 'DNF' | 'Pendente';
+
+export interface SportSpecificData {
+  // Coleta de Modalidades de Coletivo / Quadra (Futebol, Vôlei, Basquete, Handebol)
+  minutesPlayed?: number;
+  goalsScored?: number;
+  assists?: number;
+  setsPlayed?: number;
+  pointsScored?: number;
+  
+  // Coleta de Modalidades Endurance / Individuais (Corrida, Ciclismo, Natação, Tênis)
+  distanceKm?: number;
+  paceAvg?: string; // e.g. "4:15 min/km"
+  elevationGainMeters?: number;
+  rankPosition?: string; // e.g. "3º Geral", "1º Categoria"
+  gamesWon?: number;
+  firstServePct?: number;
+}
+
+export interface MatchEvent {
+  id: string;
+  athleteId: string;
+  title: string;
+  sport: SportOption;
+  type: MatchTypeOption;
+  date: string; // YYYY-MM-DD
+  time?: string; // HH:MM
+  opponentOrEventName?: string;
+  location?: string;
+  venueType: 'Casa' | 'Fora' | 'Neutro';
+  priority: MatchPriorityOption;
+  status: 'Agendado' | 'Concluído' | 'Cancelado';
+  
+  // Coleta Pré-Jogo / Pré-Prova
+  preGameTargetReadiness?: number; // e.g. 80
+  preGameReadinessScore?: number; // Real collected on match day
+  preGameCheckinDone?: boolean;
+  preGameNotes?: string;
+
+  // Coleta Pós-Jogo / Pós-Prova
+  result?: MatchResultOption;
+  scoreOrTime?: string; // e.g. "3x1", "2h45min", "6-3 / 6-4"
+  durationMinutes?: number;
+  postRpe?: number; // 0-10 (PSE Pós)
+  postLoad?: number; // duration * RPE
+  sorenessPost?: number; // 1-5
+  travelFatiguePost?: number; // 1-5
+  sportSpecificData?: SportSpecificData;
+  postGameNotes?: string;
 }
 
 export interface Athlete {
@@ -25,6 +103,8 @@ export interface Athlete {
   gender: 'M' | 'F';
   injuryHistory: string; // Maintain for backward compatibility/summary
   injuries?: InjuryEntry[]; 
+  bodyMapRecords?: BodyMapRecord[];
+  matches?: MatchEvent[];
   periodizationStart?: string; 
   periodizationEnd?: string;
   trainingDays?: number[]; // [0, 1, 2, 3, 4, 5, 6] for Sun-Sat

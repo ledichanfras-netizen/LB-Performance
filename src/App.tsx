@@ -85,6 +85,7 @@ import { ENRICHED_LIBRARY } from "./data/exercises";
 import { InjuriesView } from "./components/InjuriesView";
 import { MenstrualCycleDashboard } from "./components/MenstrualCycleDashboard";
 import { PosturalAssessmentPremium } from "./components/PosturalAssessmentPremium";
+import { CompetitionsCalendarView } from "./components/CompetitionsCalendarView";
 import toast from "react-hot-toast";
 import { toJpeg } from "html-to-image";
 import ReactMarkdown from "react-markdown";
@@ -128,13 +129,15 @@ import {
   Zap,
   Trash2,
   LogOut,
+  Sun,
+  Moon,
   Settings,
   RefreshCw,
   BookOpen,
   Search,
   Pencil,
   HeartPulse,
-  Moon, Timer, Clock,
+  Timer, Clock, Trophy,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -605,6 +608,28 @@ const EliteHubApp: FC<{
     setActiveTab("dash");
     toast.success("Sessão encerrada.");
   };
+
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    return (safeLocalStorage.getItem("lb_theme") as "dark" | "light") || "dark";
+  });
+
+  useEffect(() => {
+    safeLocalStorage.setItem("lb_theme", theme);
+    if (theme === "light") {
+      document.documentElement.classList.add("light-theme");
+      document.body.classList.add("light-theme");
+    } else {
+      document.documentElement.classList.remove("light-theme");
+      document.body.classList.remove("light-theme");
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    toast.success(`Tema ${next === "light" ? "Claro" : "Escuro"} ativado`);
+  };
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dashboardFilter, setDashboardFilter] = useState<
     "all" | "elite" | "low-readiness" | "scheduled-today"
@@ -709,7 +734,7 @@ const EliteHubApp: FC<{
   }, [athletes, selectedId, dashboardFilter]);
 
   const [activeTab, setActiveTab] = useState<
-    "dash" | "training" | "assessment" | "ai-modeling" | "premium" | "info" | "injuries"
+    "dash" | "training" | "assessment" | "ai-modeling" | "premium" | "info" | "injuries" | "competitions"
   >("dash");
   const [dashboardSubTab, setDashboardSubTab] = useState<"pro" | "classic" | "elite-monitoring">("pro");
   const [aiInsight, setAiInsight] = useState<string | null>(null);
@@ -1445,6 +1470,22 @@ const EliteHubApp: FC<{
                 <span>DM E SAÚDE</span>
               </button>
 
+              {/* COMPETIÇÕES item */}
+              <button
+                onClick={() => {
+                  setActiveTab("competitions");
+                  setAiModelingResult(null);
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black ${
+                  activeTab === "competitions"
+                    ? "bg-[#10b981] text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)] scale-102"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Trophy className="w-4 h-4 shrink-0" />
+                <span>COMPETIÇÕES</span>
+              </button>
+
               {/* 7. MODELAGEM item */}
               <button
                 onClick={() => {
@@ -1476,7 +1517,16 @@ const EliteHubApp: FC<{
                 <span>GUIA</span>
               </button>
 
-              {/* 9. SAIR item */}
+              {/* 9. TEMA item */}
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black text-amber-400 bg-slate-900/60 border border-slate-800 cursor-pointer"
+              >
+                {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400 shrink-0" /> : <Moon className="w-4 h-4 text-indigo-400 shrink-0" />}
+                <span>{theme === "dark" ? "TEMA CLARO" : "TEMA ESCURO"}</span>
+              </button>
+
+              {/* 10. SAIR item */}
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black text-rose-400 hover:bg-rose-500/10 cursor-pointer"
@@ -1491,19 +1541,29 @@ const EliteHubApp: FC<{
           <aside className="hidden md:flex md:flex-col md:relative md:bottom-auto left-0 md:w-80 md:h-screen bg-[#0B0F19]/95 border-r border-slate-800/60 p-6 z-[1000] justify-between items-stretch">
             <div className="flex flex-col items-stretch justify-start w-full gap-4 px-0">
               
-              {/* Premium Performance Pro Logo Bracket */}
-              <div className="hidden md:flex items-center gap-3.5 mb-10 mt-2 px-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-emerald-600 flex items-center justify-center text-slate-950 font-black text-2xl italic shadow-[0_0_20px_rgba(16,185,129,0.25)] border border-emerald-300/20 shrink-0">
-                  P
+              {/* Premium Performance Pro Logo Bracket & Theme Toggle */}
+              <div className="hidden md:flex items-center justify-between mb-10 mt-2 px-2">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-emerald-600 flex items-center justify-center text-slate-950 font-black text-2xl italic shadow-[0_0_20px_rgba(16,185,129,0.25)] border border-emerald-300/20 shrink-0">
+                    P
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-extrabold text-xs tracking-[0.14em] uppercase text-white/90 leading-none">
+                      PERFORMANCE
+                    </span>
+                    <span className="font-black text-lg tracking-wider text-brand-primary uppercase italic leading-none mt-1">
+                      PRO
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="font-extrabold text-xs tracking-[0.14em] uppercase text-white/90 leading-none">
-                    PERFORMANCE
-                  </span>
-                  <span className="font-black text-lg tracking-wider text-brand-primary uppercase italic leading-none mt-1">
-                    PRO
-                  </span>
-                </div>
+
+                <button
+                  onClick={toggleTheme}
+                  className="p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-amber-400 hover:text-amber-300 transition-all active:scale-95 cursor-pointer"
+                  title={`Alternar para tema ${theme === "dark" ? "Claro" : "Escuro"}`}
+                >
+                  {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+                </button>
               </div>
 
               {/* Sidebar Menu - Desktop (In requested order) */}
@@ -1666,6 +1726,22 @@ const EliteHubApp: FC<{
                   {(!selected?.wellness || selected.wellness.length === 0) && (
                     <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
                   )}
+                </button>
+
+                {/* Competições Tab */}
+                <button
+                  onClick={() => {
+                    setActiveTab("competitions");
+                    setAiModelingResult(null);
+                  }}
+                  className={`flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left text-xs font-bold uppercase tracking-wider transition-all duration-300 ${
+                    activeTab === "competitions"
+                      ? "border border-brand-primary/20 bg-gradient-to-r from-brand-primary/10 to-transparent text-brand-primary shadow-[0_0_15px_rgba(16,185,129,0.06)]"
+                      : "text-slate-400 hover:text-white hover:bg-slate-900/40 border border-transparent"
+                  }`}
+                >
+                  <Trophy className={`w-4 h-4 shrink-0 ${activeTab === "competitions" ? "text-brand-primary" : "text-slate-500"}`} />
+                  <span>Competições</span>
                 </button>
 
                 {/* 7. Modelagem Tab */}
@@ -2771,8 +2847,6 @@ const EliteHubApp: FC<{
 
                     {activeTab === "premium" && <PremiumHub />}
 
-                    {(activeTab as string) === "info" && <AthleteGuide />}
-
                     {activeTab === "ai-modeling" && selected && (
                       <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-700">
                         {aiModelingResult ? (
@@ -3328,6 +3402,15 @@ const EliteHubApp: FC<{
                             role={user.role}
                           />
                       </div>
+                    )}
+
+                    {activeTab === "competitions" && (
+                      <CompetitionsCalendarView
+                        athlete={selected!}
+                        allAthletes={athletes}
+                        onUpdateAthlete={(data) => updateAthlete(selected!.id, data)}
+                        role={user.role}
+                      />
                     )}
                   </div>
                 </div>
