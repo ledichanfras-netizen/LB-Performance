@@ -25,6 +25,7 @@ const parseBackupAthleteFields = (a: any) => {
   let dropJumpBackup = [];
   let imtpBackup = [];
   let posturalBackup = [];
+  let photoUrl = a.photo_url || a.photoUrl || undefined;
 
   if (a.injury_history && typeof a.injury_history === 'string' && a.injury_history.trim().startsWith('{')) {
     try {
@@ -56,13 +57,16 @@ const parseBackupAthleteFields = (a: any) => {
         if (parsed.hasOwnProperty('posturalBackup') && Array.isArray(parsed.posturalBackup)) {
           posturalBackup = parsed.posturalBackup;
         }
+        if (parsed.photoUrl) {
+          photoUrl = parsed.photoUrl;
+        }
       }
     } catch (e) {
       console.error("[SafeParse] Error parsing backup in injury_history:", e);
     }
   }
   
-  return { injuryHistory, injuries, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup, posturalBackup };
+  return { injuryHistory, injuries, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup, posturalBackup, photoUrl };
 };
 
 const serializeBackupAthleteFields = (athlete: any) => {
@@ -77,7 +81,8 @@ const serializeBackupAthleteFields = (athlete: any) => {
     courtDays: athlete.courtDays || [],
     dropJumpBackup: dropJump,
     imtpBackup: imtp,
-    posturalBackup: postural
+    posturalBackup: postural,
+    photoUrl: athlete.photoUrl || athlete.photo_url || ''
   });
 };
 
@@ -98,6 +103,80 @@ export const logError = (context: string, error: any) => {
   if (!isNetworkError(error)) {
     console.error(context, error?.message || error);
   }
+};
+
+const safeSupabaseUpsert = async (tableName: string, rawPayload: any): Promise<{ data: any; error: any }> => {
+  const isArray = Array.isArray(rawPayload);
+  let payload = isArray ? rawPayload.map(item => ({ ...item })) : { ...rawPayload };
+
+  let attempts = 0;
+  let lastError: any = null;
+
+  while (attempts < 10) {
+    attempts++;
+    const { data, error } = await supabase.from(tableName).upsert(payload);
+    if (!error) return { data, error: null };
+
+    lastError = error;
+    const errorMsg = error.message || '';
+    console.warn(`[Supabase Upsert ${tableName}] Tentativa ${attempts} falhou:`, errorMsg);
+
+    // Extract column name from error message if present
+    const match = errorMsg.match(/Could not find the '([^']+)' column/i) ||
+                  errorMsg.match(/column "([^"]+)" of relation/i) ||
+                  errorMsg.match(/column "([^"]+)"/i) ||
+                  errorMsg.match(/column '([^']+)'/i);
+
+    let removed = false;
+    if (match && match[1]) {
+      const missingCol = match[1];
+      if (isArray) {
+        for (const item of payload) {
+          if (item.hasOwnProperty(missingCol)) {
+            delete item[missingCol];
+            removed = true;
+          }
+        }
+      } else {
+        if (payload.hasOwnProperty(missingCol)) {
+          delete payload[missingCol];
+          removed = true;
+        }
+      }
+    }
+
+    if (!removed) {
+      // Fallback check for common optional columns
+      const commonMissingCols = [
+        'photo_url', 'photoUrl', 'training_days', 'is_tournament_mode', 'periodization_start', 'periodization_end',
+        'injuries', 'weekly_frequency', 'cognitive_load', 'readiness_score', 'travel_fatigue', 'sleep_quality'
+      ];
+      for (const col of commonMissingCols) {
+        if (errorMsg.toLowerCase().includes(col.toLowerCase())) {
+          if (isArray) {
+            for (const item of payload) {
+              if (item.hasOwnProperty(col)) {
+                delete item[col];
+                removed = true;
+              }
+            }
+          } else {
+            if (payload.hasOwnProperty(col)) {
+              delete payload[col];
+              removed = true;
+            }
+          }
+          if (removed) break;
+        }
+      }
+    }
+
+    if (!removed) {
+      return { data: null, error: lastError };
+    }
+  }
+
+  return { data: null, error: lastError || new Error(`Exceeded max upsert retries for table ${tableName}`) };
 };
 
 export const supabaseService = {
@@ -246,6 +325,7 @@ export const supabaseService = {
         return {
           id: a.id,
           name: a.name,
+          photoUrl: a.photo_url || a.photoUrl || parsedFields.photoUrl || undefined,
           dob: a.dob,
           gender: a.gender || 'M',
           modality: a.modality,
@@ -431,6 +511,7 @@ export const supabaseService = {
     const payload: any = {
       id: athlete.id,
       name: athlete.name,
+      photo_url: athlete.photoUrl || (athlete as any).photo_url || null,
       dob: athlete.dob,
       gender: athlete.gender || 'M',
       modality: athlete.modality,
@@ -446,18 +527,7 @@ export const supabaseService = {
       updated_at: new Date().toISOString()
     };
 
-    let { error: athleteError } = await supabase
-      .from('athletes')
-      .upsert(payload);
-
-    if (athleteError && athleteError.message?.toLowerCase().includes('training_days')) {
-      console.warn('[Supabase] Tabela "athletes" não possui a coluna "training_days". Retentando sem essa coluna...');
-      delete payload.training_days;
-      const retryResult = await supabase
-        .from('athletes')
-        .upsert(payload);
-      athleteError = retryResult.error;
-    }
+    const { error: athleteError } = await safeSupabaseUpsert('athletes', payload);
 
     if (athleteError) {
       logError('[Supabase] Erro ao salvar atleta base:', athleteError);
@@ -475,7 +545,7 @@ export const supabaseService = {
       }
       
       if (athlete.wellness.length > 0) {
-        const { error: wError } = await supabase.from('wellness').upsert(athlete.wellness.map(w => ({
+        const wellnessPayload = athlete.wellness.map(w => ({
           id: w.id,
           athlete_id: athlete.id,
           date: w.date,
@@ -488,7 +558,8 @@ export const supabaseService = {
           readiness_score: w.readinessScore !== undefined ? w.readinessScore : (w as any).readiness_score,
           travel_fatigue: w.travelFatigue !== undefined ? w.travelFatigue : (w as any).travel_fatigue,
           sleep_quality: w.sleepQuality !== undefined ? w.sleepQuality : (w as any).sleep_quality
-        })));
+        }));
+        const { error: wError } = await safeSupabaseUpsert('wellness', wellnessPayload);
         if (wError) {
           logError('[Supabase] Erro ao salvar wellness:', wError);
           throw wError;
@@ -507,7 +578,7 @@ export const supabaseService = {
       }
 
       if (athlete.externalSessions.length > 0) {
-        const { error: esError } = await supabase.from('external_sessions').upsert(athlete.externalSessions.map(es => ({
+        const extPayload = athlete.externalSessions.map(es => ({
           id: es.id,
           athlete_id: athlete.id,
           date: es.date,
@@ -516,7 +587,8 @@ export const supabaseService = {
           rpe: es.rpe,
           notes: es.notes,
           load: es.load
-        })));
+        }));
+        const { error: esError } = await safeSupabaseUpsert('external_sessions', extPayload);
         if (esError) {
           logError('[Supabase] Erro ao salvar sessões externas:', esError);
           throw esError;

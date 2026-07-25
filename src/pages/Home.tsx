@@ -19,8 +19,8 @@ export default function Home() {
         className="z-10 text-center max-w-2xl"
       >
         <div className="flex justify-center mb-8">
-          <div className="w-24 h-24 bg-slate-900 rounded-[2.5rem] flex items-center justify-center shadow-[0_0_50px_rgba(57,255,20,0.3)] border border-brand-primary/20">
-            <img src="/192x192.png" className="w-16 h-16 object-contain" alt="LB Logo" />
+          <div className="w-28 h-28 bg-slate-950 rounded-3xl flex items-center justify-center shadow-[0_0_60px_rgba(57,255,20,0.4)] border border-emerald-500/40 overflow-hidden shrink-0">
+            <img src="/192x192.png" className="w-full h-full object-cover scale-110" alt="LB Logo" />
           </div>
         </div>
 

@@ -120,6 +120,7 @@ const parseBackupAthleteFields = (a: any) => {
   let dropJumpBackup = [];
   let imtpBackup = [];
   let posturalBackup = [];
+  let photoUrl = a.photo_url || a.photoUrl || undefined;
 
   if (a.injury_history && typeof a.injury_history === 'string' && a.injury_history.trim().startsWith('{')) {
     try {
@@ -143,13 +144,16 @@ const parseBackupAthleteFields = (a: any) => {
         if (parsed.hasOwnProperty('posturalBackup') && Array.isArray(parsed.posturalBackup)) {
           posturalBackup = parsed.posturalBackup;
         }
+        if (parsed.photoUrl) {
+          photoUrl = parsed.photoUrl;
+        }
       }
     } catch (e) {
       console.error("[SafeParseJson] Error parsing backup in injury_history:", e);
     }
   }
   
-  return { injuryHistory, injuries, trainingDays, dropJumpBackup, imtpBackup, posturalBackup };
+  return { injuryHistory, injuries, trainingDays, dropJumpBackup, imtpBackup, posturalBackup, photoUrl };
 };
 
 const serializeBackupAthleteFields = (athlete: any) => {
@@ -162,7 +166,8 @@ const serializeBackupAthleteFields = (athlete: any) => {
     trainingDays: athlete.trainingDays || [1, 3, 5],
     dropJumpBackup: dropJump,
     imtpBackup: imtp,
-    posturalBackup: postural
+    posturalBackup: postural,
+    photoUrl: athlete.photoUrl || athlete.photo_url || ''
   });
 };
 
@@ -216,6 +221,7 @@ async function ensureColumns() {
 
     // Athletes
     await client.query('ALTER TABLE athletes DROP CONSTRAINT IF EXISTS athletes_competitive_level_check').catch(() => {});
+    await client.query('ALTER TABLE athletes ADD COLUMN IF NOT EXISTS photo_url TEXT').catch(() => {});
     await client.query('ALTER TABLE athletes ADD COLUMN IF NOT EXISTS is_tournament_mode BOOLEAN DEFAULT FALSE').catch(() => {});
     await client.query('ALTER TABLE athletes ADD COLUMN IF NOT EXISTS periodization_start TEXT').catch(() => {});
     await client.query('ALTER TABLE athletes ADD COLUMN IF NOT EXISTS periodization_end TEXT').catch(() => {});
@@ -507,6 +513,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
           const parsedFields = parseBackupAthleteFields(a);
           return {
             ...a,
+            photoUrl: a.photo_url || a.photoUrl || parsedFields.photoUrl || undefined,
             gender: a.gender || 'M',
             weeklyFrequency: a.weekly_frequency,
             competitiveLevel: a.competitive_level,
@@ -719,6 +726,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
       return {
         id: a.id,
         name: a.name,
+        photoUrl: a.photo_url || a.photoUrl || parsedFields.photoUrl || undefined,
         dob: a.dob,
         gender: a.gender || 'M',
         modality: a.modality,
@@ -969,7 +977,7 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
                } else {
                  // Tentar heurística por correspondência de string estrita se o regex falhar completamente
                  const commonMissingCols = [
-                   'injuries', 'training_days', 'is_tournament_mode',
+                   'photo_url', 'photoUrl', 'injuries', 'training_days', 'is_tournament_mode',
                    'periodization_start', 'periodization_end', 'weekly_frequency',
                    'pain_level', 'rest', 'notes',
                    'ai_details', 'observations', 'cognitive_load', 'travel_fatigue', 'sleep_quality',
@@ -1009,6 +1017,7 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
         const { error: aErr } = await safeUpsert('athletes', {
           id: athlete.id,
           name: athlete.name,
+          photo_url: athlete.photoUrl || athlete.photo_url || null,
           dob: athlete.dob || new Date().toISOString().split('T')[0],
           gender: athlete.gender || 'M',
           modality: athlete.modality || '',
@@ -1408,10 +1417,11 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
     for (const athlete of athletes) {
       console.log(`Salvando atleta: ${athlete.name} (${athlete.id})`);
       await client.query(
-        'INSERT INTO athletes (id, name, dob, gender, modality, competitive_level, position, injury_history, goal, weekly_frequency, is_tournament_mode, periodization_start, periodization_end, training_days, injuries) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) ON CONFLICT (id) DO UPDATE SET name = $2, dob = $3, gender = $4, modality = $5, competitive_level = $6, position = $7, injury_history = $8, goal = $9, weekly_frequency = $10, is_tournament_mode = $11, periodization_start = $12, periodization_end = $13, training_days = $14, injuries = $15, updated_at = CURRENT_TIMESTAMP',
+        'INSERT INTO athletes (id, name, photo_url, dob, gender, modality, competitive_level, position, injury_history, goal, weekly_frequency, is_tournament_mode, periodization_start, periodization_end, training_days, injuries) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) ON CONFLICT (id) DO UPDATE SET name = $2, photo_url = $3, dob = $4, gender = $5, modality = $6, competitive_level = $7, position = $8, injury_history = $9, goal = $10, weekly_frequency = $11, is_tournament_mode = $12, periodization_start = $13, periodization_end = $14, training_days = $15, injuries = $16, updated_at = CURRENT_TIMESTAMP',
         [
           athlete.id,
           athlete.name,
+          athlete.photoUrl || athlete.photo_url || null,
           athlete.dob || new Date().toISOString().split('T')[0],
           athlete.gender || 'M',
           athlete.modality || '',
