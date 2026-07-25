@@ -1599,8 +1599,12 @@ const EliteHubApp: FC<{
               {/* Premium Performance Pro Logo Bracket & Theme Toggle */}
               <div className="hidden md:flex items-center justify-between mb-10 mt-2 px-2">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-emerald-600 flex items-center justify-center text-slate-950 font-black text-2xl italic shadow-[0_0_20px_rgba(16,185,129,0.25)] border border-emerald-300/20 shrink-0">
-                    P
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.25)] border border-emerald-300/20 shrink-0 overflow-hidden">
+                    <img
+                      src="/192x192.png"
+                      className="w-full h-full object-cover scale-110"
+                      alt="Logo"
+                    />
                   </div>
                   <div className="flex flex-col">
                     <span className="font-extrabold text-xs tracking-[0.14em] uppercase text-white/90 leading-none">
