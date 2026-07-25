@@ -687,12 +687,12 @@ const EliteHubApp: FC<{
         list = athletes.filter((a) => a.competitiveLevel === "elite");
         break;
       case "low-readiness":
-        list = athletes.filter(
-          (a) =>
-              a.wellness &&
-              a.wellness.length > 0 &&
-              (a.wellness[0].readinessScore || 0) < 50,
-        );
+        list = athletes.filter((a) => {
+          const todayWell = (a.wellness || []).find(
+            (w) => w.date && w.date.startsWith(today),
+          );
+          return todayWell && (todayWell.readinessScore || 0) < 50;
+        });
         break;
       case "scheduled-today":
         list = athletes.filter((a) =>
@@ -724,13 +724,17 @@ const EliteHubApp: FC<{
         statusColor = "bg-red-950/60 text-red-450 border border-red-500/20";
       }
 
-      const lastWell = ath.wellness && ath.wellness.length > 0 ? ath.wellness[0] : null;
-      const readiness = lastWell?.readinessScore !== undefined ? lastWell.readinessScore : 80;
+      const todayWell = (ath.wellness || []).find((w) => w.date && w.date.startsWith(today));
+      const readinessDisplay = todayWell && todayWell.readinessScore !== undefined
+        ? `${todayWell.readinessScore}%`
+        : "—";
+      const isLowReadinessToday = todayWell && (todayWell.readinessScore || 0) < 50;
+      const readiness = todayWell && todayWell.readinessScore !== undefined ? todayWell.readinessScore : null;
       const sono = (() => {
-        if (!lastWell) return "—";
-        if (lastWell.sleepHoursFormatted) return lastWell.sleepHoursFormatted;
-        if (lastWell.sleep !== undefined && lastWell.sleep !== null) {
-          const s = Number(lastWell.sleep);
+        if (!todayWell) return "—";
+        if (todayWell.sleepHoursFormatted) return todayWell.sleepHoursFormatted;
+        if (todayWell.sleep !== undefined && todayWell.sleep !== null) {
+          const s = Number(todayWell.sleep);
           if (!isNaN(s)) {
             const h = Math.floor(s);
             const m = Math.round((s - h) * 60);
@@ -751,6 +755,9 @@ const EliteHubApp: FC<{
         status,
         statusColor,
         readiness,
+        readinessDisplay,
+        isLowReadinessToday,
+        hasWellnessToday: !!todayWell,
         sono,
         obs,
         isSelected: selectedId === ath.id
@@ -804,12 +811,12 @@ const EliteHubApp: FC<{
       case "elite":
         return athletes.filter((a) => a.competitiveLevel === "elite");
       case "low-readiness":
-        return athletes.filter(
-          (a) =>
-              a.wellness &&
-              a.wellness.length > 0 &&
-              (a.wellness[0].readinessScore || 0) < 50,
-        );
+        return athletes.filter((a) => {
+          const todayWell = (a.wellness || []).find(
+            (w) => w.date && w.date.startsWith(today),
+          );
+          return todayWell && (todayWell.readinessScore || 0) < 50;
+        });
       case "scheduled-today":
         return athletes.filter((a) =>
           (a.workouts || []).some((wk) => wk.date && wk.date.startsWith(today)),
@@ -2147,13 +2154,14 @@ const EliteHubApp: FC<{
                       },
                       {
                         key: "low-readiness",
-                        label: "Baixa Prontidão",
-                        value: athletes.filter(
-                          (a) =>
-                            a.wellness &&
-                            a.wellness.length > 0 &&
-                            (a.wellness[0].readinessScore || 0) < 50,
-                        ).length,
+                        label: "Baixa Prontidão Hoje",
+                        value: athletes.filter((a) => {
+                          const today = getLocalDateString();
+                          const todayWell = (a.wellness || []).find(
+                            (w) => w.date && w.date.startsWith(today),
+                          );
+                          return todayWell && (todayWell.readinessScore || 0) < 50;
+                        }).length,
                         icon: Flame,
                         color: "brand-primary",
                       },
@@ -2426,8 +2434,20 @@ const EliteHubApp: FC<{
                                       </td>
 
                                       {/* Readiness */}
-                                      <td className="py-4 px-4 text-xs font-mono font-black text-center text-blue-400">
-                                        {ath.readiness}%
+                                      <td className="py-4 px-4 text-xs font-mono font-black text-center">
+                                        {ath.readinessDisplay === "—" ? (
+                                          <span className="text-slate-600 font-normal" title="Prontidão não preenchida hoje">
+                                            —
+                                          </span>
+                                        ) : ath.isLowReadinessToday ? (
+                                          <span className="text-rose-400 font-extrabold bg-rose-500/10 px-2.5 py-1 rounded-lg border border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.15)]" title="Baixa prontidão registrada hoje (<50%)">
+                                            {ath.readinessDisplay}
+                                          </span>
+                                        ) : (
+                                          <span className="text-blue-400 font-black">
+                                            {ath.readinessDisplay}
+                                          </span>
+                                        )}
                                       </td>
 
                                       {/* Sono */}
