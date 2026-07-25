@@ -141,12 +141,25 @@ export const useAthletes = (token?: string | null) => {
   const sortWorkoutExercises = (a: Athlete): Athlete => {
     return {
       ...a,
-      workouts: (a.workouts || []).map(w => ({
-        ...w,
-        exercises: (w.exercises || [])
-          .slice()
-          .sort((x: any, y: any) => (x.order_index ?? 0) - (y.order_index ?? 0))
-      }))
+      workouts: (a.workouts || []).map(w => {
+        const exs = (w.exercises || []).slice();
+        const hasOrderIndex = exs.some(x => typeof x.order_index === 'number');
+        const sortedExs = hasOrderIndex
+          ? exs.sort((x: any, y: any) => {
+              const xVal = typeof x.order_index === 'number' ? x.order_index : 9999;
+              const yVal = typeof y.order_index === 'number' ? y.order_index : 9999;
+              return xVal - yVal;
+            })
+          : exs;
+
+        return {
+          ...w,
+          exercises: sortedExs.map((ex, idx) => ({
+            ...ex,
+            order_index: idx
+          }))
+        };
+      })
     };
   };
 
@@ -663,10 +676,15 @@ export const useAthletes = (token?: string | null) => {
 
   const addWorkout = async (athleteId: string, workout: Omit<Workout, 'id'>) => {
     const newId = `wk-${Date.now()}-${Math.random()}`;
+    const normalizedWorkout = {
+      ...workout,
+      id: newId,
+      exercises: (workout.exercises || []).map((ex, idx) => ({ ...ex, order_index: idx }))
+    };
     const updated = athletes.map(a => {
       if (a.id === athleteId) {
         const history = Array.isArray(a.workouts) ? a.workouts : [];
-        return { ...a, workouts: [{ ...workout, id: newId }, ...history] };
+        return { ...a, workouts: [normalizedWorkout, ...history] };
       }
       return a;
     });
@@ -679,7 +697,11 @@ export const useAthletes = (token?: string | null) => {
     const updated = athletes.map(a => {
       if (a.id === athleteId) {
         const history = Array.isArray(a.workouts) ? a.workouts : [];
-        const newWorkoutsWithIds = workoutsToAdd.map((w, idx) => ({ ...w, id: `wk-bulk-${Date.now()}-${idx}-${Math.random()}` }));
+        const newWorkoutsWithIds = workoutsToAdd.map((w, idx) => ({
+          ...w,
+          id: `wk-bulk-${Date.now()}-${idx}-${Math.random()}`,
+          exercises: (w.exercises || []).map((ex, exIdx) => ({ ...ex, order_index: exIdx }))
+        }));
         return { ...a, workouts: [...newWorkoutsWithIds, ...history] };
       }
       return a;
@@ -726,7 +748,11 @@ export const useAthletes = (token?: string | null) => {
   const updateWorkout = async (athleteId: string, workout: Workout) => {
     const updated = athletes.map(a => {
       if (a.id === athleteId) {
-        let updatedWorkout = { ...workout, updatedAt: new Date().toISOString() };
+        let updatedWorkout = {
+          ...workout,
+          updatedAt: new Date().toISOString(),
+          exercises: (workout.exercises || []).map((ex, idx) => ({ ...ex, order_index: idx }))
+        };
         if (workout.status === 'completed') {
           const athleteWeight = a.assessments.bioimpedance[0]?.weight;
           updatedWorkout.totalLoad = calculateWorkoutLoad(workout, athleteWeight);

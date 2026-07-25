@@ -284,13 +284,17 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   updateAthlete,
   generateAIWorkouts
 }) => {
-  const [edited, setEdited] = useState<Workout>({
-    id: workout.id || `wk-man-${Date.now()}`,
-    date: workout.date?.split("T")[0] || new Date().toISOString().split("T")[0],
-    name: workout.name || "",
-    phase: workout.phase || "Preparação Geral",
-    status: "planned",
-    exercises: workout.exercises ? JSON.parse(JSON.stringify(workout.exercises)) : [],
+  const [edited, setEdited] = useState<Workout>(() => {
+    const rawExercises: PrescribedExercise[] = workout.exercises ? JSON.parse(JSON.stringify(workout.exercises)) : [];
+    const indexed = rawExercises.map((ex, idx) => ({ ...ex, order_index: idx }));
+    return {
+      id: workout.id || `wk-man-${Date.now()}`,
+      date: workout.date?.split("T")[0] || new Date().toISOString().split("T")[0],
+      name: workout.name || "",
+      phase: workout.phase || "Preparação Geral",
+      status: "planned",
+      exercises: indexed,
+    };
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -620,9 +624,11 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
 
   // Actions
   const removeEx = (id: string) => {
+    const remaining = (edited.exercises || []).filter((ex) => ex.id !== id);
+    const reindexed = remaining.map((ex, i) => ({ ...ex, order_index: i }));
     setEdited({
       ...edited,
-      exercises: (edited.exercises || []).filter((ex) => ex.id !== id),
+      exercises: reindexed,
     });
     toast.success("Exercício removido.");
   };
@@ -636,10 +642,12 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       exercises[newIndex],
       exercises[index],
     ];
-    setEdited({ ...edited, exercises });
+    const reindexed = exercises.map((ex, i) => ({ ...ex, order_index: i }));
+    setEdited({ ...edited, exercises: reindexed });
   };
 
   const addExFromLib = (libEx: EnrichedExercise) => {
+    const current = edited.exercises || [];
     const newEx: PrescribedExercise = {
       id: `ex-lib-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       name: libEx.name,
@@ -651,10 +659,12 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       rest: libEx.recommendedRest || "90s",
       notes: `Foco: ${libEx.physicalQuality} | RPE Alvo: ${libEx.recommendedRpe}`,
       videoUrl: libEx.videoUrl || "",
-      imageUrl: libEx.imageUrl || ""
+      imageUrl: libEx.imageUrl || "",
+      order_index: current.length
     };
 
-    setEdited({ ...edited, exercises: [...(edited.exercises || []), newEx] });
+    const reindexed = [...current, newEx].map((ex, i) => ({ ...ex, order_index: i }));
+    setEdited({ ...edited, exercises: reindexed });
     setExpandedExerciseId(newEx.id); // auto-expand newly added exercise
     setRecentAdds(prev => [libEx.id, ...prev.slice(0, 4)]);
     toast.success(`Prescrito: ${libEx.name}`);
@@ -678,6 +688,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       });
     }
     
+    const current = edited.exercises || [];
     const newEx: PrescribedExercise = {
       id: `ex-custom-${Date.now()}`,
       name: customExerciseName.trim(),
@@ -688,10 +699,12 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       repsType: matchedEx?.defaultReps?.toLowerCase().includes("s") ? "time" : "reps",
       rest: matchedEx?.recommendedRest || "60s",
       videoUrl: matchedEx?.videoUrl || "",
-      imageUrl: matchedEx?.imageUrl || ""
+      imageUrl: matchedEx?.imageUrl || "",
+      order_index: current.length
     };
 
-    setEdited({ ...edited, exercises: [...(edited.exercises || []), newEx] });
+    const reindexed = [...current, newEx].map((ex, i) => ({ ...ex, order_index: i }));
+    setEdited({ ...edited, exercises: reindexed });
     setExpandedExerciseId(newEx.id); // auto-expand newly custom exercise
     setCustomExerciseName("");
     toast.success(`Customizado adicionado (${detectedCategory}): ${newEx.name}`);
@@ -726,10 +739,14 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       return newEx;
     });
 
-    setEdited(prev => ({
-      ...prev,
-      exercises: [...(prev.exercises || []), ...newExs]
-    }));
+    setEdited(prev => {
+      const current = prev.exercises || [];
+      const combined = [...current, ...newExs].map((ex, i) => ({ ...ex, order_index: i }));
+      return {
+        ...prev,
+        exercises: combined
+      };
+    });
     toast.success(`Bloco de Correção (${deficitName}) com ${newExs.length} exercícios prescrito!`);
   };
 
@@ -737,8 +754,8 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   const updateExField = (id: string, field: keyof PrescribedExercise, value: any) => {
     setEdited({
       ...edited,
-      exercises: (edited.exercises || []).map((ex) =>
-        ex.id === id ? { ...ex, [field]: value } : ex
+      exercises: (edited.exercises || []).map((ex, i) =>
+        ex.id === id ? { ...ex, [field]: value, order_index: i } : { ...ex, order_index: i }
       ),
     });
   };
@@ -749,9 +766,11 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       id: `ex-dup-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       name: `${ex.name} (Cópia)`
     };
+    const current = edited.exercises || [];
+    const reindexed = [...current, duplicated].map((e, i) => ({ ...e, order_index: i }));
     setEdited({
       ...edited,
-      exercises: [...(edited.exercises || []), duplicated]
+      exercises: reindexed
     });
     setExpandedExerciseId(duplicated.id); // auto-expand duplicated exercise
     toast.success("Bloco de exercício duplicado!");
@@ -762,13 +781,15 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       toast.error("O treino está vazio!");
       return;
     }
-    const duplicatedExercises = edited.exercises.map(ex => ({
+    const current = edited.exercises || [];
+    const duplicatedExercises = current.map(ex => ({
       ...ex,
       id: `ex-dup-wk-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`
     }));
+    const reindexed = [...current, ...duplicatedExercises].map((e, i) => ({ ...e, order_index: i }));
     setEdited({
       ...edited,
-      exercises: [...(edited.exercises || []), ...duplicatedExercises]
+      exercises: reindexed
     });
     toast.success(`Duplicado! Total de ${edited.exercises.length} novos exercícios adicionados.`);
   };
@@ -1013,10 +1034,14 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
       notes: `[IA PRESCRITO] Foco: ${libEx.physicalQuality} | Justificativa: Otimização de RFD por VBT.`
     }));
 
-    setEdited(prev => ({
-      ...prev,
-      exercises: [...(prev.exercises || []), ...newExercises]
-    }));
+    setEdited(prev => {
+      const current = prev.exercises || [];
+      const combined = [...current, ...newExercises].map((ex, i) => ({ ...ex, order_index: i }));
+      return {
+        ...prev,
+        exercises: combined
+      };
+    });
     
     toast.success(`Injetados ${newExercises.length} exercícios científicos na planilha!`);
   };
@@ -2507,7 +2532,14 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                 toast.error("O treino precisa de um nome.");
                 return;
               }
-              onSave(edited);
+              const finalExercises = (edited.exercises || []).map((ex, i) => ({
+                ...ex,
+                order_index: i
+              }));
+              onSave({
+                ...edited,
+                exercises: finalExercises
+              });
             }}
             className="w-full sm:w-auto px-10 py-4 bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-xs uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-[#39FF14]/10 flex items-center justify-center gap-2 cursor-pointer"
           >

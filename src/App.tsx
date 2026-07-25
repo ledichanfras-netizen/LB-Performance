@@ -1127,9 +1127,10 @@ const EliteHubApp: FC<{
           monotony: 0,
           strain: 0,
           feedback: "",
-          exercises: (workoutToClone.exercises || []).map((ex) => ({
+          exercises: (workoutToClone.exercises || []).map((ex, exIdx) => ({
             ...ex,
             id: `ex-clone-${Date.now()}-${Math.random()}`,
+            order_index: exIdx,
             performedSets: (ex.performedSets || []).map((s) => ({
               ...s,
               id: `s-clone-${Date.now()}-${Math.random()}`,
@@ -7334,19 +7335,25 @@ const WorkoutEditor: FC<{
   onSave: (w: Workout) => void;
   onCancel: () => void;
 }> = ({ workout, onSave, onCancel }) => {
-  const [edited, setEdited] = useState<Workout>({
-    id: workout.id || `wk-man-${Date.now()}`,
-    date: workout.date?.split("T")[0] || getLocalDateString(),
-    name: workout.name || "",
-    phase: workout.phase || "Base",
-    status: "planned",
-    exercises: workout.exercises ? [...workout.exercises] : [],
+  const [edited, setEdited] = useState<Workout>(() => {
+    const rawExs = workout.exercises ? [...workout.exercises] : [];
+    const indexed = rawExs.map((ex, idx) => ({ ...ex, order_index: idx }));
+    return {
+      id: workout.id || `wk-man-${Date.now()}`,
+      date: workout.date?.split("T")[0] || getLocalDateString(),
+      name: workout.name || "",
+      phase: workout.phase || "Base",
+      status: "planned",
+      exercises: indexed,
+    };
   });
 
   const removeEx = (id: string) => {
+    const remaining = (edited.exercises || []).filter((ex) => ex.id !== id);
+    const reindexed = remaining.map((ex, i) => ({ ...ex, order_index: i }));
     setEdited({
       ...edited,
-      exercises: (edited.exercises || []).filter((ex) => ex.id !== id),
+      exercises: reindexed,
     });
     toast.success("Exercício removido da lista.");
   };
@@ -7360,10 +7367,12 @@ const WorkoutEditor: FC<{
       exercises[newIndex],
       exercises[index],
     ];
-    setEdited({ ...edited, exercises });
+    const reindexed = exercises.map((ex, i) => ({ ...ex, order_index: i }));
+    setEdited({ ...edited, exercises: reindexed });
   };
 
   const addEx = () => {
+    const current = edited.exercises || [];
     const newEx: PrescribedExercise = {
       id: `ex-new-${Date.now()}`,
       name: "Novo Exercício",
@@ -7372,8 +7381,10 @@ const WorkoutEditor: FC<{
       reps: "10",
       weight: "BW",
       repsType: 'reps',
+      order_index: current.length,
     };
-    setEdited({ ...edited, exercises: [...(edited.exercises || []), newEx] });
+    const reindexed = [...current, newEx].map((ex, i) => ({ ...ex, order_index: i }));
+    setEdited({ ...edited, exercises: reindexed });
   };
 
   const updateEx = (
@@ -7383,8 +7394,8 @@ const WorkoutEditor: FC<{
   ) => {
     setEdited({
       ...edited,
-      exercises: (edited.exercises || []).map((ex) =>
-        ex.id === id ? { ...ex, [field]: value } : ex,
+      exercises: (edited.exercises || []).map((ex, i) =>
+        ex.id === id ? { ...ex, [field]: value, order_index: i } : { ...ex, order_index: i },
       ),
     });
   };
@@ -7572,7 +7583,16 @@ const WorkoutEditor: FC<{
             DESCARTAR
           </Button>
           <Button
-            onClick={() => onSave(edited)}
+            onClick={() => {
+              const finalExercises = (edited.exercises || []).map((ex, i) => ({
+                ...ex,
+                order_index: i
+              }));
+              onSave({
+                ...edited,
+                exercises: finalExercises
+              });
+            }}
             className="w-full py-5 font-black tracking-widest uppercase shadow-xl shadow-brand-primary/20"
           >
             SALVAR PLANILHA

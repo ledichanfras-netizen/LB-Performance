@@ -487,7 +487,8 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
       durationMinutes: finalDuration,
       rpe: overallRpe,
       feedback: feedbackNotes || session.feedback || "Treino concluído com biofeedback de alta performance.",
-      totalLoad: calculateWorkoutLoad(session, athleteWeight)
+      totalLoad: calculateWorkoutLoad(session, athleteWeight),
+      exercises: (session.exercises || []).map((ex, idx) => ({ ...ex, order_index: idx }))
     };
 
     onFinish(completedSession);
