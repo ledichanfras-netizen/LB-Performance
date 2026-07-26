@@ -1880,7 +1880,12 @@ const EliteHubApp: FC<{
                         {selected.photoUrl ? (
                           <img src={selected.photoUrl} alt={selected.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         ) : (
-                          <User className="w-5 h-5 text-brand-primary/80" />
+                          <img
+                            src={`data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231e293b"/><stop offset="100%" stop-color="%230f172a"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(%23g)" stroke="%2339ff14" stroke-width="2"/><path d="M50 22 a16 16 0 1 0 0.1 0 Z M22 82 c0-16 13-26 28-26 s28 10 28 26" fill="%2339ff14" opacity="0.85"/></svg>`}
+                            alt={selected.name}
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
                         )}
                         <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                           <Camera className="w-4 h-4 text-brand-primary" />
@@ -2381,16 +2386,12 @@ const EliteHubApp: FC<{
                                                 : "bg-slate-800 text-slate-300 border-slate-700/60"
                                             }`}
                                           >
-                                            {ath.photoUrl ? (
-                                              <img
-                                                src={ath.photoUrl}
-                                                alt={ath.name}
-                                                className="w-full h-full object-cover"
-                                                referrerPolicy="no-referrer"
-                                              />
-                                            ) : (
-                                              initials
-                                            )}
+                                            <img
+                                              src={ath.photoUrl || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231e293b"/><stop offset="100%" stop-color="%230f172a"/></linearGradient></defs><rect width="100" height="100" rx="50" fill="url(%23g)" stroke="%2339ff14" stroke-width="2"/><path d="M50 22 a16 16 0 1 0 0.1 0 Z M22 82 c0-16 13-26 28-26 s28 10 28 26" fill="%2339ff14" opacity="0.85"/><text x="50" y="88" font-size="11" font-family="sans-serif" font-weight="900" fill="%2339ff14" text-anchor="middle">${initials}</text></svg>`}
+                                              alt={ath.name}
+                                              className="w-full h-full object-cover"
+                                              referrerPolicy="no-referrer"
+                                            />
                                           </div>
                                           <div>
                                             <span className={ath.isSelected ? "text-xs font-black text-amber-450 block" : "text-xs font-black text-white hover:text-amber-550 block"}>
@@ -2553,11 +2554,12 @@ const EliteHubApp: FC<{
                             className="relative w-14 h-14 rounded-2xl bg-brand-primary/10 border border-brand-primary/30 hover:border-brand-primary flex items-center justify-center shrink-0 shadow-lg overflow-hidden group cursor-pointer transition-all"
                             title="Clique para Opções do Perfil / Editar Foto"
                           >
-                            {selected.photoUrl ? (
-                              <img src={selected.photoUrl} alt={selected.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                            ) : (
-                              <User size={24} className="text-brand-primary" />
-                            )}
+                            <img
+                              src={selected.photoUrl || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231e293b"/><stop offset="100%" stop-color="%230f172a"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(%23g)" stroke="%2339ff14" stroke-width="2"/><path d="M50 22 a16 16 0 1 0 0.1 0 Z M22 82 c0-16 13-26 28-26 s28 10 28 26" fill="%2339ff14" opacity="0.85"/></svg>`}
+                              alt={selected.name}
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
                             <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                               <Camera className="w-5 h-5 text-brand-primary" />
                             </div>
@@ -2752,7 +2754,12 @@ const EliteHubApp: FC<{
                                 {selected.photoUrl ? (
                                   <img src={selected.photoUrl} alt={selected.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                 ) : (
-                                  <User className="w-8 h-8 md:w-12 md:h-12" />
+                                  <img
+                                    src={`data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%231e293b"/><stop offset="100%" stop-color="%230f172a"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(%23g)" stroke="%2339ff14" stroke-width="2"/><path d="M50 22 a16 16 0 1 0 0.1 0 Z M22 82 c0-16 13-26 28-26 s28 10 28 26" fill="%2339ff14" opacity="0.85"/></svg>`}
+                                    alt={selected.name}
+                                    className="w-full h-full object-cover"
+                                    referrerPolicy="no-referrer"
+                                  />
                                 )}
                                 <div className="absolute inset-0 bg-slate-950/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity">
                                   <Camera className="w-5 h-5 md:w-6 md:h-6 text-brand-primary" />

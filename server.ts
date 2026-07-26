@@ -943,27 +943,24 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
           const isArray = Array.isArray(data);
           let attemptData = isArray ? data.map((item: any) => ({ ...item })) : { ...data };
           let lastError;
-          for (let i = 0; i < 12; i++) { // Máximo de 12 tentativas de remover colunas (suficiente para todas as modificações)
+          for (let i = 0; i < 12; i++) {
             const { error } = await supabase.from(table).upsert(attemptData);
             if (!error) return { error: null };
             lastError = error;
 
             console.warn(`[SafeSync] Tentativa ${i + 1} de salvar na tabela '${table}' falhou. Erro: ${error.message} (Código: ${error.code})`);
-            console.warn(`[SafeSync] Dados enviados:`, JSON.stringify(attemptData));
 
-            // PostgREST code 42703 (undefined_column) ou o erro de schema cache da Supabase (PGRST204)
             const isMissingCol = error.code === '42703' || error.code === 'PGRST204' ||
                                (error.message && (error.message.includes('column') || error.message.includes('Column')) &&
                                                  (error.message.includes('not found') || error.message.includes('cache')));
 
             if (isMissingCol) {
-               // Heurística de regex aprimorada para capturar o nome da coluna dentro de aspas simples ou duplas
-               const match = error.message.match(/['"]([a-z0-9_]+)['"]\s+column/i) ||
+               const match = error.message.match(/find the ['"]([a-z0-9_]+)['"] column/i) ||
+                             error.message.match(/['"]([a-z0-9_]+)['"]\s+column/i) ||
                              error.message.match(/column\s+['"]([a-z0-9_]+)['"]/i) ||
-                             error.message.match(/column\s+([a-z0-9_]+)/i) ||
-                             error.message.match(/['"]([a-z0-9_]+)['"]/i);
+                             error.message.match(/column\s+([a-z0-9_]+)/i);
 
-               if (match && match[1]) {
+               if (match && match[1] && match[1] !== table) {
                  const col = match[1];
                  console.warn(`[SafeSync] Removendo coluna inexistente '${col}' da tabela '${table}' e tentando novamente.`);
                  if (isArray) {
@@ -975,7 +972,6 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
                  }
                  continue;
                } else {
-                 // Tentar heurística por correspondência de string estrita se o regex falhar completamente
                  const commonMissingCols = [
                    'photo_url', 'photoUrl', 'injuries', 'training_days', 'is_tournament_mode',
                    'periodization_start', 'periodization_end', 'weekly_frequency',
@@ -988,7 +984,7 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
                  let removed = false;
                  for (const col of commonMissingCols) {
                    if (error.message.includes(col)) {
-                     console.warn(`[SafeSync] Heurística: Removendo '${col}' de '${table}' por correspondência direta de texto.`);
+                     console.warn(`[SafeSync] Heurística: Removendo '${col}' de '${table}' por correspondência de texto.`);
                      if (isArray) {
                        for (const item of attemptData) {
                          if (item[col] !== undefined) {
@@ -1034,6 +1030,10 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
           updated_at: new Date().toISOString()
         });
         if (aErr) throw aErr;
+
+        if (athlete.id === 'meta-custom-library-exercises') {
+          continue; // Meta-atleta não possui wellness, treinos ou avaliações adicionais
+        }
 
         // Upsert Wellness
         if (athlete.wellness) {
