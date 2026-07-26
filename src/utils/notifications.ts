@@ -8,7 +8,7 @@ export function notificar(titulo: string, mensagem: string) {
   if ("Notification" in window && Notification.permission === "granted") {
     new Notification(titulo, {
       body: mensagem,
-      icon: '/192x192.png'
+      icon: '/pwa-192x192.svg'
     });
   }
 }

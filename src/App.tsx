@@ -386,11 +386,13 @@ const Login: FC<{
         className="w-full max-w-md premium-card p-10 md:p-14 relative z-10 border-slate-800/40"
       >
         <div className="flex flex-col items-center mb-12">
-          <img
-            src="/192x192.png"
-            className="w-20 h-20 rounded-[2rem] shadow-[0_0_50px_rgba(57,255,20,0.4)] mb-8 object-contain"
-            alt="Logo"
-          />
+          <div className="w-24 h-24 rounded-[2rem] bg-slate-900/90 p-2.5 shadow-[0_0_50px_rgba(57,255,20,0.35)] mb-8 flex items-center justify-center border border-brand-primary/30">
+            <img
+              src="/pwa-192x192.svg"
+              className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(57,255,20,0.3)]"
+              alt="Logo"
+            />
+          </div>
           <h1 className="text-3xl font-black tracking-tighter uppercase italic text-white leading-none">
             Elite <span className="text-brand-primary">Hub</span>
           </h1>
@@ -499,10 +501,10 @@ const ReportPage: FC<{
 
       <div className="mt-10 pt-6 border-t border-slate-100 flex justify-between items-center bg-white shrink-0">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center p-1 shadow-lg border border-slate-800 shrink-0">
             <img
-              src="/192x192.png"
-              className="w-6 h-6 object-contain"
+              src="/pwa-192x192.svg"
+              className="w-full h-full object-contain"
               alt="LB"
             />
           </div>
@@ -544,10 +546,10 @@ const ReportHeader: FC<{
     
     <div className="relative z-10 w-full">
       <div className="flex items-center gap-4 mb-4">
-        <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-1 shadow-md">
+        <div className="w-13 h-13 rounded-2xl bg-slate-900 flex items-center justify-center p-1.5 shadow-md border border-emerald-400/30 shrink-0">
           <img
-            src="/192x192.png"
-            className="w-10 h-10 object-contain"
+            src="/pwa-192x192.svg"
+            className="w-full h-full object-contain"
             alt="Logo"
           />
         </div>
@@ -650,7 +652,8 @@ const EliteHubApp: FC<{
   };
 
   const [theme, setTheme] = useState<"dark" | "light">(() => {
-    return (safeLocalStorage.getItem("lb_theme") as "dark" | "light") || "dark";
+    const saved = safeLocalStorage.getItem("lb_theme");
+    return (saved === "dark" || saved === "light") ? saved : "light";
   });
 
   useEffect(() => {
@@ -1016,7 +1019,7 @@ const EliteHubApp: FC<{
       toast.success("Notificações ativadas! Você receberá alertas de treino.");
       new Notification("LBHUB Ativado", {
         body: "Você receberá notificações sobre seus planos e feedbacks.",
-        icon: "/192x192.png",
+        icon: "/pwa-192x192.svg",
       });
     } else {
       toast.error("Permissão de notificação negada.");
@@ -1321,11 +1324,13 @@ const EliteHubApp: FC<{
       <div className="h-screen flex flex-col items-center justify-center bg-[#020617] text-[#10b981] font-black uppercase tracking-[0.3em] md:tracking-[0.5em] p-4 text-center relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] bg-[#10b981]/5 rounded-full blur-[140px] animate-pulse"></div>
         <div className="relative z-10 flex flex-col items-center">
-          <img
-            src="/192x192.png"
-            className="w-24 h-24 rounded-[2.5rem] mb-8 shadow-[0_0_60px_rgba(16,185,129,0.4)] animate-bounce object-contain"
-            alt="LB Logo"
-          />
+          <div className="w-28 h-28 rounded-[2.5rem] bg-slate-900/90 p-3 shadow-[0_0_60px_rgba(16,185,129,0.4)] border border-brand-primary/30 flex items-center justify-center mb-8 animate-bounce">
+            <img
+              src="/pwa-192x192.svg"
+              className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+              alt="LB Logo"
+            />
+          </div>
           <div className="space-y-2">
             <h1 className="text-2xl md:text-3xl tracking-[0.4em] font-black italic">
               LB PERFORMANCE
@@ -1397,13 +1402,15 @@ const EliteHubApp: FC<{
   if (loading && athletes.length === 0) {
     return (
       <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 bg-gradient-to-br from-brand-dark to-slate-900">
-        <div className="relative">
-          <div className="w-24 h-24 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin"></div>
-          <img
-            src="/192x192.png"
-            className="absolute inset-0 w-full h-full p-2 object-contain"
-            alt="Logo"
-          />
+        <div className="relative w-28 h-28 flex items-center justify-center">
+          <div className="w-28 h-28 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin absolute inset-0"></div>
+          <div className="w-16 h-16 rounded-2xl bg-slate-900/90 p-2 border border-brand-primary/30 flex items-center justify-center z-10 shadow-[0_0_20px_rgba(57,255,20,0.3)]">
+            <img
+              src="/pwa-192x192.svg"
+              className="w-full h-full object-contain"
+              alt="Logo"
+            />
+          </div>
         </div>
         <p className="mt-10 text-brand-primary font-black uppercase tracking-[0.4em] animate-pulse text-xs text-center">
           Sincronizando Banco de Dados Elite...
@@ -1594,8 +1601,8 @@ const EliteHubApp: FC<{
               {/* Premium Performance Pro Logo Bracket & Theme Toggle */}
               <div className="hidden md:flex items-center justify-between mb-10 mt-2 px-2">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-emerald-600 flex items-center justify-center text-slate-950 font-black text-2xl italic shadow-[0_0_20px_rgba(16,185,129,0.25)] border border-emerald-300/20 shrink-0">
-                    P
+                  <div className="w-10 h-10 rounded-xl bg-slate-900/80 flex items-center justify-center p-1 border border-slate-800 shadow-[0_0_20px_rgba(16,185,129,0.25)] shrink-0">
+                    <img src="/pwa-192x192.svg" className="w-8 h-8 object-contain" alt="LB Logo" />
                   </div>
                   <div className="flex flex-col">
                     <span className="font-extrabold text-xs tracking-[0.14em] uppercase text-white/90 leading-none">
@@ -1980,10 +1987,10 @@ const EliteHubApp: FC<{
 
                   <div className="relative z-10 min-w-0">
                     <div className="flex items-center gap-3 sm:gap-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 shrink-0">
+                      <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-slate-900 flex items-center justify-center p-1.5 border border-brand-primary/30 shrink-0 shadow-lg">
                         <img
-                          src="/192x192.png"
-                          className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
+                          src="/pwa-192x192.svg"
+                          className="w-full h-full object-contain"
                           alt="Logo"
                         />
                       </div>
@@ -12805,347 +12812,261 @@ const ImtpReport: FC<{
     triggerPrint();
   };
 
-  // References and Benchmarks for Elite IMTP - Dynamic Sport and Age Adjusted
+  // Individualized Neuromuscular Analytics & Contextual Benchmarking
   const athleteAge = calculateAge(athlete.dob);
-  
-  // 1. Get Age Factor
-  let ageAdjustFactor = 1.0;
-  let ageAdjustNote = "Meta padrão de adulto (18-35 anos)";
-  if (athleteAge < 14) {
-    ageAdjustFactor = 0.65;
-    ageAdjustNote = "Fator Sub-14: 65% das metas adultas";
-  } else if (athleteAge < 16) {
-    ageAdjustFactor = 0.75;
-    ageAdjustNote = "Fator Sub-16: 75% das metas adultas";
-  } else if (athleteAge < 18) {
-    ageAdjustFactor = 0.85;
-    ageAdjustNote = "Fator Sub-18: 85% das metas adultas";
-  } else if (athleteAge > 45) {
-    ageAdjustFactor = 0.825;
-    ageAdjustNote = "Fator Master 45+: 82.5% das metas adultas";
-  } else if (athleteAge > 35) {
-    ageAdjustFactor = 0.925;
-    ageAdjustNote = "Fator Master 35-45: 92.5% das metas adultas";
-  }
-
-  // 2. Find matching sport normative row
-  let foundNormRow = null;
-  const flatSports = Object.values(SPORTS_DATA).flatMap((c) => c.sports);
-  
-  foundNormRow = flatSports.find((s) => {
-    const isFemaleRow = s.gender.includes("F");
-    const genderMatches = (athlete.gender === "F") === isFemaleRow;
-    const isJuvenilRow = s.name.toLowerCase().includes("juvenil") || s.gender.includes("≤18");
-    const isJuvenil = athleteAge <= 18;
-    const ageMatches = isJuvenil === isJuvenilRow || (!isJuvenilRow && !isJuvenil);
-    const normModality = (athlete.modality || "").toLowerCase();
-    const normRowName = s.name.toLowerCase();
-    return (normModality.includes(normRowName) || normRowName.includes(normModality)) && genderMatches && ageMatches;
-  });
-
-  if (!foundNormRow) {
-    foundNormRow = flatSports.find((s) => {
-      const isFemaleRow = s.gender.includes("F");
-      const genderMatches = (athlete.gender === "F") === isFemaleRow;
-      const normModality = (athlete.modality || "").toLowerCase();
-      const normRowName = s.name.toLowerCase().replace("juvenil", "").trim();
-      return (normModality.includes(normRowName) || normRowName.includes(normModality)) && genderMatches;
-    });
-  }
-
-  if (!foundNormRow) {
-    foundNormRow = {
-      name: athlete.modality || "Geral",
-      gender: athlete.gender,
-      dev: athlete.gender === "F" ? "< 22" : "< 30",
-      comp: athlete.gender === "F" ? "22–27" : "30–34",
-      adv: athlete.gender === "F" ? "27–32" : "34–37",
-      elite: athlete.gender === "F" ? "≥ 32" : "≥ 37",
-      rfdPriority: "Alta",
-      note: "Referência geral ponderada por peso corporal",
-      ref: "LB Academy Standards"
-    };
-  }
-
-  // Dynamic target mapping according to physical level
-  let levelKey: "dev" | "comp" | "adv" | "elite" = "elite";
-  const cLevel = (athlete.competitiveLevel || "").toLowerCase();
-  
-  if (cLevel === "amador" || cLevel === "dev" || cLevel === "em desenvolvimento") {
-    levelKey = "dev";
-  } else if (cLevel === "competitivo" || cLevel === "comp" || cLevel === "intermediário") {
-    levelKey = "comp";
-  } else if (cLevel === "avancado" || cLevel === "adv" || cLevel === "avançado") {
-    levelKey = "adv";
-  } else {
-    levelKey = "elite";
-  }
-
-  const isFutebol = athlete.modality?.toLowerCase().includes("futebol") || athlete.modality?.toLowerCase().includes("soccer");
   const isFemale = athlete.gender === "F";
+  const athleteMass = data.weight || athlete.weight || 70;
+  const isFutebol = (athlete.modality || "").toLowerCase().includes("futebol") || (athlete.modality || "").toLowerCase().includes("soccer");
 
-  let reqImtpRelMin = 3.5;
-  let reqImtpRelMax = 4.5;
-  let reqImtpAbsMin = 250;
-  let reqImtpAbsMax = 350;
-  let imtpSoccerCategory = "";
+  // Historical longitudinal dataset processing
+  const sortedHistory = [...history]
+    .filter((h) => h.peakForce && h.peakForce > 0)
+    .sort((a, b) => getSafeDateTime(a.date) - getSafeDateTime(b.date));
 
-  if (isFutebol) {
-    if (isFemale) {
-      if (athleteAge <= 15) {
-        imtpSoccerCategory = "Sub-15 Feminino (14-15 anos)";
-        reqImtpRelMin = 2.0;
-        reqImtpRelMax = 2.5;
-        reqImtpAbsMin = 120;
-        reqImtpAbsMax = 160;
-      } else if (athleteAge <= 17) {
-        imtpSoccerCategory = "Sub-17 Feminino (16-17 anos)";
-        reqImtpRelMin = 2.2;
-        reqImtpRelMax = 2.7;
-        reqImtpAbsMin = 160;
-        reqImtpAbsMax = 200;
-      } else if (athleteAge <= 20) {
-        imtpSoccerCategory = "Sub-20 Feminino (18-20 anos)";
-        reqImtpRelMin = 2.4;
-        reqImtpRelMax = 2.9;
-        reqImtpAbsMin = 180;
-        reqImtpAbsMax = 230;
-      } else {
-        imtpSoccerCategory = "Profissional Feminino (Adulto)";
-        reqImtpRelMin = 2.6;
-        reqImtpRelMax = 3.2;
-        reqImtpAbsMin = 200;
-        reqImtpAbsMax = 260;
-      }
-    } else {
-      if (athleteAge <= 15) {
-        imtpSoccerCategory = "Sub-15 Masculino (14-15 anos)";
-        reqImtpRelMin = 3.0; // 30 N/kg
-        reqImtpRelMax = 3.5; // 35 N/kg
-        reqImtpAbsMin = 180;
-        reqImtpAbsMax = 230;
-      } else if (athleteAge <= 17) {
-        imtpSoccerCategory = "Sub-17 Masculino (16-17 anos)";
-        reqImtpRelMin = 3.5; // 35 N/kg
-        reqImtpRelMax = 4.0; // 40 N/kg
-        reqImtpAbsMin = 240;
-        reqImtpAbsMax = 290;
-      } else if (athleteAge <= 20) {
-        imtpSoccerCategory = "Sub-20 Masculino (18-20 anos)";
-        reqImtpRelMin = 3.8; // 38 N/kg
-        reqImtpRelMax = 4.3; // 43 N/kg
-        reqImtpAbsMin = 280;
-        reqImtpAbsMax = 330;
-      } else {
-        imtpSoccerCategory = "Profissional Masculino (Adulto)";
-        reqImtpRelMin = 4.2; // 42 N/kg
-        reqImtpRelMax = 5.0; // 50 N/kg
-        reqImtpAbsMin = 320;
-        reqImtpAbsMax = 420;
-      }
-    }
-  }
-
-  const baseTargetValue = foundNormRow ? parseNormativeValue(foundNormRow[levelKey]) : 3.5;
-  let REF_RELATIVE_PEAK_FORCE = parseFloat((baseTargetValue * ageAdjustFactor).toFixed(2));
-
-  // Scale absolute target based on the selected level
-  let levelFactor = 1.0;
-  if (levelKey === "dev") levelFactor = 0.7;
-  else if (levelKey === "comp") levelFactor = 0.8;
-  else if (levelKey === "adv") levelFactor = 0.9;
-  
-  const basePeakForceObj = athlete.gender === "F" ? 260.0 : 350.0;
-  let REF_PEAK_FORCE = parseFloat((basePeakForceObj * levelFactor).toFixed(1));
-
-  if (isFutebol) {
-    if (levelKey === "dev") {
-      REF_RELATIVE_PEAK_FORCE = parseFloat((reqImtpRelMin * 0.9).toFixed(2));
-      REF_PEAK_FORCE = parseFloat((reqImtpAbsMin * 0.9).toFixed(1));
-    } else if (levelKey === "comp") {
-      REF_RELATIVE_PEAK_FORCE = reqImtpRelMin;
-      REF_PEAK_FORCE = reqImtpAbsMin;
-    } else if (levelKey === "adv") {
-      REF_RELATIVE_PEAK_FORCE = parseFloat(((reqImtpRelMin + reqImtpRelMax) / 2).toFixed(2));
-      REF_PEAK_FORCE = parseFloat(((reqImtpAbsMin + reqImtpAbsMax) / 2).toFixed(1));
-    } else {
-      REF_RELATIVE_PEAK_FORCE = reqImtpRelMax;
-      REF_PEAK_FORCE = reqImtpAbsMax;
-    }
-  }
-
-  const getNormLabel = () => {
-    let levelStr = "";
-    const cLevel = (athlete.competitiveLevel || "").toLowerCase();
-    if (cLevel === "amador" || cLevel === "dev" || cLevel === "em desenvolvimento") {
-      levelStr = "Desenvolvimento";
-    } else if (cLevel === "competitivo" || cLevel === "comp" || cLevel === "intermediário") {
-      levelStr = "Competitivo";
-    } else if (cLevel === "avancado" || cLevel === "adv" || cLevel === "avançado") {
-      levelStr = "Avançado";
-    } else {
-      levelStr = "Elite";
-    }
-
-    if (isFutebol) {
-      const categoryWithAgeRange = imtpSoccerCategory.split(" (")[0];
-      return `Futebol ${levelStr} (${categoryWithAgeRange})`;
-    }
-    
-    return formatCompetitiveLevel(athlete.competitiveLevel);
-  };
-
-  const REF_TIME_TO_PEAK = foundNormRow.rfdPriority.includes("Crítica") ? 200 : 250; 
-  const REF_PEAK_RFD = foundNormRow.rfdPriority.includes("Crítica") || foundNormRow.rfdPriority.includes("Muito Alta") ? 18000 : 15000;
-
-  // Calculate IMTP Performance Score (out of 100)
-  const peakForceContrib = Math.min(((data.peakForce || 0) / REF_PEAK_FORCE) * 100, 100) * 0.35;
-  const relativeForceContrib = Math.min(((data.relativePeakForce || 0) / REF_RELATIVE_PEAK_FORCE) * 100, 100) * 0.35;
-  const normalizedTime = Math.max(100, data.timeToPeakForce || 4000);
-  const timeToPeakContrib = Math.min((REF_TIME_TO_PEAK / normalizedTime) * 100, 100) * 0.15;
-  const rfdContrib = Math.min(((data.rfdPeak || 0) / REF_PEAK_RFD) * 100, 100) * 0.15;
-  const imtpScore = Math.round(peakForceContrib + relativeForceContrib + timeToPeakContrib + rfdContrib);
-
-  let imtpScoreClass = "Abaixo da Média";
-  let imtpScoreColor = "bg-red-500/10 text-red-500 border-red-500/20";
-  if (imtpScore >= 85) {
-    imtpScoreClass = isFutebol ? "Elite Futebol / Pro" : "Elite Mundial / Pro";
-    imtpScoreColor = "bg-brand-primary/10 text-brand-primary border-brand-primary/20";
-  } else if (imtpScore >= 70) {
-    imtpScoreClass = isFutebol ? "Excelente / Alto Nível" : "Excelente / Alto Nível";
-    imtpScoreColor = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-  } else if (imtpScore >= 50) {
-    imtpScoreClass = "Médio / Competitivo";
-    imtpScoreColor = "bg-yellow-500/10 text-yellow-500 border-yellow-500/30";
-  }
-
-  // Clinical Technical Interpretation
-  let diagnosticStr = `O atleta apresenta capacidade produtiva de força moderada no teste IMTP. Recomenda-se elevar a capacidade contrátil absoluta e otimizar as taxas de desenvolvimento de força dinâmica.`;
-  if (isFutebol) {
-    if (imtpScore >= 85) {
-      diagnosticStr = `Perfil neuromuscular extraordinário de elite para a categoria futebolística ${imtpSoccerCategory}. Exibe excelente sincronismo de recrutamento de fibras rápidas, força tensional absoluta e relativa excepcional para a modalidade.`;
-    } else if (imtpScore >= 70) {
-      diagnosticStr = `Bom perfil funcional de força isométrica correspondente à categoria futebolística ${imtpSoccerCategory}. Bons níveis de sustentação e taxa de força adequados ao rendimento competitivo padrão.`;
-    } else {
-      diagnosticStr = `Capacidade contrátil abaixo dos padrões ótimos estipulados para futebolistas na categoria ${imtpSoccerCategory}. Recomenda--se priorizar o treinamento neuromuscular de força e pliometria para potenciar o RFD precoce.`;
-    }
-  } else {
-    if (imtpScore >= 85 && (data.timeToPeakForce || 4000) <= 350) {
-      diagnosticStr = `Atleta com perfil neuromuscular extraordinário de elite. Exibe excelente sincronismo de recrutamento de fibras rápidas, força tensional absoluta excepcional e altíssimo gradiente de RFD explosivo.`;
-    } else if ((data.timeToPeakForce || 4000) > 400) {
-      diagnosticStr = `Apesar dos bons níveis de força, o tempo para atingir o pico de força está prolongado (${data.timeToPeakForce}ms). Indica dependência excessiva da força máxima lenta; recomenda-se focar no ciclo de alongamento-encurtamento e RFD precoce.`;
-    }
-  }
-
-  // Athlete simplified version
-  let simplifiedStr = `Você consegue empurrar bastante carga com as pernas, mas seu músculo demora um pouco mais para atingir a força máxima. Vamos treinar com mais velocidade e salto para você explodir mais rápido!`;
-  if (isFutebol) {
-    if (imtpScore >= 85) {
-      simplifiedStr = `Espetacular! Sua força máxima relativa de ${data.relativePeakForce || 0} kgf/kg está no nível de elite para a categoria ${imtpSoccerCategory}! Suas pernas têm a explosão perfeita de um campeão.`;
-    } else if (imtpScore >= 70) {
-      simplifiedStr = `Muito bom! Sua força está no nível ideal para competir forte no futebol na categoria ${imtpSoccerCategory}. Continuaremos evoluindo seus arranques!`;
-    } else {
-      simplifiedStr = `Seu teste mostra que precisamos treinar mais a sua força rápida específica para futebolistas na categoria ${imtpSoccerCategory}. Foco em potência e velocidade de resposta muscular!`;
-    }
-  } else {
-    if (imtpScore >= 85) {
-      simplifiedStr = `Espetacular! Sua força máxima e velocidade de resposta muscular estão no topo! Suas pernas funcionam como verdadeiras molas de alta potência. Parabéns!`;
-    } else if (imtpScore >= 70) {
-      simplifiedStr = `Excelente trabalho! Seus músculos das coxas e glúteos estão muito fortes e prontos para acelerações intensas. Continuaremos lapidando sua partida explosiva.`;
-    }
-  }
-
-  // Parents explanation
-  let parentsStr = `O teste IMTP no meio agachamento nos ajuda a ver qual a força total que o atleta consegue gerar contra o solo. É essencial para esportes que exigem aceleração rápida de largada e saltas mais altos, pois mostra as 'fundações' de potência física do seu corpo.`;
-
-  // Action items based on indices
-  let actionItems = [
-    { title: "Saltos Resistidos", desc: "Saltos verticais carregados com elásticos de resistência para treinar a força explosiva em tempos curtos (4 séries de 5 saltos)." },
-    { title: "IMTP Overload Isométrico", desc: "Forçar isométrica contra barra rígida indestrutível mantendo tensão por 5s na posição crítica (3 séries de 4 repetições)." },
-    { title: "Power Cleans & Puxadas Dinâmicas", desc: "Desenvolvimento da força e taxa de desenvolvimento de força por puxadas de aceleração máxima a partir do solo (4 séries de 4 repetições)." }
-  ];
-
-  if ((data.timeToPeakForce || 4000) > 350) {
-    actionItems = [
-      { title: "Saltos Drop Jumps Pro", desc: "Saltar de uma caixa (35-45cm) e imediatamente impulsionar para cima, minimizando tempo de contato (4 séries de 6 reps)." },
-      { title: "Treino em Contrastes de Força", desc: "Executar agachamentos pesados (85% 1RM) imediatamente seguidos de saltos sobre caixa (3 blocos de carga explosiva)." },
-      { title: "Agachamento Unilateral Búlgaro", desc: "Fortalecer estabilidade lateral e empuxo de quadril individualmente com saltos (4 séries de 8 repetições)." }
-    ];
-  }
-
-  // History curves helper
-  const getImtpHistory = (key: keyof Imtp) => {
-    const sortedValid = [...history]
-      .filter((item) => {
-        const val = item[key] as number;
-        return val !== undefined && val > 0;
-      })
-      .sort((a, b) => getSafeDateTime(a.date) - getSafeDateTime(b.date));
-
-    return sortedValid
-      .map((item, index) => {
-        const val = (item[key] as number) || 0;
-        const prevVal = index > 0 ? (sortedValid[index - 1][key] as number) : undefined;
-        const diff = prevVal ? ((val - prevVal) / prevVal) * 100 : 0;
-        const refVal = key === "peakForce" ? REF_PEAK_FORCE : REF_RELATIVE_PEAK_FORCE;
-        return {
-          date: formatDate(item.date),
-          value: val,
-          progression: diff,
-          isOptimal: val >= refVal,
-        };
-      })
-      .slice(-3);
-  };
-
-  const peakHistory = getImtpHistory("peakForce");
-  const relHistory = getImtpHistory("relativePeakForce");
-
-  // Find previous IMTP test in history
-  const sortedImtpTests = [...history]
+  const previousImtp = sortedHistory
     .filter((h) => h.id !== data.id)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const previousImtp = sortedImtpTests[0];
+    .slice(-1)[0];
 
-  const getProgression = (current: number, previous: number | undefined, lowerIsBetter = false) => {
-    if (previous === undefined || previous === 0) return null;
+  // Helper for longitudinal delta calculation
+  const getLongitudinalDelta = (current: number, previous: number | undefined, lowerIsBetter = false) => {
+    if (!previous || previous === 0) return null;
     const diff = current - previous;
     const pct = (diff / previous) * 100;
     const improved = lowerIsBetter ? diff < 0 : diff > 0;
     const sign = diff > 0 ? "+" : "";
+
+    let statusTrend: "positiva" | "estavel" | "atencao" = "estavel";
+    if (Math.abs(pct) >= 2.5) {
+      statusTrend = improved ? "positiva" : "atencao";
+    }
+
     return {
       diff,
       pct,
       improved,
       text: `${sign}${pct.toFixed(1)}%`,
-      color: improved ? "text-emerald-700 bg-emerald-500/10 border-emerald-500/20" : "text-amber-700 bg-amber-500/10 border-amber-500/20",
-      icon: improved ? "▲" : "▼"
+      trend: statusTrend,
+      icon: statusTrend === "positiva" ? "▲" : statusTrend === "atencao" ? "▼" : "➔",
+      color: statusTrend === "positiva"
+        ? "text-emerald-700 bg-emerald-500/10 border-emerald-500/20"
+        : statusTrend === "atencao"
+        ? "text-red-700 bg-red-500/10 border-red-500/20"
+        : "text-amber-700 bg-amber-500/10 border-amber-500/20"
     };
   };
 
-  const peakProg = previousImtp ? getProgression(data.peakForce || 0, previousImtp.peakForce) : null;
-  const relProg = previousImtp ? getProgression(data.relativePeakForce || 0, previousImtp.relativePeakForce) : null;
-  const rfdProg = (previousImtp && data.rfdPeak && previousImtp.rfdPeak) ? getProgression(data.rfdPeak, previousImtp.rfdPeak) : null;
-  const timeProg = (previousImtp && data.timeToPeakForce && previousImtp.timeToPeakForce) ? getProgression(data.timeToPeakForce, previousImtp.timeToPeakForce, true) : null;
+  const peakDelta = getLongitudinalDelta(data.peakForce || 0, previousImtp?.peakForce);
+  const relDelta = getLongitudinalDelta(data.relativePeakForce || 0, previousImtp?.relativePeakForce);
+  const rfdDelta = getLongitudinalDelta(data.rfdPeak || 0, previousImtp?.rfdPeak);
+  const rfd100Delta = getLongitudinalDelta(data.rfd100 || 0, previousImtp?.rfd100);
+  const timeDelta = getLongitudinalDelta(data.timeToPeakForce || 0, previousImtp?.timeToPeakForce, true);
+  const impulse100Delta = getLongitudinalDelta(data.impulse100 || 0, previousImtp?.impulse100);
 
-  // Format levels helper
-  const getLevelColor = (level: string) => {
-    const l = (level || "").toLowerCase();
-    if (l.includes("elite")) return "bg-brand-primary text-white border-brand-primary/20";
-    if (l.includes("avançado") || l.includes("avancado")) return "bg-emerald-500 text-white border-emerald-500/20";
-    if (l.includes("competitivo")) return "bg-teal-500 text-white border-teal-500/20";
-    if (l.includes("desenvolvimento")) return "bg-yellow-500 text-slate-950 border-yellow-500/20";
-    return "bg-slate-300 text-slate-700 border-slate-300/20";
+  // Semáforos de Desempenho (Traffic Light Indicators)
+  const getTrafficLight = (val: number, optMin: number, modMin: number, lowerIsBetter = false) => {
+    if (lowerIsBetter) {
+      if (val <= optMin) return { status: "VERDE", color: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30", dot: "🟢", label: "ÓTIMO" };
+      if (val <= modMin) return { status: "AMARELO", color: "bg-amber-500/10 text-amber-700 border-amber-500/30", dot: "🟡", label: "ATENÇÃO MODERADA" };
+      return { status: "VERMELHO", color: "bg-red-500/10 text-red-700 border-red-500/30", dot: "🔴", label: "PRIORIDADE DE AJUSTE" };
+    } else {
+      if (val >= optMin) return { status: "VERDE", color: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30", dot: "🟢", label: "ÓTIMO" };
+      if (val >= modMin) return { status: "AMARELO", color: "bg-amber-500/10 text-amber-700 border-amber-500/30", dot: "🟡", label: "ATENÇÃO MODERADA" };
+      return { status: "VERMELHO", color: "bg-red-500/10 text-red-700 border-red-500/30", dot: "🔴", label: "PRIORIDADE DE AJUSTE" };
+    }
   };
 
+  // Thresholds calibrated by sex and age
+  const relOptTarget = isFemale ? 3.0 : 4.0;
+  const relModTarget = isFemale ? 2.4 : 3.2;
+
+  const peakLight = getTrafficLight(data.peakForce || 0, isFemale ? 220 : 320, isFemale ? 170 : 250);
+  const relLight = getTrafficLight(data.relativePeakForce || 0, relOptTarget, relModTarget);
+  const rfd100Light = getTrafficLight(data.rfd100 || 0, 7500, 5000);
+  const rfdPeakLight = getTrafficLight(data.rfdPeak || 0, 15000, 10000);
+  const timeLight = getTrafficLight(data.timeToPeakForce || 350, 250, 380, true);
+  const impulse100Light = getTrafficLight(data.impulse100 || 0, 110, 80);
+
+  // Índice de Prontidão Neuromuscular Individualizado (IPN) 0-100
+  const calcIndividualizedReadiness = () => {
+    const relVal = data.relativePeakForce || 3.0;
+    const relScore = Math.min(100, Math.max(30, (relVal / relOptTarget) * 100));
+
+    const rfd100Val = data.rfd100 || 6000;
+    const rfd100Score = Math.min(100, Math.max(30, (rfd100Val / 8000) * 100));
+
+    const timeVal = data.timeToPeakForce || 350;
+    const timeScore = Math.min(100, Math.max(30, ((500 - Math.min(500, timeVal)) / 250) * 100));
+
+    const rfdPeakVal = data.rfdPeak || 12000;
+    const rfdPeakScore = Math.min(100, Math.max(30, (rfdPeakVal / 16000) * 100));
+
+    // Trend weight bonus/malus
+    let trendBonus = 0;
+    if (peakDelta?.trend === "positiva") trendBonus += 5;
+    if (peakDelta?.trend === "atencao") trendBonus -= 5;
+    if (timeDelta?.trend === "positiva") trendBonus += 5;
+    if (timeDelta?.trend === "atencao") trendBonus -= 5;
+
+    const baseScore = Math.round(relScore * 0.35 + rfd100Score * 0.25 + timeScore * 0.20 + rfdPeakScore * 0.20 + trendBonus);
+    return Math.min(100, Math.max(40, baseScore));
+  };
+
+  const ipnScore = calcIndividualizedReadiness();
+
+  // Helper for AI laudo level percent
   const getLevelPercent = (level: string) => {
     const l = (level || "").toLowerCase();
-    if (l.includes("elite")) return 100;
-    if (l.includes("avançado") || l.includes("avancado")) return 80;
-    if (l.includes("competitivo")) return 60;
-    if (l.includes("desenvolvimento")) return 40;
+    if (l.includes("elite") || l.includes("excelente") || l.includes("ótimo")) return 100;
+    if (l.includes("avançado") || l.includes("forte") || l.includes("bom")) return 80;
+    if (l.includes("competitivo") || l.includes("médio") || l.includes("moderado")) return 60;
+    if (l.includes("desenvolvimento") || l.includes("atenção")) return 40;
     return 20;
   };
+
+  let ipnStatus = {
+    label: "PRONTIDÃO OTIMIZADA",
+    subLabel: "Pico Funcional & Resposta Neural Preservada",
+    color: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30",
+    dot: "🟢",
+    desc: "Atleta em ótimo estado de facilitação neuromuscular, com capacidade de rápida aplicação de força e curva de produção íntegra."
+  };
+
+  if (ipnScore < 65 || (data.timeToPeakForce && data.timeToPeakForce > 400)) {
+    ipnStatus = {
+      label: "ALTA CARGA DE FADIGA / AJUSTE NECESSÁRIO",
+      subLabel: "Atenção ao Gradiente Neural & Fadiga Central",
+      color: "bg-red-500/10 text-red-700 border-red-500/30",
+      dot: "🔴",
+      desc: "Lentidão no tempo para atingir pico de força ou queda na taxa de produção inicial (<100ms). Recomenda-se ajustar volume de treino."
+    };
+  } else if (ipnScore < 80 || (data.timeToPeakForce && data.timeToPeakForce > 320)) {
+    ipnStatus = {
+      label: "ESTÁVEL / ATENÇÃO MODERADA",
+      subLabel: "Manutenção de Cargas & Otimização do RFD Precoce",
+      color: "bg-amber-500/10 text-amber-700 border-amber-500/30",
+      dot: "🟡",
+      desc: "Perfil de força consistente com oportunidade de aceleração do tempo de disparo contrátil e RFD inicial."
+    };
+  }
+
+  // Multi-axis Capability Radar Chart Dataset
+  const radarData = [
+    {
+      capability: "Força Absoluta",
+      score: Math.min(100, Math.round(((data.peakForce || 200) / (isFemale ? 250 : 380)) * 100)),
+      fullMark: 100
+    },
+    {
+      capability: "Força Relativa",
+      score: Math.min(100, Math.round(((data.relativePeakForce || 2.5) / relOptTarget) * 100)),
+      fullMark: 100
+    },
+    {
+      capability: "RFD 0-100ms",
+      score: Math.min(100, Math.round(((data.rfd100 || 5000) / 8000) * 100)),
+      fullMark: 100
+    },
+    {
+      capability: "RFD Propulsivo",
+      score: Math.min(100, Math.round(((data.rfdPeak || 10000) / 16000) * 100)),
+      fullMark: 100
+    },
+    {
+      capability: "Eficiência Contratil",
+      score: Math.min(100, Math.round((Math.max(100, 500 - (data.timeToPeakForce || 350)) / 350) * 100)),
+      fullMark: 100
+    }
+  ];
+
+  // Longitudinal dataset for charts (up to last 5 assessments)
+  const longitudinalChartData = sortedHistory.slice(-5).map((item) => {
+    return {
+      date: formatDate(item.date),
+      peakForce: item.peakForce || 0,
+      relativePeakForce: item.relativePeakForce || 0,
+      rfdPeak: item.rfdPeak || 0,
+      rfd100: item.rfd100 || 0,
+      timeToPeakForce: item.timeToPeakForce || 0,
+      impulse100: item.impulse100 || 0
+    };
+  });
+
+  // Dynamic Movement Impact Analysis
+  const movementImpacts = [
+    {
+      title: "1. ACELERAÇÃO (0-10M)",
+      metric: `RFD @ 100ms: ${data.rfd100 || 0} N/s • ${rfd100Light.dot} ${rfd100Light.label}`,
+      impact: (data.rfd100 || 0) >= 7000
+        ? "Excelente capacidade de decolagem inicial. Permite vencer a inércia e acelerar nos primeiros 3 passos com impulsão vertical-horizontal ótima."
+        : "O tempo de reação inicial necessita de estímulos pliométricos curtos. A menor taxa de força a 100ms limita a explosão na partida estática."
+    },
+    {
+      title: "2. SPRINT & VELOCIDADE MÁXIMA",
+      metric: `Força Relativa: ${data.relativePeakForce || 0} kgf/kg • ${relLight.dot} ${relLight.label}`,
+      impact: (data.relativePeakForce || 0) >= relOptTarget
+        ? "Alta rigidez muscular e suporte de peso corporal. Garante tempos de contato extremamente curtos durante a fase de velocidade máxima."
+        : "O aumento da relação força/massa corporal otimizará a flutuação no sprint e reduzirá o tempo de suporte com o solo."
+    },
+    {
+      title: "3. MUDANÇA DE DIREÇÃO (COD)",
+      metric: `Impulso @ 100ms: ${data.impulse100 || 0} N·s • ${impulse100Light.dot} ${impulse100Light.label}`,
+      impact: (data.impulse100 || 0) >= 100
+        ? "Notável capacidade de frenagem e re-aceleração. O atleta absorve e redireciona o vetor de força com estabilidade articular superior."
+        : "Recomenda-se fortalecer o controle excêntrico unilateral para acelerar o tempo de transição e troca de direção."
+    },
+    {
+      title: "4. SALTO VERTICAL & HORIZONTAL",
+      metric: `Pico RFD: ${data.rfdPeak || 0} N/s • ${rfdPeakLight.dot} ${rfdPeakLight.label}`,
+      impact: (data.rfdPeak || 0) >= 14000
+        ? "Elevado gradiente contrátil para impulsão vertical e decolagens rápidas em disputas aéreas."
+        : "O pico de RFD em desenvolvimento indica benefício direto com o método de contraste pesado-leve (potenciação pós-ativação)."
+    },
+    {
+      title: "5. DESACELERAÇÃO & FRENAGEM",
+      metric: `Pico Absoluto: ${data.peakForce || 0} kgf • ${peakLight.dot} ${peakLight.label}`,
+      impact: (data.peakForce || 0) >= (isFemale ? 200 : 300)
+        ? "Capacidade tensional máxima elevada para dissipar grandes cargas de impacto e proteger a cadeia posterior em paradas bruscas."
+        : "Aumentar a força isométrica estipula um escudo de proteção mecânica contra sobrecargas ligamentares durante desacelerações."
+    },
+    {
+      title: "6. PREVENÇÃO DE LESÕES & RIGIDEZ TENDÍNEA",
+      metric: `Tempo até Pico: ${data.timeToPeakForce || 0} ms • ${timeLight.dot} ${timeLight.label}`,
+      impact: (data.timeToPeakForce || 350) <= 300
+        ? "Rápida ativação neuromuscular e sincronismo de recrutamento de unidades motoras, minimizando risco de estiramento isquiotibial."
+        : "O tempo de reação atinge pico tardio. Priorizar o ciclo de encurtamento-alongamento (CEA) rápido melhora a rigidez do complexo miotendíneo."
+    }
+  ];
+
+  // Training Action Priorities
+  const trainingPriorities = [];
+  if ((data.timeToPeakForce || 350) > 320 || (data.rfd100 || 0) < 6500) {
+    trainingPriorities.push({
+      priority: "PRIORIDADE 1: RFD PRECOCE & CEA RÁPIDO",
+      desc: "Saltos pliométricos de baixo tempo de contato (Drop Jumps 30-40cm) e lançamentos balísticos focando no disparo inicial em <100ms."
+    });
+  } else {
+    trainingPriorities.push({
+      priority: "PRIORIDADE 1: MANUTENÇÃO DE POTÊNCIA REATIVO-ELÁSTICA",
+      desc: "Manter bloco de saltos em profundidade e sprints resistidos curtos com foco na taxa de decolagem."
+    });
+  }
+
+  if ((data.relativePeakForce || 0) < relOptTarget) {
+    trainingPriorities.push({
+      priority: "PRIORIDADE 2: FORÇA MÁXIMA RELATIVA & SOBRECARGA ISOMÉTRICA",
+      desc: "Agachamento com sobrecarga (80-90% 1RM) e puxadas isométricas IMTP em posição crítica para elevar a força tensional sem ganho excessivo de massa."
+    });
+  } else {
+    trainingPriorities.push({
+      priority: "PRIORIDADE 2: MANUTENÇÃO DE FORÇA TENSIONAL MÁXIMA",
+      desc: "Treino de força em contraste (Complex Training) combinando agachamento pesado com saltos sem pausa."
+    });
+  }
+
+  trainingPriorities.push({
+    priority: "PRIORIDADE 3: RIGIDEZ TENDÍNEA & CONTROLE EXCÊNTRICO",
+    desc: "Aterrissagens unilaterais controladas e agachamento búlgaro com pausa isométrica para reforçar o ligamento patelar e tendão de Aquiles."
+  });
 
   const totalPages = (data.aiDetails && includeAiLaudo) ? 4 : 2;
 
@@ -13156,11 +13077,11 @@ const ImtpReport: FC<{
         {/* Printable/exportable container */}
         <div ref={reportRef} className="print-container bg-slate-100/10 md:bg-transparent">
           
-          {/* Page 1: General IMTP Strength Overview */}
+          {/* PAGE 1: PRONTIDÃO NEUROMUSCULAR, RADAR DE CAPACIDADES E EVOLUÇÃO LONGITUDINAL */}
           <ReportPage pageNumber={1} totalPages={totalPages}>
             <ReportHeader
               title="Meio Agachamento Isométrico (IMTP)"
-              subTitle="IMTP - Isometric Mid-Thigh Pull Elite Report"
+              subTitle="Relatório de Desempenho e Prontidão Neuromuscular"
               athlete={athlete}
               date={formatDate(data.date)}
               extraStats={[
@@ -13169,241 +13090,335 @@ const ImtpReport: FC<{
               ]}
             />
 
-            <div className="grid grid-cols-3 gap-6 mb-6">
-              {/* Score Circular gauge */}
-              <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl flex flex-col items-center justify-center text-center select-none">
-                <p className="text-[9px] font-black tracking-widest text-slate-500 uppercase mb-2">
-                  IMTP ATHLETIC INDEX
-                </p>
-                <div className="relative w-28 h-28 flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" stroke="#f1f5f9" strokeWidth="8" fill="transparent" />
-                    <circle cx="50" cy="50" r="40" stroke="#39FF14" strokeWidth="8" fill="transparent"
-                      strokeDasharray={251.2}
-                      strokeDashoffset={251.2 - (251.2 * imtpScore) / 100}
-                      strokeLinecap="round" className="transition-all duration-1000"
-                    />
-                  </svg>
-                  <div className="absolute flex flex-col items-center justify-center">
-                    <span className="text-3xl font-black text-slate-950 italic leading-none">{imtpScore}</span>
-                    <span className="text-[7px] font-extrabold text-slate-900 uppercase mt-0.5 tracking-wider">PTS</span>
-                  </div>
-                </div>
-                <div className={`mt-3 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border ${imtpScoreColor}`}>
-                  {imtpScoreClass}
-                </div>
-              </div>
-
-              {/* General details of force */}
-              <div className="col-span-2 bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col justify-between">
+            {/* Top Grid: Neuromuscular Readiness Index & Capabilities Radar */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+              
+              {/* Box 1: Prontidão Neuromuscular Badge & Traffic Light */}
+              <div className="bg-slate-50 border border-slate-200 p-4.5 rounded-2xl flex flex-col justify-between select-none">
                 <div>
-                  <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 border-l-2 border-brand-primary pl-2 italic flex flex-wrap gap-2 items-center justify-between">
-                    <span>FORÇA TENSIONAL ISOMÉTRICA MÁXIMA</span>
-                    <span className="text-[7.5px] font-black text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-md leading-none uppercase">
-                      {isFutebol ? `Futebol • ${imtpSoccerCategory}` : (foundNormRow?.name || "Geral")} {!isFutebol && `(${foundNormRow?.gender || "M/F"})`} • {isFutebol ? "Normativos Customizados por Categoria" : ageAdjustNote}
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+                      INDICADOR DE PRONTIDÃO
                     </span>
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white p-3 rounded-xl border border-slate-200">
-                      <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-wider block">Pico de Força (Absoluto)</span>
-                      <strong className="text-2xl font-black text-slate-900 mt-1 block italic">
-                        {data.peakForce || 0} kgf <span className="text-slate-400 font-medium text-xs">({Math.round((data.peakForce || 0) * 9.80665)} N)</span>
-                      </strong>
-                      <span className="text-[7.5px] font-bold text-slate-500 block mt-1">
-                        Meta ({getNormLabel()}): &ge; {REF_PEAK_FORCE} kgf ({Math.round(REF_PEAK_FORCE * 9.80665)} N)
-                      </span>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-xl border border-slate-200">
-                      <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-wider block">Força Relativa {data.weight ? `(${data.weight} kg)` : "(Massa Corporal)"}</span>
-                      <strong className="text-2xl font-black text-emerald-600 mt-1 block italic">
-                        {data.relativePeakForce || 0} kgf/kg <span className="text-emerald-400 font-medium text-xs">({((data.relativePeakForce || 0) * 9.80665).toFixed(1)} N/kg)</span>
-                      </strong>
-                      <span className="text-[7.5px] font-bold text-slate-500 block mt-1">
-                        Normativa ({getNormLabel()}): &ge; {REF_RELATIVE_PEAK_FORCE} kgf/kg ({(REF_RELATIVE_PEAK_FORCE * 9.80665).toFixed(1)} N/kg)
-                      </span>
-                    </div>
+                    <span className={`text-[7.5px] font-black px-2 py-0.5 rounded-full border ${ipnStatus.color}`}>
+                      {ipnStatus.dot} {ipnStatus.label}
+                    </span>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-200">
-                  <div>
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider block">Tempo até o Pico</span>
-                    <strong className="text-sm font-black text-slate-800 italic">{data.timeToPeakForce || 0} ms</strong>
+                  <div className="flex items-baseline gap-2 mt-2 mb-1">
+                    <span className="text-3xl font-black text-slate-950 italic">{ipnScore}</span>
+                    <span className="text-xs font-bold text-slate-500 uppercase">/ 100 PTS</span>
                   </div>
-                  <div>
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider block">Força Média do Teste</span>
-                    <strong className="text-sm font-black text-slate-800 italic">{data.meanForce || 0} kgf</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Progression charts */}
-            <div className="grid grid-cols-2 gap-6 mb-6">
-              {/* Abs Peak progression */}
-              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl h-[170px] flex flex-col justify-between">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Histórico: Pico de Força Absoluta</span>
-                <div className="flex-grow min-h-0 w-full mt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={peakHistory} margin={{ top: 20, right: 15, left: -20, bottom: -5 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#334155", fontSize: 8, fontWeight: 900 }} />
-                      <YAxis domain={[0, Math.max(450, ...peakHistory.map((d) => d.value * 1.25))]} hide />
-                      <ReferenceLine y={REF_PEAK_FORCE} stroke="#f43f5e" strokeDasharray="4 4" />
-                      <Line type="monotone" dataKey="value" stroke="#39FF14" strokeWidth={3}
-                        dot={(props: any) => {
-                          const { cx, cy, payload } = props;
-                          const isElite = payload.value >= REF_PEAK_FORCE;
-                          return (
-                            <g key={cx}>
-                              <circle cx={cx} cy={cy} r={5} fill={isElite ? "#10b981" : "#ef4444"} stroke="#FFF" strokeWidth={1.5} />
-                              <text x={cx} y={cy - 10} textAnchor="middle" fill="#0f172a" fontSize={8} fontWeight={900} className="font-sans">
-                                {payload.value} kgf
-                              </text>
-                            </g>
-                          );
-                        }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Rel Peak progression */}
-              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl h-[170px] flex flex-col justify-between">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Histórico: Força Relativa</span>
-                <div className="flex-grow min-h-0 w-full mt-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={relHistory} margin={{ top: 20, right: 15, left: -20, bottom: -5 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#334155", fontSize: 8, fontWeight: 900 }} />
-                      <YAxis domain={[0, 6.5]} hide />
-                      <ReferenceLine y={REF_RELATIVE_PEAK_FORCE} stroke="#f43f5e" strokeDasharray="4 4" />
-                      <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3}
-                        dot={(props: any) => {
-                          const { cx, cy, payload } = props;
-                          const isElite = payload.value >= REF_RELATIVE_PEAK_FORCE;
-                          return (
-                            <g key={cx}>
-                              <circle cx={cx} cy={cy} r={5} fill={isElite ? "#10b981" : "#ef4444"} stroke="#FFF" strokeWidth={1.5} />
-                              <text x={cx} y={cy - 10} textAnchor="middle" fill="#0f172a" fontSize={8} fontWeight={900} className="font-sans">
-                                {payload.value.toFixed(2)} x
-                              </text>
-                            </g>
-                          );
-                        }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-4">
-              <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-2 border-l-2 border-brand-primary pl-2 italic">
-                EXPLICAÇÕES CIENTÍFICAS E COMPARAÇÃO EVOLUTIVA
-              </h4>
-              <div className="grid grid-cols-2 gap-4 text-xs font-bold text-slate-700">
-                <div className="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col justify-between">
-                  <div>
-                    <p className="text-slate-500 text-[8px] uppercase font-black tracking-widest leading-none mb-1.5">PARECER TÉCNICO & ALVO DE TREINO:</p>
-                    <p className="leading-relaxed text-[10px] text-slate-800 uppercase font-sans font-extrabold">{diagnosticStr}</p>
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-slate-100">
-                    <p className="text-[8px] text-slate-400 uppercase tracking-wider block font-bold leading-none mb-1">Dica de Performance:</p>
-                    <p className="text-[9px] text-slate-500 leading-normal uppercase">O aumento de 10% no Pico de Força do IMTP correlaciona-se cientificamente com melhoria de 0.05s a 0.08s no sprint linear de 10m.</p>
-                  </div>
-                </div>
-
-                <div className="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col justify-between">
-                  {previousImtp ? (
-                    <div>
-                      <div className="flex justify-between items-center mb-2 pb-1 border-b border-slate-100">
-                        <span className="text-emerald-600 text-[8px] uppercase font-black tracking-widest leading-none">
-                          Comparação com Teste Anterior
-                        </span>
-                        <span className="text-[7.5px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded uppercase leading-none font-bold">
-                          {formatDate(previousImtp.date)}
-                        </span>
-                      </div>
-                      
-                      <div className="text-[8px] uppercase font-extrabold text-slate-800 space-y-1.5">
-                        <div className="flex justify-between items-center">
-                          <span>Pico de Força:</span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400 font-bold">{previousImtp.peakForce} kgf</span>
-                            <span className="text-slate-700">➔ {data.peakForce} kgf</span>
-                            {peakProg && (
-                              <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded border ${peakProg.color}`}>
-                                {peakProg.icon} {peakProg.text}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                          <span>Força Relativa:</span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400 font-bold">{previousImtp.relativePeakForce?.toFixed(2)} x</span>
-                            <span className="text-slate-700">➔ {data.relativePeakForce?.toFixed(2)} x</span>
-                            {relProg && (
-                              <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded border ${relProg.color}`}>
-                                {relProg.icon} {relProg.text}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                          <span>Pico RFD (Explosão):</span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400 font-bold">{previousImtp.rfdPeak || 0} N/s</span>
-                            <span className="text-slate-700">➔ {data.rfdPeak || 0} N/s</span>
-                            {rfdProg && (
-                              <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded border ${rfdProg.color}`}>
-                                {rfdProg.icon} {rfdProg.text}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex justify-between items-center">
-                          <span>Tempo até Pico:</span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400 font-bold">{previousImtp.timeToPeakForce || 0} ms</span>
-                            <span className="text-slate-700">➔ {data.timeToPeakForce || 0} ms</span>
-                            {timeProg && (
-                              <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded border ${timeProg.color}`}>
-                                {timeProg.icon} {timeProg.text}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col justify-center items-center text-center h-full py-4 select-none">
-                      <TrendingUp className="w-8 h-8 text-slate-300 mb-2" />
-                      <p className="text-[9px] uppercase font-black text-slate-700 mb-1 leading-snug">Primeiro Teste IMTP</p>
-                      <p className="text-[8px] text-slate-500 leading-normal uppercase">
-                        Não existem avaliações anteriores registradas para este atleta. Os próximos testes farão comparações evolutivas automáticas neste espaço.
-                      </p>
-                    </div>
-                  )}
-                  <p className="text-[6.5px] text-slate-400 font-normal leading-tight italic mt-2.5 leading-none">
-                    *Comparações baseadas no banco de dados sincronizado e processamento biomecânico.
+                  <p className="text-[8.5px] font-semibold text-slate-600 uppercase leading-relaxed mt-2 border-t border-slate-200/60 pt-2">
+                    {ipnStatus.desc}
                   </p>
                 </div>
+
+                <div className="mt-3 pt-2.5 border-t border-slate-200 flex justify-between items-center text-[8px] font-extrabold uppercase text-slate-500">
+                  <span>Contexto da Modalidade:</span>
+                  <span className="text-slate-900 font-black">{athlete.modality || "Geral"} • {athleteAge} Anos</span>
+                </div>
               </div>
+
+              {/* Box 2 & 3: Multi-Axis Capabilities Radar */}
+              <div className="col-span-2 bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col justify-between">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest border-l-2 border-brand-primary pl-2 italic">
+                    RADAR DE CAPACIDADES NEUROMUSCULARES (PERFIL INDIVIDUAL)
+                  </span>
+                  <span className="text-[7.5px] font-bold text-slate-400 uppercase">
+                    Escala de Eficiência Contratil (0-100)
+                  </span>
+                </div>
+
+                <div className="h-[145px] w-full flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
+                      <PolarGrid stroke="#cbd5e1" />
+                      <PolarAngleAxis
+                        dataKey="capability"
+                        tick={{ fill: "#0f172a", fontSize: 8, fontWeight: 800 }}
+                      />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar
+                        name="Capacidades"
+                        dataKey="score"
+                        stroke="#39FF14"
+                        fill="#39FF14"
+                        fillOpacity={0.25}
+                        strokeWidth={2}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle Grid: Core Metrics with Individualized Traffic Lights */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5 select-none font-sans">
+              
+              {/* Metric 1: Peak Force */}
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col justify-between shadow-sm">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-wider">Pico Absoluto</span>
+                    <span className={`text-[7px] font-black px-1.5 py-0.5 rounded border ${peakLight.color}`}>
+                      {peakLight.dot} {peakLight.label}
+                    </span>
+                  </div>
+                  <strong className="text-xl font-black text-slate-950 block italic mt-1">
+                    {data.peakForce || 0} kgf
+                  </strong>
+                  <span className="text-[7.5px] text-slate-400 font-medium block">
+                    ({Math.round((data.peakForce || 0) * 9.80665)} N)
+                  </span>
+                </div>
+                <div className="mt-2.5 pt-2 border-t border-slate-100 flex justify-between items-center">
+                  <span className="text-[7px] font-bold text-slate-400 uppercase">Tendência:</span>
+                  {peakDelta ? (
+                    <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded border ${peakDelta.color}`}>
+                      {peakDelta.icon} {peakDelta.text}
+                    </span>
+                  ) : (
+                    <span className="text-[7px] font-bold text-slate-400 uppercase">Baseline</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Metric 2: Relative Peak Force */}
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col justify-between shadow-sm">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-wider">Força Relativa</span>
+                    <span className={`text-[7px] font-black px-1.5 py-0.5 rounded border ${relLight.color}`}>
+                      {relLight.dot} {relLight.label}
+                    </span>
+                  </div>
+                  <strong className="text-xl font-black text-emerald-600 block italic mt-1">
+                    {data.relativePeakForce || 0} kgf/kg
+                  </strong>
+                  <span className="text-[7.5px] text-slate-400 font-medium block">
+                    ({((data.relativePeakForce || 0) * 9.80665).toFixed(1)} N/kg)
+                  </span>
+                </div>
+                <div className="mt-2.5 pt-2 border-t border-slate-100 flex justify-between items-center">
+                  <span className="text-[7px] font-bold text-slate-400 uppercase">Massa ({athleteMass}kg):</span>
+                  {relDelta ? (
+                    <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded border ${relDelta.color}`}>
+                      {relDelta.icon} {relDelta.text}
+                    </span>
+                  ) : (
+                    <span className="text-[7px] font-bold text-slate-400 uppercase">Baseline</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Metric 3: Time to Peak */}
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col justify-between shadow-sm">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-wider">Tempo até o Pico</span>
+                    <span className={`text-[7px] font-black px-1.5 py-0.5 rounded border ${timeLight.color}`}>
+                      {timeLight.dot} {timeLight.label}
+                    </span>
+                  </div>
+                  <strong className="text-xl font-black text-slate-900 block italic mt-1">
+                    {data.timeToPeakForce || 0} ms
+                  </strong>
+                  <span className="text-[7.5px] text-slate-400 font-medium block">
+                    Velocidade de Reação
+                  </span>
+                </div>
+                <div className="mt-2.5 pt-2 border-t border-slate-100 flex justify-between items-center">
+                  <span className="text-[7px] font-bold text-slate-400 uppercase">Variação Tempo:</span>
+                  {timeDelta ? (
+                    <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded border ${timeDelta.color}`}>
+                      {timeDelta.icon} {timeDelta.text}
+                    </span>
+                  ) : (
+                    <span className="text-[7px] font-bold text-slate-400 uppercase">Baseline</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Metric 4: RFD 100ms */}
+              <div className="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col justify-between shadow-sm">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[7.5px] font-black text-slate-400 uppercase tracking-wider">RFD @ 100ms</span>
+                    <span className={`text-[7px] font-black px-1.5 py-0.5 rounded border ${rfd100Light.color}`}>
+                      {rfd100Light.dot} {rfd100Light.label}
+                    </span>
+                  </div>
+                  <strong className="text-xl font-black text-brand-primary block italic mt-1">
+                    {data.rfd100 || 0} N/s
+                  </strong>
+                  <span className="text-[7.5px] text-slate-400 font-medium block">
+                    Explosão Inicial (&lt;100ms)
+                  </span>
+                </div>
+                <div className="mt-2.5 pt-2 border-t border-slate-100 flex justify-between items-center">
+                  <span className="text-[7px] font-bold text-slate-400 uppercase">Evolução Neural:</span>
+                  {rfd100Delta ? (
+                    <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded border ${rfd100Delta.color}`}>
+                      {rfd100Delta.icon} {rfd100Delta.text}
+                    </span>
+                  ) : (
+                    <span className="text-[7px] font-bold text-slate-400 uppercase">Baseline</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Longitudinal Charts Grid */}
+            <div className="grid grid-cols-2 gap-5 mb-5">
+              
+              {/* Longitudinal Chart 1: Peak Force & Relative Force */}
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl h-[165px] flex flex-col justify-between">
+                <div className="flex justify-between items-center">
+                  <span className="text-[8.5px] font-black text-slate-900 uppercase tracking-wider">
+                    EVOLUÇÃO LONGITUDINAL: FORÇA MÁXIMA & RELATIVA
+                  </span>
+                  <span className="text-[7.5px] font-bold text-slate-400 uppercase">Acompanhamento Temporal</span>
+                </div>
+                <div className="flex-grow min-h-0 w-full mt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={longitudinalChartData} margin={{ top: 15, right: 15, left: -20, bottom: -5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#334155", fontSize: 8, fontWeight: 900 }} />
+                      <YAxis yAxisId="left" hide domain={['auto', 'auto']} />
+                      <YAxis yAxisId="right" orientation="right" hide domain={['auto', 'auto']} />
+                      <Line yAxisId="left" type="monotone" dataKey="peakForce" stroke="#39FF14" strokeWidth={2.5}
+                        dot={(props: any) => {
+                          const { cx, cy, payload } = props;
+                          return (
+                            <g key={cx}>
+                              <circle cx={cx} cy={cy} r={4} fill="#10b981" stroke="#FFF" strokeWidth={1.5} />
+                              <text x={cx} y={cy - 8} textAnchor="middle" fill="#0f172a" fontSize={7.5} fontWeight={900}>
+                                {payload.peakForce}kgf
+                              </text>
+                            </g>
+                          );
+                        }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Longitudinal Chart 2: RFD & Time to Peak */}
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl h-[165px] flex flex-col justify-between">
+                <div className="flex justify-between items-center">
+                  <span className="text-[8.5px] font-black text-slate-900 uppercase tracking-wider">
+                    EVOLUÇÃO LONGITUDINAL: TAXA DE EXPLOSÃO (RFD)
+                  </span>
+                  <span className="text-[7.5px] font-bold text-slate-400 uppercase">Gradiente de Produção</span>
+                </div>
+                <div className="flex-grow min-h-0 w-full mt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={longitudinalChartData} margin={{ top: 15, right: 15, left: -20, bottom: -5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#334155", fontSize: 8, fontWeight: 900 }} />
+                      <YAxis hide domain={['auto', 'auto']} />
+                      <Line type="monotone" dataKey="rfdPeak" stroke="#0284c7" strokeWidth={2.5}
+                        dot={(props: any) => {
+                          const { cx, cy, payload } = props;
+                          return (
+                            <g key={cx}>
+                              <circle cx={cx} cy={cy} r={4} fill="#0284c7" stroke="#FFF" strokeWidth={1.5} />
+                              <text x={cx} y={cy - 8} textAnchor="middle" fill="#0f172a" fontSize={7.5} fontWeight={900}>
+                                {payload.rfdPeak}N/s
+                              </text>
+                            </g>
+                          );
+                        }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Section: Longitudinal Evolution & Individualized Interpretation Table */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+              <h4 className="text-[9.5px] font-black text-slate-900 uppercase tracking-widest mb-2 border-l-2 border-brand-primary pl-2 italic">
+                SÍNTESE DE ACOMPANHAMENTO LONGITUDINAL & HISTÓRICO COMPARATIVO
+              </h4>
+              
+              {previousImtp ? (
+                <div className="grid grid-cols-4 gap-3 text-[8px] font-bold text-slate-800 uppercase font-sans">
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                    <span className="text-slate-400 block text-[7px]">Pico de Força</span>
+                    <strong className="text-xs font-black text-slate-950 block">{data.peakForce} kgf</strong>
+                    <div className="flex justify-between items-center mt-1 pt-1 border-t border-slate-100">
+                      <span className="text-slate-400">Anterior: {previousImtp.peakForce}kgf</span>
+                      {peakDelta && (
+                        <span className={`text-[7px] font-black px-1 rounded ${peakDelta.color}`}>
+                          {peakDelta.icon} {peakDelta.text}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                    <span className="text-slate-400 block text-[7px]">Força Relativa</span>
+                    <strong className="text-xs font-black text-emerald-600 block">{data.relativePeakForce} kgf/kg</strong>
+                    <div className="flex justify-between items-center mt-1 pt-1 border-t border-slate-100">
+                      <span className="text-slate-400">Anterior: {previousImtp.relativePeakForce}x</span>
+                      {relDelta && (
+                        <span className={`text-[7px] font-black px-1 rounded ${relDelta.color}`}>
+                          {relDelta.icon} {relDelta.text}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                    <span className="text-slate-400 block text-[7px]">Pico RFD (Explosão)</span>
+                    <strong className="text-xs font-black text-slate-950 block">{data.rfdPeak || 0} N/s</strong>
+                    <div className="flex justify-between items-center mt-1 pt-1 border-t border-slate-100">
+                      <span className="text-slate-400">Anterior: {previousImtp.rfdPeak || 0}N/s</span>
+                      {rfdDelta && (
+                        <span className={`text-[7px] font-black px-1 rounded ${rfdDelta.color}`}>
+                          {rfdDelta.icon} {rfdDelta.text}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                    <span className="text-slate-400 block text-[7px]">Tempo até o Pico</span>
+                    <strong className="text-xs font-black text-slate-950 block">{data.timeToPeakForce || 0} ms</strong>
+                    <div className="flex justify-between items-center mt-1 pt-1 border-t border-slate-100">
+                      <span className="text-slate-400">Anterior: {previousImtp.timeToPeakForce || 0}ms</span>
+                      {timeDelta && (
+                        <span className={`text-[7px] font-black px-1 rounded ${timeDelta.color}`}>
+                          {timeDelta.icon} {timeDelta.text}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between text-[8.5px] uppercase font-bold text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>Primeira avaliação registrada no sistema. Os próximos testes gerarão gráficos longitudinais e delta percentual automático.</span>
+                  </div>
+                  <span className="text-[7.5px] font-mono bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
+                    REGISTRO BASELINE DEFINIDO
+                  </span>
+                </div>
+              )}
             </div>
           </ReportPage>
 
-          {/* Page 2: RFD & Impulse Dynamics */}
+          {/* PAGE 2: IMPACTO NO MOVIMENTO, FASES DA CURVA, PRIORIDADES DE TREINO E METAS % */}
           <ReportPage pageNumber={2} totalPages={totalPages}>
             <ReportHeader
-              title="Curva Força-Tempo de Elite (IMTP)"
-              subTitle="RFDs & Impulse Analytics (Taxas de Produção em ms)"
+              title="Análise Dinâmica de Força-Tempo e Impulso"
+              subTitle="Indicadores de Potência, Reação e Diretrizes de Treinamento"
               athlete={athlete}
               date={formatDate(data.date)}
               extraStats={[
@@ -13412,218 +13427,213 @@ const ImtpReport: FC<{
               ]}
             />
 
-            {/* Coach & Scientist layman explanations of RFD and Impulse */}
-            <div className="bg-emerald-50/60 border border-emerald-100 p-4.5 rounded-2xl mb-4 font-sans select-none">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="text-emerald-600 animate-pulse" size={16} />
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-[#006400]">
-                   PARECER DO CIENTISTA: ENTENDENDO SUA EXPLOSÃO E EMPURRÃO
-                </h4>
-              </div>
-              <p className="text-[9.5px] text-slate-700 font-semibold uppercase leading-relaxed mb-3">
-                Para vencer no esporte, a sua "força total" não é o único segredo — o mais importante é o <strong className="text-slate-900 font-extrabold">tempo</strong> que você leva para ativar essa força. Movimentos explosivos na quadra (tiros, saltos, fintas) duram menos de <strong className="text-slate-900 font-extrabold">200 milissegundos</strong>. Se você demorar para ligar seus motores, a força máxima acumulada não servirá para gerar aceleração instantânea. É por isso que analisamos a sua taxa de explosão (RFD) e o seu empurrão continuado (Impulso).
-              </p>
-              <div className="grid grid-cols-3 gap-3 text-slate-900">
-                <div className="bg-white/80 p-3 rounded-xl border border-emerald-100">
-                  <span className="text-[7.5px] font-extrabold text-[#006400] tracking-wider block uppercase">1. O QUE É TAXA DE EXPLOSÃO (RFD)?</span>
-                  <p className="text-[8.5px] font-semibold leading-relaxed uppercase text-slate-600 mt-1">
-                    É a sua "arrancada instantânea". Mede o quão rápido você aciona seu motor para empurrar o chão. Seu pico de RFD de <strong className="text-slate-900">{data.rfdPeak || 0} N/s</strong> mostra que a velocidade para ligar seus motores é de nível <span className="font-extrabold text-emerald-700">{(data.rfdPeak || 0) >= 15000 ? "Elite" : "Forte"}</span>.
-                  </p>
-                </div>
-                <div className="bg-white/80 p-3 rounded-xl border border-emerald-100">
-                  <span className="text-[7.5px] font-extrabold text-[#006400] tracking-wider block uppercase">2. O QUE É O IMPULSO (N·s)?</span>
-                  <p className="text-[8.5px] font-semibold leading-relaxed uppercase text-slate-600 mt-1">
-                    É o seu "empurrão continuado" contra o solo. Quanto mais forte e sustentada for a sua força durante todo o movimento de subida, mais alto você salta. O seu <strong className="text-slate-900">Impulso aos 100ms ({data.impulse100 || 0} N·s)</strong> é o dado mais crítico aqui, pois dita a sua velocidade de reação rápida!
-                  </p>
-                </div>
-                <div className="bg-white/80 p-3 rounded-xl border border-emerald-100">
-                  <span className="text-[7.5px] font-extrabold text-[#006400] tracking-wider block uppercase">3. SEU DIRECIONAMENTO DE TREINO</span>
-                  <p className="text-[8.5px] font-semibold leading-relaxed uppercase text-slate-600 mt-1">
-                    Como cientista e preparador, nosso objetivo será reduzir o seu tempo de contato com o solo. Privilegiaremos <strong className="text-slate-900">saltos rápidos (drop-jumps)</strong> e <strong className="text-slate-905 font-bold">trabalho em contraste (carga máxima rápida)</strong> para acelerar a decolagem.
-                  </p>
-                </div>
+            {/* Dynamic Movement Impact Analysis (6 Key Pillars) */}
+            <div className="mb-4">
+              <h4 className="text-[9.5px] font-black text-slate-900 uppercase tracking-widest mb-2 border-l-2 border-brand-primary pl-2 italic">
+                IMPACTO FUNCIONAL E APLICAÇÃO PRÁTICA NOS PADRÕES DE MOVIMENTO
+              </h4>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {movementImpacts.map((item, idx) => (
+                  <div key={idx} className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex flex-col justify-between font-sans">
+                    <div>
+                      <span className="text-[7.5px] font-black text-brand-primary uppercase tracking-wider block mb-0.5">
+                        {item.title}
+                      </span>
+                      <strong className="text-[8.5px] font-extrabold text-slate-900 block mb-1.5 uppercase leading-none">
+                        {item.metric}
+                      </strong>
+                      <p className="text-[8px] font-medium text-slate-600 uppercase leading-relaxed">
+                        {item.impact}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Scientific Diagnostics & Main Metrics Grid */}
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              {/* Panel 1: Fase Inicial Crítica (0 a 100ms) */}
+            {/* Temporal Force-Time Phase Panels with Semáforos */}
+            <div className="grid grid-cols-3 gap-3.5 mb-4">
+              
+              {/* Panel 1: Fase Inicial (0-100ms) */}
               <div className="bg-white border border-slate-200 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-[8px] font-black text-brand-primary uppercase tracking-wider bg-brand-primary/10 px-1.5 py-0.5 rounded leading-none">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[8px] font-black text-brand-primary uppercase bg-brand-primary/10 px-1.5 py-0.5 rounded leading-none">
                       0 - 100ms
                     </span>
-                    <span className="text-[8px] font-bold text-slate-400 uppercase">FASE INICIAL CRÍTICA</span>
+                    <span className="text-[7.5px] font-bold text-slate-400 uppercase">FASE INICIAL CRÍTICA</span>
                   </div>
-                  <h5 className="text-[9.5px] font-black text-slate-950 uppercase mb-1 leading-none">
-                    EXPLOSÃO PURA & REAÇÃO
+                  <h5 className="text-[9px] font-black text-slate-950 uppercase mb-1">
+                    EXPLOSÃO PURA & DECOLOGEM
                   </h5>
-                  <p className="text-[8px] font-bold text-slate-500 leading-normal mb-3 uppercase">
-                    Define o tempo de reação de partida rápida e decolagem de altíssima velocidade.
-                  </p>
-                  <div className="space-y-2 font-sans">
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-150 flex justify-between items-center">
-                      <div className="shrink-0">
-                        <span className="text-[7.5px] font-bold text-slate-400 uppercase block">RFD @ 100ms</span>
-                        <strong className="text-base font-black text-slate-950 italic">{data.rfd100 || 0} N/s</strong>
+                  <div className="space-y-2 mt-2 font-sans">
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-150 flex justify-between items-center">
+                      <div>
+                        <span className="text-[7px] font-bold text-slate-400 uppercase block">RFD @ 100ms</span>
+                        <strong className="text-sm font-black text-slate-950 italic">{data.rfd100 || 0} N/s</strong>
                       </div>
-                      <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase font-mono ${(data.rfd100 || 0) >= 8000 ? "text-emerald-700 bg-emerald-500/10" : "text-amber-700 bg-amber-500/10"}`}>
-                        {(data.rfd100 || 0) >= 8000 ? "EXCELENTE" : "EM DESENVOLVIMENTO"}
+                      <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded uppercase border ${rfd100Light.color}`}>
+                        {rfd100Light.dot} {rfd100Light.label}
                       </span>
                     </div>
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-150 flex justify-between items-center font-sans">
-                      <div className="shrink-0">
-                        <span className="text-[7.5px] font-bold text-slate-400 uppercase block">IMPULSO @ 100ms</span>
-                        <strong className="text-base font-black text-slate-950 italic">{data.impulse100 || 0} N·s</strong>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-150 flex justify-between items-center">
+                      <div>
+                        <span className="text-[7px] font-bold text-slate-400 uppercase block">IMPULSO @ 100ms</span>
+                        <strong className="text-sm font-black text-slate-950 italic">{data.impulse100 || 0} N·s</strong>
                       </div>
-                      <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase font-mono ${(data.impulse100 || 0) >= 100 ? "text-emerald-700 bg-emerald-500/10" : "text-amber-700 bg-amber-500/10"}`}>
-                        {(data.impulse100 || 0) >= 100 ? "EXCELENTE" : "EM DESENVOLVIMENTO"}
+                      <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded uppercase border ${impulse100Light.color}`}>
+                        {impulse100Light.dot} {impulse100Light.label}
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 pt-2 text-[7.5px] text-slate-400 uppercase leading-snug border-t border-slate-100 italic">
-                  *Referência Prática: Crucial para o tempo de decolagem no basquete, vôlei e as primeiras passadas nos sprints.
-                </div>
+                <p className="mt-2 text-[7px] text-slate-400 uppercase italic border-t border-slate-100 pt-1.5 leading-snug">
+                  *Crucial para o tempo de decolagem em saltos e primeiras passadas de aceleração linear.
+                </p>
               </div>
 
-              {/* Panel 2: Fase de Transição (100 a 200ms) */}
+              {/* Panel 2: Fase Propulsiva (100-200ms) */}
               <div className="bg-white border border-slate-200 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-[8px] font-black text-emerald-600 uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded leading-none">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[8px] font-black text-emerald-600 uppercase bg-emerald-500/10 px-1.5 py-0.5 rounded leading-none">
                       100 - 200ms
                     </span>
-                    <span className="text-[8px] font-bold text-slate-400 uppercase">FASE PROPULSIVA</span>
+                    <span className="text-[7.5px] font-bold text-slate-400 uppercase">FASE PROPULSIVA</span>
                   </div>
-                  <h5 className="text-[9.5px] font-black text-slate-950 uppercase mb-1 leading-none">
-                    POTÊNCIA CONTINUADA & SALTO
+                  <h5 className="text-[9px] font-black text-slate-950 uppercase mb-1">
+                    POTÊNCIA CONTINUADA
                   </h5>
-                  <p className="text-[8px] font-bold text-slate-500 leading-normal mb-3 uppercase">
-                    Reflete a transição mecânica em que o atleta atinge a decolagem física em saltos.
-                  </p>
-                  <div className="space-y-2 font-sans">
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-150 flex justify-between items-center">
-                      <div className="shrink-0">
-                        <span className="text-[7.5px] font-bold text-slate-400 uppercase block">RFD @ 200ms</span>
-                        <strong className="text-base font-black text-slate-950 italic">{data.rfd200 || 0} N/s</strong>
+                  <div className="space-y-2 mt-2 font-sans">
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-150 flex justify-between items-center">
+                      <div>
+                        <span className="text-[7px] font-bold text-slate-400 uppercase block">RFD @ 200ms</span>
+                        <strong className="text-sm font-black text-slate-950 italic">{data.rfd200 || 0} N/s</strong>
                       </div>
-                      <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase font-mono ${(data.rfd200 || 0) >= 10000 ? "text-emerald-700 bg-emerald-500/10" : "text-amber-700 bg-amber-500/10"}`}>
-                        {(data.rfd200 || 0) >= 10000 ? "EXCELENTE" : "EM DESENVOLVIMENTO"}
+                      <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded uppercase border ${(data.rfd200 || 0) >= 10000 ? "text-emerald-700 bg-emerald-500/10 border-emerald-500/20" : "text-amber-700 bg-amber-500/10 border-amber-500/20"}`}>
+                        {(data.rfd200 || 0) >= 10000 ? "🟢 ÓTIMO" : "🟡 MODERADO"}
                       </span>
                     </div>
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-150 flex justify-between items-center">
-                      <div className="shrink-0">
-                        <span className="text-[7.5px] font-bold text-slate-400 uppercase block">IMPULSO @ 200ms</span>
-                        <strong className="text-base font-black text-slate-950 italic">{data.impulse200 || 0} N·s</strong>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-150 flex justify-between items-center">
+                      <div>
+                        <span className="text-[7px] font-bold text-slate-400 uppercase block">IMPULSO @ 200ms</span>
+                        <strong className="text-sm font-black text-slate-950 italic">{data.impulse200 || 0} N·s</strong>
                       </div>
-                      <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase font-mono ${(data.impulse200 || 0) >= 200 ? "text-emerald-700 bg-emerald-500/10" : "text-amber-700 bg-amber-500/10"}`}>
-                        {(data.impulse200 || 0) >= 200 ? "EXCELENTE" : "EM DESENVOLVIMENTO"}
+                      <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded uppercase border ${(data.impulse200 || 0) >= 200 ? "text-emerald-700 bg-emerald-500/10 border-emerald-500/20" : "text-amber-700 bg-amber-500/10 border-amber-500/20"}`}>
+                        {(data.impulse200 || 0) >= 200 ? "🟢 ÓTIMO" : "🟡 MODERADO"}
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 pt-2 text-[7.5px] text-slate-400 uppercase leading-snug border-t border-slate-100 italic">
-                  *Referência Prática: O padrão ouro de tempo de contato para saltos unilaterais na passada de atletismo.
-                </div>
+                <p className="mt-2 text-[7px] text-slate-400 uppercase italic border-t border-slate-100 pt-1.5 leading-snug">
+                  *Determina a magnitude de empuxo continuado na passada de corrida e impulso vertical.
+                </p>
               </div>
 
-              {/* Panel 3: Pico / Força Máxima Limiar */}
+              {/* Panel 3: Pico Neuromuscular Absoluto */}
               <div className="bg-white border border-slate-200 p-3.5 rounded-xl flex flex-col justify-between shadow-sm">
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-[8px] font-black text-purple-600 uppercase tracking-wider bg-purple-500/10 px-1.5 py-0.5 rounded leading-none">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-[8px] font-black text-purple-600 uppercase bg-purple-500/10 px-1.5 py-0.5 rounded leading-none">
                       PICO GERAL
                     </span>
-                    <span className="text-[8px] font-bold text-slate-400 uppercase">CAPACIDADE MÁXIMA</span>
+                    <span className="text-[7.5px] font-bold text-slate-400 uppercase">CAPACIDADE MÁXIMA</span>
                   </div>
-                  <h5 className="text-[9.5px] font-black text-slate-950 uppercase mb-1 leading-none">
-                    PICO NEUROMUSCULAR ABSOLUTO
+                  <h5 className="text-[9px] font-black text-slate-950 uppercase mb-1">
+                    POTENCIAL TENSIONAL BRUTO
                   </h5>
-                  <p className="text-[8px] font-bold text-slate-500 leading-normal mb-3 uppercase">
-                    Reflete o potencial bruto supremo de contratilidade e recrutamento de fibras do atleta.
-                  </p>
-                  <div className="space-y-2 font-sans">
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-150 flex justify-between items-center">
-                      <div className="shrink-0">
-                        <span className="text-[7.5px] font-bold text-slate-400 uppercase block">PICO RFD</span>
-                        <strong className="text-base font-black text-slate-950 italic">{data.rfdPeak || 0} N/s</strong>
+                  <div className="space-y-2 mt-2 font-sans">
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-150 flex justify-between items-center">
+                      <div>
+                        <span className="text-[7px] font-bold text-slate-400 uppercase block">PICO RFD</span>
+                        <strong className="text-sm font-black text-slate-950 italic">{data.rfdPeak || 0} N/s</strong>
                       </div>
-                      <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase font-mono ${(data.rfdPeak || 0) >= 15000 ? "text-emerald-700 bg-emerald-500/10" : "text-amber-700 bg-amber-500/10"}`}>
-                        {(data.rfdPeak || 0) >= 15000 ? "ELITE" : "COMPETITIVO"}
+                      <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded uppercase border ${rfdPeakLight.color}`}>
+                        {rfdPeakLight.dot} {rfdPeakLight.label}
                       </span>
                     </div>
-                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-150 flex justify-between items-center">
-                      <div className="shrink-0">
-                        <span className="text-[7.5px] font-bold text-slate-400 uppercase block">IMPULSO DE PICO</span>
-                        <strong className="text-base font-black text-slate-950 italic">{data.impulsePeak || 0} N·s</strong>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-150 flex justify-between items-center">
+                      <div>
+                        <span className="text-[7px] font-bold text-slate-400 uppercase block">IMPULSO DE PICO</span>
+                        <strong className="text-sm font-black text-slate-950 italic">{data.impulsePeak || 0} N·s</strong>
                       </div>
-                      <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase font-mono ${(data.impulsePeak || 0) >= 450 ? "text-emerald-700 bg-emerald-500/10" : "text-amber-700 bg-amber-500/10"}`}>
-                        {(data.impulsePeak || 0) >= 450 ? "ELITE" : "COMPETITIVO"}
+                      <span className={`text-[6.5px] font-black px-1.5 py-0.5 rounded uppercase border ${(data.impulsePeak || 0) >= 400 ? "text-emerald-700 bg-emerald-500/10 border-emerald-500/20" : "text-amber-700 bg-amber-500/10 border-amber-500/20"}`}>
+                        {(data.impulsePeak || 0) >= 400 ? "🟢 ÓTIMO" : "🟡 MODERADO"}
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="mt-3 pt-2 text-[7.5px] text-slate-400 uppercase leading-snug border-t border-slate-100 italic">
-                  *Referência Prática: Métrica de força pura concentrada de alta magnitude indispensável na fase estática do IMTP.
-                </div>
+                <p className="mt-2 text-[7px] text-slate-400 uppercase italic border-t border-slate-100 pt-1.5 leading-snug">
+                  *Reflete o recrutamento máximo de unidades motoras e força de sustentação isométrica.
+                </p>
               </div>
             </div>
 
-            {/* Practical Action items and trainer interpretation */}
-            {data.aiDetails && (
-              <div className="p-5 rounded-2xl mb-4 bg-slate-50 border border-slate-200">
-                <div>
-                  <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-3 border-l-2 border-brand-primary pl-2 italic">
-                    PLANO DE ATUAÇÃO PREVENTIVA E DE POTÊNCIA
-                  </h4>
-                  <div className="grid grid-cols-3 gap-4">
-                    {actionItems.map((item, idx) => (
-                      <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col justify-between font-sans">
-                        <div>
-                          <p className="text-[7.5px] font-black text-brand-primary uppercase tracking-wider mb-1">AÇÃO {idx + 1}</p>
-                          <strong className="text-xs font-black text-slate-900 uppercase italic block leading-none mb-2">{item.title}</strong>
-                          <p className="text-[9px] font-medium text-slate-600 uppercase leading-relaxed">{item.desc}</p>
-                        </div>
-                      </div>
-                    ))}
+            {/* Practical Action Priorities */}
+            <div className="p-4 rounded-2xl mb-4 bg-slate-50 border border-slate-200 select-none">
+              <h4 className="text-[9.5px] font-black text-slate-900 uppercase tracking-widest mb-2.5 border-l-2 border-brand-primary pl-2 italic">
+                PRIORIDADES DE TREINAMENTO E PRESCRIÇÃO INDIVIDUALIZADA
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-sans">
+                {trainingPriorities.map((item, idx) => (
+                  <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[7px] font-black text-brand-primary uppercase tracking-wider block mb-1">
+                        DIRETRIZ {idx + 1}
+                      </span>
+                      <strong className="text-[9px] font-black text-slate-950 uppercase italic block leading-snug mb-1.5">
+                        {item.priority}
+                      </strong>
+                      <p className="text-[8px] font-semibold text-slate-600 uppercase leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            )}
+            </div>
 
-            {/* Goals */}
-            <div className="bg-slate-950 text-white rounded-2xl p-5 select-none font-sans flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            {/* Individualized Percentage Evolution Goals (% Metas) */}
+            <div className="bg-slate-950 text-white rounded-2xl p-4.5 select-none font-sans flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div className="w-full md:w-auto">
-                <p className="text-[8px] font-black tracking-widest text-[#39FF14] uppercase mb-1">METAS DE EVOLUÇÃO NEUROMUSCULAR (ALVO IMTP)</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
-                  <div className="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-[#39FF14] animate-ping" />
+                  <p className="text-[8px] font-black tracking-widest text-[#39FF14] uppercase">
+                    METAS INDIVIDUALIZADAS POR EVOLUÇÃO PERCENTUAL (PRÓXIMO CICLO)
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 mt-2">
+                  <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-center">
                     <span className="text-[7px] text-slate-400 block uppercase font-bold font-mono">Pico de Força Alvo</span>
-                    <strong className="text-sm font-black text-[#39FF14] italic">
-                      {Math.round((data.peakForce || 250) * 1.10)} - {Math.round((data.peakForce || 250) * 1.15)} KGF
+                    <strong className="text-sm font-black text-[#39FF14] italic block mt-0.5">
+                      {Math.round((data.peakForce || 200) * 1.05)} - {Math.round((data.peakForce || 200) * 1.08)} KGF
                     </strong>
-                    <span className="text-[6.5px] text-slate-500 block mt-0.5 font-semibold font-mono">(+10% a +15%)</span>
+                    <span className="text-[6.5px] text-slate-400 block mt-0.5 font-bold font-mono">(+5.0% a +8.0% de Evolução)</span>
                   </div>
-                  <div className="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center">
+
+                  <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-center">
                     <span className="text-[7px] text-slate-400 block uppercase font-bold font-mono">Pico RFD Desejável</span>
-                    <strong className="text-sm font-black text-[#39FF14] italic">
-                      {Math.round((data.rfdPeak || 15000) * 1.12)} - {Math.round((data.rfdPeak || 15000) * 1.18)} N/S
+                    <strong className="text-sm font-black text-[#39FF14] italic block mt-0.5">
+                      {Math.round((data.rfdPeak || 10000) * 1.08)} - {Math.round((data.rfdPeak || 10000) * 1.12)} N/S
                     </strong>
-                    <span className="text-[6.5px] text-slate-500 block mt-0.5 font-semibold font-mono">(+12% a +18%)</span>
+                    <span className="text-[6.5px] text-slate-400 block mt-0.5 font-bold font-mono">(+8.0% a +12.0% de Explosão)</span>
                   </div>
-                  <div className="bg-slate-900 border border-slate-800 p-2 rounded-xl text-center col-span-2 sm:col-span-1">
-                    <span className="text-[7px] text-slate-400 block uppercase font-bold font-mono">Tempo até o Pico</span>
-                    <strong className="text-sm font-black text-brand-primary italic">
-                      &lt; {Math.round((data.timeToPeakForce || 250) * 0.90)} MS
+
+                  <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-center col-span-2 sm:col-span-1">
+                    <span className="text-[7px] text-slate-400 block uppercase font-bold font-mono">Otimização Tempo de Reação</span>
+                    <strong className="text-sm font-black text-brand-primary italic block mt-0.5">
+                      &lt; {Math.round((data.timeToPeakForce || 350) * 0.90)} MS
                     </strong>
-                    <span className="text-[6.5px] text-slate-500 block mt-0.5 font-semibold font-mono">(-10% de Contração Rápida)</span>
+                    <span className="text-[6.5px] text-slate-400 block mt-0.5 font-bold font-mono">(-10.0% de Tempo Contratil)</span>
                   </div>
                 </div>
               </div>
+
               <div className="text-left md:text-right border-t md:border-t-0 border-slate-800 pt-3 md:pt-0 w-full md:w-auto flex flex-col shrink-0">
-                <span className="text-[8px] font-black text-slate-400 block uppercase tracking-wider leading-none">PRAZO ESTIMADO DE ADAPTAÇÃO</span>
-                <strong className="text-sm font-black italic text-brand-primary uppercase tracking-tight mt-1">6 A 8 SEMANAS DE PERIODIZAÇÃO</strong>
+                <span className="text-[8px] font-black text-slate-400 block uppercase tracking-wider leading-none">BLOCO DE PERIODIZAÇÃO RECOMENDADO</span>
+                <strong className="text-xs font-black italic text-brand-primary uppercase tracking-tight mt-1">6 A 8 SEMANAS DE INTERVENÇÃO</strong>
                 <span className="text-[7px] text-slate-500 uppercase mt-0.5 leading-normal">Foco em treinamento pliométrico e contrastes excêntricos-isométricos.</span>
               </div>
             </div>

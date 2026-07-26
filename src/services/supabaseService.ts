@@ -86,6 +86,24 @@ const serializeBackupAthleteFields = (athlete: any) => {
   });
 };
 
+const extractMissingColumnFromSupabaseError = (errorMessage: string): string | null => {
+  if (!errorMessage) return null;
+
+  // e.g. "Could not find the 'training_days' column of 'athletes' in the schema cache"
+  const match1 = errorMessage.match(/Could not find the '([^']+)' column/i);
+  if (match1 && match1[1]) return match1[1];
+
+  // e.g. "column 'training_days' of relation 'athletes' does not exist"
+  const match2 = errorMessage.match(/column ["']?([^"'\s]+)["']? (?:of relation [^\s]+ )?does not exist/i);
+  if (match2 && match2[1]) return match2[1];
+
+  // e.g. "column training_days does not exist"
+  const match3 = errorMessage.match(/column ([^\s]+) does not exist/i);
+  if (match3 && match3[1]) return match3[1];
+
+  return null;
+};
+
 export const isNetworkError = (error: any): boolean => {
   if (!error) return false;
   const msg = (error.message || String(error)).toLowerCase();
@@ -453,23 +471,56 @@ export const supabaseService = {
       updated_at: new Date().toISOString()
     };
 
-    let { error: athleteError } = await supabase
-      .from('athletes')
-      .upsert(payload);
+    let attempts = 0;
+    let athleteError: any = null;
 
-    if (athleteError && (athleteError.message?.toLowerCase().includes('photo_url') || athleteError.message?.toLowerCase().includes('training_days'))) {
-      if (athleteError.message?.toLowerCase().includes('photo_url')) {
-        console.warn('[Supabase] Tabela "athletes" não possui a coluna "photo_url". Retentando sem essa coluna...');
-        delete payload.photo_url;
-      }
-      if (athleteError.message?.toLowerCase().includes('training_days')) {
-        console.warn('[Supabase] Tabela "athletes" não possui a coluna "training_days". Retentando sem essa coluna...');
-        delete payload.training_days;
-      }
-      const retryResult = await supabase
+    while (attempts < 10) {
+      attempts++;
+      const res = await supabase
         .from('athletes')
         .upsert(payload);
-      athleteError = retryResult.error;
+      athleteError = res.error;
+
+      if (!athleteError) {
+        break;
+      }
+
+      const errMsg = athleteError.message || '';
+      console.warn(`[Supabase] Tentativa ${attempts} de salvar atleta '${athlete.name}' falhou: ${errMsg}`);
+
+      const missingCol = extractMissingColumnFromSupabaseError(errMsg);
+      let removedAny = false;
+
+      if (missingCol && (missingCol in payload)) {
+        console.warn(`[Supabase] Removendo coluna inexistente '${missingCol}' do payload do atleta e retentando...`);
+        delete payload[missingCol];
+        removedAny = true;
+      } else {
+        const optionalCols = [
+          'training_days',
+          'photo_url',
+          'is_tournament_mode',
+          'periodization_start',
+          'periodization_end',
+          'weekly_frequency',
+          'injury_history',
+          'competitive_level',
+          'position',
+          'goal'
+        ];
+        for (const col of optionalCols) {
+          if ((col in payload) && errMsg.toLowerCase().includes(col.toLowerCase())) {
+            console.warn(`[Supabase] Removendo coluna com erro '${col}' do payload do atleta e retentando...`);
+            delete payload[col];
+            removedAny = true;
+            break;
+          }
+        }
+      }
+
+      if (!removedAny) {
+        break;
+      }
     }
 
     if (athleteError) {
