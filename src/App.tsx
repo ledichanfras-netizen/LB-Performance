@@ -385,14 +385,12 @@ const Login: FC<{
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md premium-card p-10 md:p-14 relative z-10 border-slate-800/40"
       >
-        <div className="flex flex-col items-center mb-10">
-          <div className="w-28 h-28 rounded-3xl shadow-[0_0_60px_rgba(57,255,20,0.45)] mb-6 border border-emerald-500/50 overflow-hidden bg-slate-950 flex items-center justify-center shrink-0">
-            <img
-              src="/192x192.png"
-              className="w-full h-full object-cover scale-110"
-              alt="LB Logo"
-            />
-          </div>
+        <div className="flex flex-col items-center mb-12">
+          <img
+            src="/192x192.png"
+            className="w-20 h-20 rounded-[2rem] shadow-[0_0_50px_rgba(57,255,20,0.4)] mb-8 object-contain"
+            alt="Logo"
+          />
           <h1 className="text-3xl font-black tracking-tighter uppercase italic text-white leading-none">
             Elite <span className="text-brand-primary">Hub</span>
           </h1>
@@ -501,10 +499,10 @@ const ReportPage: FC<{
 
       <div className="mt-10 pt-6 border-t border-slate-100 flex justify-between items-center bg-white shrink-0">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-slate-950 rounded-xl flex items-center justify-center shadow-lg overflow-hidden border border-emerald-500/20 shrink-0">
+          <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg">
             <img
               src="/192x192.png"
-              className="w-full h-full object-cover scale-110"
+              className="w-6 h-6 object-contain"
               alt="LB"
             />
           </div>
@@ -546,10 +544,10 @@ const ReportHeader: FC<{
     
     <div className="relative z-10 w-full">
       <div className="flex items-center gap-4 mb-4">
-        <div className="w-12 h-12 rounded-xl bg-slate-950 flex items-center justify-center shadow-md overflow-hidden border border-emerald-500/30 shrink-0">
+        <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center p-1 shadow-md">
           <img
             src="/192x192.png"
-            className="w-full h-full object-cover scale-110"
+            className="w-10 h-10 object-contain"
             alt="Logo"
           />
         </div>
@@ -750,6 +748,7 @@ const EliteHubApp: FC<{
       return {
         id: ath.id,
         name: ath.name,
+        photoUrl: ath.photoUrl,
         esporte: ath.modality || "Geral",
         acute,
         chronic,
@@ -1322,13 +1321,11 @@ const EliteHubApp: FC<{
       <div className="h-screen flex flex-col items-center justify-center bg-[#020617] text-[#10b981] font-black uppercase tracking-[0.3em] md:tracking-[0.5em] p-4 text-center relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] bg-[#10b981]/5 rounded-full blur-[140px] animate-pulse"></div>
         <div className="relative z-10 flex flex-col items-center">
-          <div className="w-28 h-28 rounded-3xl mb-8 shadow-[0_0_60px_rgba(16,185,129,0.5)] overflow-hidden border border-emerald-500/50 bg-slate-950 animate-bounce flex items-center justify-center shrink-0">
-            <img
-              src="/192x192.png"
-              className="w-full h-full object-cover scale-110"
-              alt="LB Logo"
-            />
-          </div>
+          <img
+            src="/192x192.png"
+            className="w-24 h-24 rounded-[2.5rem] mb-8 shadow-[0_0_60px_rgba(16,185,129,0.4)] animate-bounce object-contain"
+            alt="LB Logo"
+          />
           <div className="space-y-2">
             <h1 className="text-2xl md:text-3xl tracking-[0.4em] font-black italic">
               LB PERFORMANCE
@@ -1400,15 +1397,13 @@ const EliteHubApp: FC<{
   if (loading && athletes.length === 0) {
     return (
       <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center p-8 bg-gradient-to-br from-brand-dark to-slate-900">
-        <div className="relative w-24 h-24">
+        <div className="relative">
           <div className="w-24 h-24 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin"></div>
-          <div className="absolute inset-1.5 rounded-full overflow-hidden bg-slate-950 flex items-center justify-center">
-            <img
-              src="/192x192.png"
-              className="w-full h-full object-cover scale-110"
-              alt="Logo"
-            />
-          </div>
+          <img
+            src="/192x192.png"
+            className="absolute inset-0 w-full h-full p-2 object-contain"
+            alt="Logo"
+          />
         </div>
         <p className="mt-10 text-brand-primary font-black uppercase tracking-[0.4em] animate-pulse text-xs text-center">
           Sincronizando Banco de Dados Elite...
@@ -1599,12 +1594,8 @@ const EliteHubApp: FC<{
               {/* Premium Performance Pro Logo Bracket & Theme Toggle */}
               <div className="hidden md:flex items-center justify-between mb-10 mt-2 px-2">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.25)] border border-emerald-300/20 shrink-0 overflow-hidden">
-                    <img
-                      src="/192x192.png"
-                      className="w-full h-full object-cover scale-110"
-                      alt="Logo"
-                    />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-emerald-600 flex items-center justify-center text-slate-950 font-black text-2xl italic shadow-[0_0_20px_rgba(16,185,129,0.25)] border border-emerald-300/20 shrink-0">
+                    P
                   </div>
                   <div className="flex flex-col">
                     <span className="font-extrabold text-xs tracking-[0.14em] uppercase text-white/90 leading-none">
@@ -1984,10 +1975,10 @@ const EliteHubApp: FC<{
 
                   <div className="relative z-10 min-w-0">
                     <div className="flex items-center gap-3 sm:gap-4">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-950 flex items-center justify-center border border-emerald-500/30 overflow-hidden shrink-0 shadow-lg">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20 shrink-0">
                         <img
                           src="/192x192.png"
-                          className="w-full h-full object-cover scale-110"
+                          className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
                           alt="Logo"
                         />
                       </div>
@@ -2384,13 +2375,22 @@ const EliteHubApp: FC<{
                                       <td className="py-4 px-4">
                                         <div className="flex items-center gap-3">
                                           <div
-                                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black select-none transition-transform duration-300 ${
+                                            className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black select-none transition-transform duration-300 overflow-hidden shrink-0 border ${
                                               ath.isSelected
-                                                ? "bg-gradient-to-br from-amber-500 to-yellow-600 text-slate-950 scale-105"
-                                                : "bg-slate-800 text-slate-300"
+                                                ? "bg-gradient-to-br from-amber-500 to-yellow-600 text-slate-950 scale-105 border-amber-400"
+                                                : "bg-slate-800 text-slate-300 border-slate-700/60"
                                             }`}
                                           >
-                                            {initials}
+                                            {ath.photoUrl ? (
+                                              <img
+                                                src={ath.photoUrl}
+                                                alt={ath.name}
+                                                className="w-full h-full object-cover"
+                                                referrerPolicy="no-referrer"
+                                              />
+                                            ) : (
+                                              initials
+                                            )}
                                           </div>
                                           <div>
                                             <span className={ath.isSelected ? "text-xs font-black text-amber-450 block" : "text-xs font-black text-white hover:text-amber-550 block"}>

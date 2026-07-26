@@ -105,80 +105,6 @@ export const logError = (context: string, error: any) => {
   }
 };
 
-const safeSupabaseUpsert = async (tableName: string, rawPayload: any): Promise<{ data: any; error: any }> => {
-  const isArray = Array.isArray(rawPayload);
-  let payload = isArray ? rawPayload.map(item => ({ ...item })) : { ...rawPayload };
-
-  let attempts = 0;
-  let lastError: any = null;
-
-  while (attempts < 10) {
-    attempts++;
-    const { data, error } = await supabase.from(tableName).upsert(payload);
-    if (!error) return { data, error: null };
-
-    lastError = error;
-    const errorMsg = error.message || '';
-    console.warn(`[Supabase Upsert ${tableName}] Tentativa ${attempts} falhou:`, errorMsg);
-
-    // Extract column name from error message if present
-    const match = errorMsg.match(/Could not find the '([^']+)' column/i) ||
-                  errorMsg.match(/column "([^"]+)" of relation/i) ||
-                  errorMsg.match(/column "([^"]+)"/i) ||
-                  errorMsg.match(/column '([^']+)'/i);
-
-    let removed = false;
-    if (match && match[1]) {
-      const missingCol = match[1];
-      if (isArray) {
-        for (const item of payload) {
-          if (item.hasOwnProperty(missingCol)) {
-            delete item[missingCol];
-            removed = true;
-          }
-        }
-      } else {
-        if (payload.hasOwnProperty(missingCol)) {
-          delete payload[missingCol];
-          removed = true;
-        }
-      }
-    }
-
-    if (!removed) {
-      // Fallback check for common optional columns
-      const commonMissingCols = [
-        'photo_url', 'photoUrl', 'training_days', 'is_tournament_mode', 'periodization_start', 'periodization_end',
-        'injuries', 'weekly_frequency', 'cognitive_load', 'readiness_score', 'travel_fatigue', 'sleep_quality'
-      ];
-      for (const col of commonMissingCols) {
-        if (errorMsg.toLowerCase().includes(col.toLowerCase())) {
-          if (isArray) {
-            for (const item of payload) {
-              if (item.hasOwnProperty(col)) {
-                delete item[col];
-                removed = true;
-              }
-            }
-          } else {
-            if (payload.hasOwnProperty(col)) {
-              delete payload[col];
-              removed = true;
-            }
-          }
-          if (removed) break;
-        }
-      }
-    }
-
-    if (!removed) {
-      return { data: null, error: lastError };
-    }
-  }
-
-  return { data: null, error: lastError || new Error(`Exceeded max upsert retries for table ${tableName}`) };
-};
-
 export const supabaseService = {
   async loadAthletes(): Promise<Athlete[]> {
     if (!isSupabaseConfigured) {
@@ -527,7 +453,24 @@ export const supabaseService = {
       updated_at: new Date().toISOString()
     };
 
-    const { error: athleteError } = await safeSupabaseUpsert('athletes', payload);
+    let { error: athleteError } = await supabase
+      .from('athletes')
+      .upsert(payload);
+
+    if (athleteError && (athleteError.message?.toLowerCase().includes('photo_url') || athleteError.message?.toLowerCase().includes('training_days'))) {
+      if (athleteError.message?.toLowerCase().includes('photo_url')) {
+        console.warn('[Supabase] Tabela "athletes" não possui a coluna "photo_url". Retentando sem essa coluna...');
+        delete payload.photo_url;
+      }
+      if (athleteError.message?.toLowerCase().includes('training_days')) {
+        console.warn('[Supabase] Tabela "athletes" não possui a coluna "training_days". Retentando sem essa coluna...');
+        delete payload.training_days;
+      }
+      const retryResult = await supabase
+        .from('athletes')
+        .upsert(payload);
+      athleteError = retryResult.error;
+    }
 
     if (athleteError) {
       logError('[Supabase] Erro ao salvar atleta base:', athleteError);
@@ -545,7 +488,7 @@ export const supabaseService = {
       }
       
       if (athlete.wellness.length > 0) {
-        const wellnessPayload = athlete.wellness.map(w => ({
+        const { error: wError } = await supabase.from('wellness').upsert(athlete.wellness.map(w => ({
           id: w.id,
           athlete_id: athlete.id,
           date: w.date,
@@ -558,8 +501,7 @@ export const supabaseService = {
           readiness_score: w.readinessScore !== undefined ? w.readinessScore : (w as any).readiness_score,
           travel_fatigue: w.travelFatigue !== undefined ? w.travelFatigue : (w as any).travel_fatigue,
           sleep_quality: w.sleepQuality !== undefined ? w.sleepQuality : (w as any).sleep_quality
-        }));
-        const { error: wError } = await safeSupabaseUpsert('wellness', wellnessPayload);
+        })));
         if (wError) {
           logError('[Supabase] Erro ao salvar wellness:', wError);
           throw wError;
@@ -578,7 +520,7 @@ export const supabaseService = {
       }
 
       if (athlete.externalSessions.length > 0) {
-        const extPayload = athlete.externalSessions.map(es => ({
+        const { error: esError } = await supabase.from('external_sessions').upsert(athlete.externalSessions.map(es => ({
           id: es.id,
           athlete_id: athlete.id,
           date: es.date,
@@ -587,8 +529,7 @@ export const supabaseService = {
           rpe: es.rpe,
           notes: es.notes,
           load: es.load
-        }));
-        const { error: esError } = await safeSupabaseUpsert('external_sessions', extPayload);
+        })));
         if (esError) {
           logError('[Supabase] Erro ao salvar sessões externas:', esError);
           throw esError;
