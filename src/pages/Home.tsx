@@ -20,7 +20,7 @@ export default function Home() {
       >
         <div className="flex justify-center mb-8">
           <div className="w-28 h-28 bg-slate-900/90 rounded-[2.5rem] flex items-center justify-center p-3 shadow-[0_0_50px_rgba(57,255,20,0.35)] border border-brand-primary/30">
-            <img src="/pwa-192x192.svg" className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(57,255,20,0.3)]" alt="LB Logo" />
+            <img src="/pwa-192x192.svg?v=3" className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(57,255,20,0.3)]" alt="LB Logo" />
           </div>
         </div>
 

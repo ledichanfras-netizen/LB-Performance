@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useDashboard } from "../hooks/useDashboard";
 import { motion } from 'motion/react';
-import { Activity, Zap, TrendingUp, ArrowLeft, Trophy } from 'lucide-react';
+import { Zap, TrendingUp, ArrowLeft, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { UserWithPlan } from '../utils/plan';
@@ -72,8 +72,12 @@ export default function Dashboard({ user }: { user: UserWithPlan | null }) {
               >
                 <span className="hidden xs:inline sm:inline">Hub</span> <Zap className="w-4 h-4 fill-current" />
               </button>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-900 rounded-xl sm:rounded-2xl flex items-center justify-center border border-slate-800 shrink-0">
-                <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-brand-primary" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-900 rounded-xl sm:rounded-2xl flex items-center justify-center p-1.5 border border-slate-800 shrink-0">
+                <img
+                  src="/pwa-192x192.svg?v=3"
+                  className="w-full h-full object-contain"
+                  alt="Logo"
+                />
               </div>
             </div>
         </header>
