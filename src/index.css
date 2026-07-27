@@ -116,11 +116,45 @@ body.light-theme .bg-slate-950\/80,
 body.light-theme .bg-slate-950\/60,
 body.light-theme .bg-\[\#020617\],
 body.light-theme .bg-\[\#070b14\],
+body.light-theme .bg-\[\#080c14\],
 body.light-theme .bg-\[\#0B0F19\],
 body.light-theme .bg-\[\#0A0D16\],
+body.light-theme .bg-\[\#080d16\],
+body.light-theme .bg-\[\#080D16\],
+body.light-theme .bg-\[\#0e1322\],
+body.light-theme .bg-\[\#0E1322\],
+body.light-theme .bg-\[\#0d1324\],
+body.light-theme .bg-\[\#0D1324\],
+body.light-theme .bg-\[\#111625\],
+body.light-theme .bg-\[\#111726\],
+body.light-theme .bg-\[\#080d1a\],
+body.light-theme .bg-\[\#080D1A\],
+body.light-theme .bg-\[\#0c111d\],
+body.light-theme .bg-\[\#111827\],
+body.light-theme .bg-\[\#0b0f19\],
 body.light-theme .bg-brand-dark {
   background-color: #ffffff !important;
   color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Subtabs Segmented Controller & Navigation Bars in Light Mode */
+body.light-theme .bg-\[\#0d1324\]\/50,
+body.light-theme .bg-\[\#0d1324\] {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Unselected Navigation & Subtab Buttons in Light Mode */
+body.light-theme button.text-slate-400,
+body.light-theme button.text-slate-500 {
+  color: #334155 !important;
+}
+
+body.light-theme button.text-slate-400:hover,
+body.light-theme button.text-slate-500:hover {
+  color: #0f172a !important;
+  background-color: rgba(203, 213, 225, 0.5) !important;
 }
 
 /* Inner block containers (slate-800, sub-panels) for nested contrast */
@@ -132,9 +166,79 @@ body.light-theme .bg-slate-800\/40,
 body.light-theme .bg-slate-800\/30,
 body.light-theme .bg-slate-800\/20,
 body.light-theme .bg-slate-850\/90,
-body.light-theme .bg-slate-850 {
-  background-color: #f1f5f9 !important;
+body.light-theme .bg-slate-850,
+body.light-theme .bg-\[\#111625\]\/80,
+body.light-theme .bg-\[\#0e1322\]\/30,
+body.light-theme .bg-\[\#0e1322\]\/80,
+body.light-theme .bg-\[\#0e1322\]\/95,
+body.light-theme .bg-\[\#111827\]\/40,
+body.light-theme .bg-\[\#0b0f19\]\/40,
+body.light-theme .bg-slate-950\/25,
+body.light-theme .bg-slate-950\/40,
+body.light-theme .bg-slate-950\/60,
+body.light-theme .bg-slate-900\/60,
+body.light-theme .bg-slate-900\/50,
+body.light-theme .bg-slate-900\/30,
+body.light-theme .bg-slate-900\/20,
+body.light-theme .bg-amber-950\/25,
+body.light-theme .bg-amber-950\/30,
+body.light-theme .bg-emerald-950\/25 {
+  background-color: #f8fafc !important;
   color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Specific Light Theme Gradients for PERFORMANCE LB-X, Athlete Dashboard, DM & Readiness Cards */
+body.light-theme .bg-gradient-to-br.from-slate-900.via-slate-950.to-slate-900 {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%) !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05) !important;
+}
+
+body.light-theme .bg-gradient-to-br.from-\[\#02050E\].to-\[\#0A1227\] {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f6ff 100%) !important;
+  border-color: #60a5fa !important;
+  color: #0f172a !important;
+  box-shadow: 0 12px 32px -6px rgba(48, 143, 250, 0.18) !important;
+}
+
+body.light-theme .bg-gradient-to-br.from-\[\#02050E\].to-\[\#0A1227\] .text-[#308FFA]\/40 {
+  color: #2563eb !important;
+}
+
+body.light-theme .bg-gradient-to-br.from-\[\#111827\].to-\[\#0b0f19\] {
+  background: linear-gradient(to bottom right, #ffffff, #f1f5f9) !important;
+  border-color: #cbd5e1 !important;
+}
+
+body.light-theme .bg-gradient-to-br.from-\[\#064e3b\]\/30.to-\[\#022c22\]\/10 {
+  background: linear-gradient(to bottom right, rgba(16, 185, 129, 0.1), rgba(209, 250, 229, 0.4)) !important;
+  border-color: #a7f3d0 !important;
+}
+
+body.light-theme .bg-gradient-to-br.from-\[\#241a02\].via-\[\#0f0a00\].to-slate-950,
+body.light-theme .bg-gradient-to-br.from-\[\#1e1c0c\].via-\[\#100e05\].to-\[\#0d0a02\] {
+  background: linear-gradient(to bottom right, #fffbeb, #fef3c7) !important;
+  border-color: #f59e0b !important;
+}
+
+body.light-theme .bg-gradient-to-br.from-\[\#021d15\].via-\[\#04100c\].to-brand-dark {
+  background: linear-gradient(to bottom right, #ecfdf5, #ffffff) !important;
+  border-color: #10b981 !important;
+}
+
+/* SVG Dials & Radial Chart Background Rings in Light Mode */
+body.light-theme svg circle[stroke="#0e1322"],
+body.light-theme svg circle[stroke="#0E1322"],
+body.light-theme svg circle[stroke="#111726"],
+body.light-theme svg circle[stroke="#161e38"] {
+  stroke: #e2e8f0 !important;
+}
+
+body.light-theme svg g[fill="#0f172a"] {
+  fill: #e2e8f0 !important;
+  stroke: #94a3b8 !important;
 }
 
 /* Borders */

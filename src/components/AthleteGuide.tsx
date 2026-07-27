@@ -63,7 +63,11 @@ const GuideCard: FC<{
   </motion.div>
 );
 
-export const AthleteGuide: FC = () => {
+export interface AthleteGuideProps {
+  role?: "coach" | "athlete";
+}
+
+export const AthleteGuide: FC<AthleteGuideProps> = ({ role = "coach" }) => {
   const [subTab, setSubTab] = useState<"guide" | "normatives" | "tables" | "library">("guide");
   const [normativeSearch, setNormativeSearch] = useState("");
   const [activeNormativeTab, setActiveNormativeTab] = useState<"all" | "imtp" | "cmj" | "speed" | "vo2">("all");
@@ -604,16 +608,18 @@ export const AthleteGuide: FC = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => {
-                  setExerciseToEdit(null);
-                  setIsEditorOpen(true);
-                }}
-                className="bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-[10px] px-4 py-2.5 rounded-xl transition-all uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-[#39FF14]/10 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Novo Exercício</span>
-              </button>
+              {role === "coach" && (
+                <button
+                  onClick={() => {
+                    setExerciseToEdit(null);
+                    setIsEditorOpen(true);
+                  }}
+                  className="bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 font-black text-[10px] px-4 py-2.5 rounded-xl transition-all uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-[#39FF14]/10 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>Novo Exercício</span>
+                </button>
+              )}
 
               {/* Quick search */}
               <div className="relative w-full md:w-80">
@@ -1002,39 +1008,41 @@ export const AthleteGuide: FC = () => {
                           )}
 
                           {/* Botões de Ação para Biblioteca */}
-                          <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-850/65">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExerciseToEdit(item);
-                                setIsEditorOpen(true);
-                              }}
-                              className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                              <span>Editar Exercício</span>
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExerciseToClone(item);
-                              }}
-                              className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                              <span>Clonar</span>
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setExerciseToDelete(item);
-                              }}
-                              className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Excluir</span>
-                            </button>
-                          </div>
+                          {role === "coach" && (
+                            <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-850/65">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExerciseToEdit(item);
+                                  setIsEditorOpen(true);
+                                }}
+                                className="px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Editar Exercício</span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExerciseToClone(item);
+                                }}
+                                className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Clonar</span>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExerciseToDelete(item);
+                                }}
+                                className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Excluir</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </motion.div>
                     )}

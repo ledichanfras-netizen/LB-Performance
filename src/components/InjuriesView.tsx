@@ -270,13 +270,15 @@ export const InjuriesView: FC<InjuriesViewProps> = ({
           </button>
         </div>
 
-        <button
-          onClick={() => setShowHealthReport(true)}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all text-slate-300 bg-slate-950 hover:bg-slate-800 border border-slate-800 shrink-0"
-        >
-          <FileText className="w-4 h-4 text-emerald-400" />
-          Relatório Fisiopatológico
-        </button>
+        {role === "coach" && (
+          <button
+            onClick={() => setShowHealthReport(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all text-slate-300 bg-slate-950 hover:bg-slate-800 border border-slate-800 shrink-0 cursor-pointer"
+          >
+            <FileText className="w-4 h-4 text-emerald-400" />
+            Relatório Fisiopatológico
+          </button>
+        )}
       </div>
 
       {/* RENDER ACTIVE SUBTAB CONTENT */}

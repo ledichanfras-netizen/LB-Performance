@@ -2143,7 +2143,7 @@ const EliteHubApp: FC<{
               {/* Render Guia directly without requiring an athlete selection */}
               {activeTab === "info" ? (
                 <div className="w-full max-w-7xl mx-auto px-4 py-4 animate-in fade-in duration-500">
-                  <AthleteGuide />
+                  <AthleteGuide role={user?.role} />
                 </div>
               ) : !selected && user.role === "coach" ? (
                 <div className="flex flex-col items-center px-4 max-w-7xl mx-auto">
@@ -3453,8 +3453,8 @@ const EliteHubApp: FC<{
                                       e.stopPropagation();
                                       startWorkoutFlow(w);
                                     }}
-                                    variant="accent"
-                                    className="w-full mt-auto py-4 text-[10px] font-black tracking-widest uppercase shadow-lg shadow-brand-secondary/20"
+                                    variant="primary"
+                                    className="w-full mt-auto py-4 text-[10px] font-black tracking-widest uppercase bg-[#39FF14] hover:bg-[#32e00f] text-slate-950 shadow-lg shadow-[#39FF14]/20 cursor-pointer"
                                   >
                                     INICIAR SESSÃO
                                   </Button>
