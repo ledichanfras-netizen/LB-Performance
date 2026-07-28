@@ -25,6 +25,7 @@ const parseBackupAthleteFields = (a: any) => {
   let dropJumpBackup = [];
   let imtpBackup = [];
   let posturalBackup = [];
+  let matches = [];
   let photoUrl = a.photo_url || a.photoUrl || undefined;
 
   if (a.injury_history && typeof a.injury_history === 'string' && a.injury_history.trim().startsWith('{')) {
@@ -57,6 +58,9 @@ const parseBackupAthleteFields = (a: any) => {
         if (parsed.hasOwnProperty('posturalBackup') && Array.isArray(parsed.posturalBackup)) {
           posturalBackup = parsed.posturalBackup;
         }
+        if (parsed.hasOwnProperty('matches') && Array.isArray(parsed.matches)) {
+          matches = parsed.matches;
+        }
         if (parsed.photoUrl) {
           photoUrl = parsed.photoUrl;
         }
@@ -66,7 +70,7 @@ const parseBackupAthleteFields = (a: any) => {
     }
   }
   
-  return { injuryHistory, injuries, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup, posturalBackup, photoUrl };
+  return { injuryHistory, injuries, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup, posturalBackup, matches, photoUrl };
 };
 
 const serializeBackupAthleteFields = (athlete: any) => {
@@ -82,6 +86,7 @@ const serializeBackupAthleteFields = (athlete: any) => {
     dropJumpBackup: dropJump,
     imtpBackup: imtp,
     posturalBackup: postural,
+    matches: athlete.matches || [],
     photoUrl: athlete.photoUrl || athlete.photo_url || ''
   });
 };
@@ -285,6 +290,7 @@ export const supabaseService = {
           academyDays: parsedFields.academyDays,
           courtDays: parsedFields.courtDays,
           injuries: parsedFields.injuries,
+          matches: parsedFields.matches || [],
           wellness: (a.wellness || []).map((w: any) => {
             const exactSleep = w.calculated_sleep_hours !== undefined && w.calculated_sleep_hours !== null 
               ? Number(w.calculated_sleep_hours) 

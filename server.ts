@@ -131,6 +131,7 @@ const parseBackupAthleteFields = (a: any) => {
   let dropJumpBackup = [];
   let imtpBackup = [];
   let posturalBackup = [];
+  let matches = [];
   let photoUrl = a.photo_url || a.photoUrl || undefined;
 
   if (a.injury_history && typeof a.injury_history === 'string' && a.injury_history.trim().startsWith('{')) {
@@ -155,6 +156,9 @@ const parseBackupAthleteFields = (a: any) => {
         if (parsed.hasOwnProperty('posturalBackup') && Array.isArray(parsed.posturalBackup)) {
           posturalBackup = parsed.posturalBackup;
         }
+        if (parsed.hasOwnProperty('matches') && Array.isArray(parsed.matches)) {
+          matches = parsed.matches;
+        }
         if (parsed.photoUrl) {
           photoUrl = parsed.photoUrl;
         }
@@ -164,7 +168,7 @@ const parseBackupAthleteFields = (a: any) => {
     }
   }
   
-  return { injuryHistory, injuries, trainingDays, dropJumpBackup, imtpBackup, posturalBackup, photoUrl };
+  return { injuryHistory, injuries, trainingDays, dropJumpBackup, imtpBackup, posturalBackup, matches, photoUrl };
 };
 
 const serializeBackupAthleteFields = (athlete: any) => {
@@ -178,6 +182,7 @@ const serializeBackupAthleteFields = (athlete: any) => {
     dropJumpBackup: dropJump,
     imtpBackup: imtp,
     posturalBackup: postural,
+    matches: athlete.matches || [],
     photoUrl: athlete.photoUrl || athlete.photo_url || ''
   });
 };
@@ -535,6 +540,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
             periodizationEnd: a.periodization_end,
             trainingDays: parsedFields.trainingDays,
             injuries: parsedFields.injuries,
+            matches: parsedFields.matches || [],
           wellness: (a.wellness || []).map((w: any) => ({
             ...w,
             cognitiveLoad: w.cognitive_load,
@@ -752,6 +758,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
         periodizationEnd: a.periodization_end,
         trainingDays: parsedFields.trainingDays,
         injuries: parsedFields.injuries,
+        matches: parsedFields.matches || [],
       wellness: (wellnessByAth[a.id] || []).map((w: any) => ({
         ...w,
         cognitiveLoad: w.cognitive_load,
