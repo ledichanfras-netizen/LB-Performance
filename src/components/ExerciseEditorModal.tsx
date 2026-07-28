@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect } from "react";
-import { X, Save, Sparkles } from "lucide-react";
+import { X, Save, Sparkles, Layers, Clock, Hash, Timer } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { EnrichedExercise } from "../data/exercises";
 import { toast } from "react-hot-toast";
@@ -26,7 +26,17 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
 
   useEffect(() => {
     if (exercise) {
-      setFormData({ ...exercise });
+      const isTimeBased = exercise.defaultRepsType === "time" ||
+        Boolean(exercise.defaultExecutionTime) ||
+        (exercise.defaultReps && (exercise.defaultReps.toLowerCase().includes("s") || exercise.defaultReps.toLowerCase().includes("min") || exercise.defaultReps.toLowerCase().includes("seg")));
+
+      setFormData({
+        ...exercise,
+        defaultSets: exercise.defaultSets ?? 3,
+        defaultRepsType: isTimeBased ? "time" : "reps",
+        defaultReps: isTimeBased ? (exercise.defaultReps && !exercise.defaultReps.toLowerCase().includes("s") ? exercise.defaultReps : "10") : (exercise.defaultReps || "10"),
+        defaultExecutionTime: exercise.defaultExecutionTime || (isTimeBased ? exercise.defaultReps : "30s"),
+      });
       setBenefitsText((exercise.benefits || []).join("\n"));
       setCommonErrorsText((exercise.commonErrors || []).join("\n"));
       setProgressionsText((exercise.progressions || []).join("\n"));
@@ -38,7 +48,10 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
         category: "MMII",
         muscleGroup: "Geral",
         videoUrl: "",
-        defaultReps: "3x10",
+        defaultSets: 3,
+        defaultRepsType: "reps",
+        defaultReps: "10",
+        defaultExecutionTime: "30s",
         defaultWeight: "BW",
         difficulty: "Intermediário",
         lateralType: "Bilateral",
@@ -86,6 +99,12 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
         .filter((t) => t.length > 0);
     };
 
+    const defaultSetsNum = Number(formData.defaultSets) > 0 ? Number(formData.defaultSets) : 3;
+    const repsType = formData.defaultRepsType || "reps";
+    const repsVal = repsType === "time"
+      ? (formData.defaultExecutionTime || formData.defaultReps || "30s")
+      : (formData.defaultReps || "10");
+
     const finalExercise: EnrichedExercise = {
       ...((exercise || {}) as EnrichedExercise),
       id: formData.id || `custom-lib-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
@@ -93,7 +112,10 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
       category: formData.category || "MMII",
       muscleGroup: formData.muscleGroup || "Geral",
       videoUrl: formData.videoUrl?.trim() || "",
-      defaultReps: formData.defaultReps || "3x10",
+      defaultSets: defaultSetsNum,
+      defaultRepsType: repsType,
+      defaultReps: repsVal,
+      defaultExecutionTime: formData.defaultExecutionTime || (repsType === "time" ? repsVal : "30s"),
       defaultWeight: formData.defaultWeight || "BW",
       difficulty: formData.difficulty || "Intermediário",
       lateralType: formData.lateralType || "Bilateral",
@@ -233,58 +255,6 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
                   </select>
                 </div>
               </div>
-            </div>
-
-            {/* Seção 2: Prescrição & Biomecânica */}
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-brand-primary border-b border-slate-900 pb-1">
-                2. Detalhes Biomecânicos & Padrão de Prescrição
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Reps/Séries Padrão</label>
-                  <input
-                    type="text"
-                    value={formData.defaultReps || ""}
-                    onChange={(e) => handleInputChange("defaultReps", e.target.value)}
-                    placeholder="Ex: 3x10 ou 30s"
-                    className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-medium outline-none focus:border-[#39FF14]"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Carga Padrão</label>
-                  <input
-                    type="text"
-                    value={formData.defaultWeight || ""}
-                    onChange={(e) => handleInputChange("defaultWeight", e.target.value)}
-                    placeholder="Ex: BW, 15 kg"
-                    className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-medium outline-none focus:border-[#39FF14]"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Descanso Padrão</label>
-                  <input
-                    type="text"
-                    value={formData.recommendedRest || ""}
-                    onChange={(e) => handleInputChange("recommendedRest", e.target.value)}
-                    placeholder="Ex: 90s, 2 min"
-                    className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-medium outline-none focus:border-[#39FF14]"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">PSE Sugerida (1-10)</label>
-                  <input
-                    type="text"
-                    value={formData.recommendedRpe || ""}
-                    onChange={(e) => handleInputChange("recommendedRpe", e.target.value)}
-                    placeholder="Ex: 8 ou 7-9"
-                    className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-medium outline-none focus:border-[#39FF14]"
-                  />
-                </div>
-              </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="space-y-1">
@@ -329,6 +299,154 @@ export const ExerciseEditorModal: FC<ExerciseEditorModalProps> = ({
                     placeholder="Ex: #Elite, #Força"
                     className="w-full bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-medium outline-none focus:border-[#39FF14]"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Seção 2: Prescrição Padrão (Séries, Repetições ou Tempo) */}
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-brand-primary border-b border-slate-900 pb-1 flex items-center justify-between">
+                <span>2. Prescrição Padrão (Séries, Repetições / Tempo)</span>
+                <span className="text-[9px] font-bold text-slate-400 normal-case tracking-normal hidden sm:inline">
+                  Pré-carregado automaticamente ao prescrever no treino
+                </span>
+              </h4>
+
+              <div className="bg-[#161b26] border border-slate-850 p-4 rounded-2xl space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* 1. Número de Séries */}
+                  <div className="space-y-1">
+                    <label className="text-[8.5px] font-black uppercase text-slate-300 tracking-wider flex items-center gap-1">
+                      <Layers className="w-3 h-3 text-[#39FF14]" />
+                      <span>Número de Séries *</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={25}
+                      value={formData.defaultSets ?? 3}
+                      onChange={(e) => handleInputChange("defaultSets", Math.max(1, parseInt(e.target.value) || 1))}
+                      placeholder="Ex: 3"
+                      className="w-full bg-[#0c111d] border border-slate-800 rounded-lg p-2.5 text-xs text-white font-black outline-none focus:border-[#39FF14]"
+                    />
+                  </div>
+
+                  {/* 2. Tipo de Prescrição (Repetições OU Tempo) */}
+                  <div className="space-y-1 col-span-1 sm:col-span-2">
+                    <label className="text-[8.5px] font-black uppercase text-slate-300 tracking-wider flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-brand-primary" />
+                      <span>Tipo de Execução *</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-[#0c111d] border border-slate-800 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange("defaultRepsType", "reps")}
+                        className={`py-1.5 px-3 rounded-md text-xs font-black uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          (formData.defaultRepsType || "reps") === "reps"
+                            ? "bg-[#39FF14] text-slate-950 shadow-md"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <Hash className="w-3.5 h-3.5" />
+                        <span>Repetições</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange("defaultRepsType", "time")}
+                        className={`py-1.5 px-3 rounded-md text-xs font-black uppercase transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                          formData.defaultRepsType === "time"
+                            ? "bg-[#39FF14] text-slate-950 shadow-md"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <Timer className="w-3.5 h-3.5" />
+                        <span>Tempo de Execução</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  {/* 3. Campo Dinâmico: Repetições OU Tempo */}
+                  {(formData.defaultRepsType || "reps") === "reps" ? (
+                    <div className="space-y-1 sm:col-span-1">
+                      <label className="text-[8.5px] font-black uppercase text-slate-300 tracking-wider">
+                        Número de Repetições *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.defaultReps || ""}
+                        onChange={(e) => handleInputChange("defaultReps", e.target.value)}
+                        placeholder="Ex: 10, 8-12, 12/lado"
+                        className="w-full bg-[#0c111d] border border-slate-800 rounded-lg p-2.5 text-xs text-white font-medium outline-none focus:border-[#39FF14]"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-1 sm:col-span-1">
+                      <label className="text-[8.5px] font-black uppercase text-slate-300 tracking-wider">
+                        Tempo de Execução *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.defaultExecutionTime || formData.defaultReps || ""}
+                        onChange={(e) => {
+                          handleInputChange("defaultExecutionTime", e.target.value);
+                          handleInputChange("defaultReps", e.target.value);
+                        }}
+                        placeholder="Ex: 30s, 45s, 1 min"
+                        className="w-full bg-[#0c111d] border border-slate-800 rounded-lg p-2.5 text-xs text-white font-medium outline-none focus:border-[#39FF14]"
+                      />
+                    </div>
+                  )}
+
+                  {/* Carga Padrão */}
+                  <div className="space-y-1">
+                    <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Carga Padrão</label>
+                    <input
+                      type="text"
+                      value={formData.defaultWeight || ""}
+                      onChange={(e) => handleInputChange("defaultWeight", e.target.value)}
+                      placeholder="Ex: BW, 15 kg"
+                      className="w-full bg-[#0c111d] border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 font-medium outline-none focus:border-[#39FF14]"
+                    />
+                  </div>
+
+                  {/* Descanso Padrão */}
+                  <div className="space-y-1">
+                    <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Descanso Padrão</label>
+                    <input
+                      type="text"
+                      value={formData.recommendedRest || ""}
+                      onChange={(e) => handleInputChange("recommendedRest", e.target.value)}
+                      placeholder="Ex: 90s, 2 min"
+                      className="w-full bg-[#0c111d] border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 font-medium outline-none focus:border-[#39FF14]"
+                    />
+                  </div>
+
+                  {/* PSE Sugerida */}
+                  <div className="space-y-1">
+                    <label className="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">PSE Sugerida (1-10)</label>
+                    <input
+                      type="text"
+                      value={formData.recommendedRpe || ""}
+                      onChange={(e) => handleInputChange("recommendedRpe", e.target.value)}
+                      placeholder="Ex: 8 ou 7-9"
+                      className="w-full bg-[#0c111d] border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 font-medium outline-none focus:border-[#39FF14]"
+                    />
+                  </div>
+                </div>
+
+                {/* Resumo/Preview da Prescrição */}
+                <div className="p-3 bg-[#0c111d]/90 border border-slate-800 rounded-xl flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    Resumo do Cadastro:
+                  </span>
+                  <span className="text-xs font-black text-[#39FF14] bg-[#39FF14]/10 border border-[#39FF14]/20 px-3 py-1 rounded-lg flex items-center gap-1.5">
+                    <span>{formData.defaultSets || 3} Séries</span>
+                    <span>x</span>
+                    <span>{(formData.defaultRepsType || "reps") === "time" ? (formData.defaultExecutionTime || formData.defaultReps || "30s") : (formData.defaultReps || "10")}</span>
+                    <span>{(formData.defaultRepsType || "reps") === "time" ? "⏱️ (Tempo)" : "🏋️ (Reps)"}</span>
+                  </span>
                 </div>
               </div>
             </div>

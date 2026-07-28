@@ -906,10 +906,14 @@ export const AthleteGuide: FC<AthleteGuideProps> = ({ role = "coach" }) => {
 
                           {/* Default prescriptions */}
                           <div className="flex flex-wrap gap-4 text-[10px] bg-slate-900/60 p-3 rounded-xl border border-slate-850/60">
-                            {item.defaultReps && (
+                            {(item.defaultSets || item.defaultReps) && (
                               <div>
-                                <span className="text-slate-500 font-bold uppercase tracking-widest mr-1.5">Reps/Séries:</span>
-                                <span className="text-white font-extrabold">{item.defaultReps}</span>
+                                <span className="text-slate-500 font-bold uppercase tracking-widest mr-1.5">Séries / Execução:</span>
+                                <span className="text-white font-extrabold">
+                                  {item.defaultSets ? `${item.defaultSets} Séries x ` : ""}
+                                  {item.defaultReps}
+                                  {item.defaultRepsType === "time" || item.defaultExecutionTime ? " ⏱️ (Tempo)" : " 🏋️"}
+                                </span>
                               </div>
                             )}
                             {item.defaultWeight && (

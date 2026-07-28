@@ -50,6 +50,8 @@ export interface EnrichedExercise {
   timeUnderTension?: string;
   defaultDuration?: string;
   defaultSets?: number;
+  defaultRepsType?: 'reps' | 'time';
+  defaultExecutionTime?: string;
   applicability?: string;
   evidenceLevel?: string;
 }

@@ -648,16 +648,27 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
 
   const addExFromLib = (libEx: EnrichedExercise) => {
     const current = edited.exercises || [];
+    const prescribedSets = libEx.defaultSets && Number(libEx.defaultSets) > 0 ? Number(libEx.defaultSets) : 3;
+    const repsType: 'reps' | 'time' = libEx.defaultRepsType || (
+      libEx.defaultExecutionTime ||
+      (libEx.defaultReps && (libEx.defaultReps.toLowerCase().includes("s") || libEx.defaultReps.toLowerCase().includes("min") || libEx.defaultReps.toLowerCase().includes("seg")))
+        ? "time"
+        : "reps"
+    );
+    const repVal = repsType === "time"
+      ? (libEx.defaultExecutionTime || libEx.defaultReps || "30s")
+      : (libEx.defaultReps || "10");
+
     const newEx: PrescribedExercise = {
       id: `ex-lib-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       name: libEx.name,
       muscleGroup: libEx.muscleGroup,
-      sets: 3,
-      reps: libEx.defaultReps,
-      weight: libEx.defaultWeight,
-      repsType: libEx.defaultReps.toLowerCase().includes("s") ? "time" : "reps",
+      sets: prescribedSets,
+      reps: repVal,
+      weight: libEx.defaultWeight || "BW",
+      repsType: repsType,
       rest: libEx.recommendedRest || "90s",
-      notes: `Foco: ${libEx.physicalQuality} | RPE Alvo: ${libEx.recommendedRpe}`,
+      notes: `Foco: ${libEx.physicalQuality || 'Geral'} | RPE Alvo: ${libEx.recommendedRpe || '8'}`,
       videoUrl: libEx.videoUrl || "",
       imageUrl: libEx.imageUrl || "",
       order_index: current.length
@@ -667,7 +678,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
     setEdited({ ...edited, exercises: reindexed });
     setExpandedExerciseId(newEx.id); // auto-expand newly added exercise
     setRecentAdds(prev => [libEx.id, ...prev.slice(0, 4)]);
-    toast.success(`Prescrito: ${libEx.name}`);
+    toast.success(`Prescrito: ${libEx.name} (${prescribedSets}x ${repVal})`);
   };
 
   const addCustomEx = () => {
@@ -689,14 +700,25 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
     }
     
     const current = edited.exercises || [];
+    const prescribedSets = matchedEx?.defaultSets && Number(matchedEx.defaultSets) > 0 ? Number(matchedEx.defaultSets) : 3;
+    const repsType: 'reps' | 'time' = matchedEx?.defaultRepsType || (
+      matchedEx?.defaultExecutionTime ||
+      (matchedEx?.defaultReps && (matchedEx.defaultReps.toLowerCase().includes("s") || matchedEx.defaultReps.toLowerCase().includes("min") || matchedEx.defaultReps.toLowerCase().includes("seg")))
+        ? "time"
+        : "reps"
+    );
+    const repVal = repsType === "time"
+      ? (matchedEx?.defaultExecutionTime || matchedEx?.defaultReps || "30s")
+      : (matchedEx?.defaultReps || "10");
+
     const newEx: PrescribedExercise = {
       id: `ex-custom-${Date.now()}`,
       name: customExerciseName.trim(),
       muscleGroup: matchedEx?.muscleGroup || (detectedCategory !== "Geral" ? detectedCategory : "Geral"),
-      sets: 3,
-      reps: matchedEx?.defaultReps || "10",
+      sets: prescribedSets,
+      reps: repVal,
       weight: matchedEx?.defaultWeight || "BW",
-      repsType: matchedEx?.defaultReps?.toLowerCase().includes("s") ? "time" : "reps",
+      repsType: repsType,
       rest: matchedEx?.recommendedRest || "60s",
       videoUrl: matchedEx?.videoUrl || "",
       imageUrl: matchedEx?.imageUrl || "",
@@ -707,7 +729,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
     setEdited({ ...edited, exercises: reindexed });
     setExpandedExerciseId(newEx.id); // auto-expand newly custom exercise
     setCustomExerciseName("");
-    toast.success(`Customizado adicionado (${detectedCategory}): ${newEx.name}`);
+    toast.success(`Customizado adicionado (${detectedCategory}): ${newEx.name} (${prescribedSets}x ${repVal})`);
   };
 
   const addDeficitCorrectiveBlock = (deficitName: string, exerciseNames: string[]) => {
@@ -723,14 +745,25 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
     }
 
     const newExs = toAdd.map((libEx, idx) => {
+      const prescribedSets = libEx.defaultSets && Number(libEx.defaultSets) > 0 ? Number(libEx.defaultSets) : 3;
+      const repsType: 'reps' | 'time' = libEx.defaultRepsType || (
+        libEx.defaultExecutionTime ||
+        (libEx.defaultReps && (libEx.defaultReps.toLowerCase().includes("s") || libEx.defaultReps.toLowerCase().includes("min") || libEx.defaultReps.toLowerCase().includes("seg")))
+          ? "time"
+          : "reps"
+      );
+      const repVal = repsType === "time"
+        ? (libEx.defaultExecutionTime || libEx.defaultReps || "30s")
+        : (libEx.defaultReps || "10");
+
       const newEx: PrescribedExercise = {
         id: `ex-deficit-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`,
         name: libEx.name,
         muscleGroup: libEx.muscleGroup,
-        sets: 3,
-        reps: libEx.defaultReps,
-        weight: libEx.defaultWeight,
-        repsType: libEx.defaultReps.toLowerCase().includes("s") ? "time" : "reps",
+        sets: prescribedSets,
+        reps: repVal,
+        weight: libEx.defaultWeight || "BW",
+        repsType: repsType,
         rest: libEx.recommendedRest || "90s",
         notes: `Bloco Corretivo IA: Foco em Corrigir ${deficitName} | VBT: Máxima Velocidade`,
         videoUrl: libEx.videoUrl || "",
@@ -1022,17 +1055,30 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   const injectAiSuggestedExercises = () => {
     if (aiSuggestedExercises.length === 0) return;
     
-    const newExercises = aiSuggestedExercises.map((libEx, index) => ({
-      id: `ex-ai-${Date.now()}-${index}`,
-      name: libEx.name,
-      muscleGroup: libEx.muscleGroup,
-      sets: 4,
-      reps: libEx.defaultReps,
-      weight: libEx.defaultWeight,
-      repsType: libEx.defaultReps.toLowerCase().includes("s") ? ("time" as const) : ("reps" as const),
-      rest: libEx.recommendedRest || "2 min",
-      notes: `[IA PRESCRITO] Foco: ${libEx.physicalQuality} | Justificativa: Otimização de RFD por VBT.`
-    }));
+    const newExercises = aiSuggestedExercises.map((libEx, index) => {
+      const prescribedSets = libEx.defaultSets && Number(libEx.defaultSets) > 0 ? Number(libEx.defaultSets) : 4;
+      const repsType: 'reps' | 'time' = libEx.defaultRepsType || (
+        libEx.defaultExecutionTime ||
+        (libEx.defaultReps && (libEx.defaultReps.toLowerCase().includes("s") || libEx.defaultReps.toLowerCase().includes("min") || libEx.defaultReps.toLowerCase().includes("seg")))
+          ? "time"
+          : "reps"
+      );
+      const repVal = repsType === "time"
+        ? (libEx.defaultExecutionTime || libEx.defaultReps || "30s")
+        : (libEx.defaultReps || "10");
+
+      return {
+        id: `ex-ai-${Date.now()}-${index}`,
+        name: libEx.name,
+        muscleGroup: libEx.muscleGroup,
+        sets: prescribedSets,
+        reps: repVal,
+        weight: libEx.defaultWeight || "BW",
+        repsType: repsType,
+        rest: libEx.recommendedRest || "2 min",
+        notes: `[IA PRESCRITO] Foco: ${libEx.physicalQuality || 'Geral'} | Justificativa: Otimização de RFD por VBT.`
+      };
+    });
 
     setEdited(prev => {
       const current = prev.exercises || [];
