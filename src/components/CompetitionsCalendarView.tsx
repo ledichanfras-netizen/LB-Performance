@@ -840,6 +840,8 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                         type="text"
                         value={formTitle}
                         onChange={(e) => setFormTitle(e.target.value)}
+                        onFocus={(e) => e.target.select()}
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
                         placeholder="Ex: Flamengo vs Palmeiras, Maratona Internacional, Open de Tênis..."
                         className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3 text-xs text-white font-black outline-none"
                         required
@@ -919,6 +921,8 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                           type="text"
                           value={formOpponent}
                           onChange={(e) => setFormOpponent(e.target.value)}
+                          onFocus={(e) => e.target.select()}
+                          onClick={(e) => (e.target as HTMLInputElement).select()}
                           placeholder="Ex: Rival FC, Maracanã, Parque Ibirapuera..."
                           className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3 text-xs text-white font-medium outline-none"
                         />
@@ -974,8 +978,11 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                         type="number"
                         min="50"
                         max="100"
-                        value={formTargetReadiness}
-                        onChange={(e) => setFormTargetReadiness(Number(e.target.value))}
+                        value={formTargetReadiness === 0 ? "" : formTargetReadiness || ""}
+                        onChange={(e) => setFormTargetReadiness(Number(e.target.value) || 0)}
+                        onFocus={(e) => e.target.select()}
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                        placeholder="85"
                         className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3 text-xs text-white font-black outline-none"
                       />
                     </div>
@@ -1024,6 +1031,8 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                           type="text"
                           value={formScoreOrTime}
                           onChange={(e) => setFormScoreOrTime(e.target.value)}
+                          onFocus={(e) => e.target.select()}
+                          onClick={(e) => (e.target as HTMLInputElement).select()}
                           placeholder="Ex: 3x1, 2h45min12s, 6-3 / 6-4, 1º Lugar..."
                           className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3 text-xs text-white font-black outline-none"
                         />
@@ -1037,8 +1046,11 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                         </label>
                         <input
                           type="number"
-                          value={formDurationMinutes}
-                          onChange={(e) => setFormDurationMinutes(Number(e.target.value))}
+                          value={formDurationMinutes === 0 ? "" : formDurationMinutes || ""}
+                          onChange={(e) => setFormDurationMinutes(Number(e.target.value) || 0)}
+                          onFocus={(e) => e.target.select()}
+                          onClick={(e) => (e.target as HTMLInputElement).select()}
+                          placeholder="90"
                           className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3 text-xs text-white font-black outline-none"
                         />
                       </div>
@@ -1051,8 +1063,11 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                           type="number"
                           min="1"
                           max="10"
-                          value={formPostRpe}
-                          onChange={(e) => setFormPostRpe(Number(e.target.value))}
+                          value={formPostRpe === 0 ? "" : formPostRpe || ""}
+                          onChange={(e) => setFormPostRpe(Number(e.target.value) || 0)}
+                          onFocus={(e) => e.target.select()}
+                          onClick={(e) => (e.target as HTMLInputElement).select()}
+                          placeholder="8"
                           className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3 text-xs text-white font-black outline-none"
                         />
                       </div>
@@ -1071,8 +1086,11 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                             <label className="text-[9px] font-bold text-slate-400 block mb-1">Min. Jogados</label>
                             <input
                               type="number"
-                              value={formMinPlayed}
-                              onChange={(e) => setFormMinPlayed(Number(e.target.value))}
+                              value={formMinPlayed === 0 ? "" : formMinPlayed || ""}
+                              onChange={(e) => setFormMinPlayed(Number(e.target.value) || 0)}
+                              onFocus={(e) => e.target.select()}
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
+                              placeholder="90"
                               className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-bold"
                             />
                           </div>
@@ -1080,8 +1098,11 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                             <label className="text-[9px] font-bold text-slate-400 block mb-1">Gols/Pontos</label>
                             <input
                               type="number"
-                              value={formGoals}
-                              onChange={(e) => setFormGoals(Number(e.target.value))}
+                              value={formGoals === 0 ? "" : formGoals || ""}
+                              onChange={(e) => setFormGoals(Number(e.target.value) || 0)}
+                              onFocus={(e) => e.target.select()}
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
+                              placeholder="0"
                               className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-bold"
                             />
                           </div>
@@ -1089,8 +1110,11 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                             <label className="text-[9px] font-bold text-slate-400 block mb-1">Assistências</label>
                             <input
                               type="number"
-                              value={formAssists}
-                              onChange={(e) => setFormAssists(Number(e.target.value))}
+                              value={formAssists === 0 ? "" : formAssists || ""}
+                              onChange={(e) => setFormAssists(Number(e.target.value) || 0)}
+                              onFocus={(e) => e.target.select()}
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
+                              placeholder="0"
                               className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-bold"
                             />
                           </div>
@@ -1104,8 +1128,11 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                             <label className="text-[9px] font-bold text-slate-400 block mb-1">Sets Jogados</label>
                             <input
                               type="number"
-                              value={formSets}
-                              onChange={(e) => setFormSets(Number(e.target.value))}
+                              value={formSets === 0 ? "" : formSets || ""}
+                              onChange={(e) => setFormSets(Number(e.target.value) || 0)}
+                              onFocus={(e) => e.target.select()}
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
+                              placeholder="3"
                               className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-bold"
                             />
                           </div>
@@ -1113,8 +1140,11 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                             <label className="text-[9px] font-bold text-slate-400 block mb-1">Pontos / Games Vencidos</label>
                             <input
                               type="number"
-                              value={formGoals}
-                              onChange={(e) => setFormGoals(Number(e.target.value))}
+                              value={formGoals === 0 ? "" : formGoals || ""}
+                              onChange={(e) => setFormGoals(Number(e.target.value) || 0)}
+                              onFocus={(e) => e.target.select()}
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
+                              placeholder="0"
                               className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-bold"
                             />
                           </div>
@@ -1129,8 +1159,11 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                             <input
                               type="number"
                               step="0.1"
-                              value={formDistanceKm}
-                              onChange={(e) => setFormDistanceKm(Number(e.target.value))}
+                              value={formDistanceKm === 0 ? "" : formDistanceKm || ""}
+                              onChange={(e) => setFormDistanceKm(Number(e.target.value) || 0)}
+                              onFocus={(e) => e.target.select()}
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
+                              placeholder="10.0"
                               className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-bold"
                             />
                           </div>
@@ -1140,6 +1173,8 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                               type="text"
                               value={formPaceAvg}
                               onChange={(e) => setFormPaceAvg(e.target.value)}
+                              onFocus={(e) => e.target.select()}
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
                               placeholder="04:30 min/km"
                               className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-bold"
                             />
@@ -1148,8 +1183,11 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                             <label className="text-[9px] font-bold text-slate-400 block mb-1">Desnível (m)</label>
                             <input
                               type="number"
-                              value={formElevation}
-                              onChange={(e) => setFormElevation(Number(e.target.value))}
+                              value={formElevation === 0 ? "" : formElevation || ""}
+                              onChange={(e) => setFormElevation(Number(e.target.value) || 0)}
+                              onFocus={(e) => e.target.select()}
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
+                              placeholder="150"
                               className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-bold"
                             />
                           </div>
@@ -1159,6 +1197,8 @@ export const CompetitionsCalendarView: FC<CompetitionsCalendarViewProps> = ({
                               type="text"
                               value={formRankPos}
                               onChange={(e) => setFormRankPos(e.target.value)}
+                              onFocus={(e) => e.target.select()}
+                              onClick={(e) => (e.target as HTMLInputElement).select()}
                               placeholder="3º Lugar Geral"
                               className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white font-bold"
                             />

@@ -17444,6 +17444,8 @@ const WellnessForm: FC<{
                     sleep: h,
                   }));
                 }}
+                onFocus={(e) => e.target.select()}
+                onClick={(e) => (e.target as HTMLInputElement).select()}
                 className="w-full bg-transparent text-white font-black text-center text-sm outline-none"
                 placeholder="Ex: 8"
               />
