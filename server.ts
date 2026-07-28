@@ -215,6 +215,7 @@ async function ensureColumns() {
     await client.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT \'free\'').catch(() => {});
 
     // Wellness
+    await client.query('ALTER TABLE wellness ALTER COLUMN sleep TYPE REAL USING sleep::real').catch(() => {});
     await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS readiness_score INTEGER').catch(() => {});
     await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS travel_fatigue INTEGER').catch(() => {});
     await client.query('ALTER TABLE wellness ADD COLUMN IF NOT EXISTS sleep_quality INTEGER').catch(() => {});
@@ -1065,7 +1066,7 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
                athlete_id: athlete.id,
                date: w.date,
                fatigue: safeNum(w.fatigue, 0),
-               sleep: safeNum(w.sleep, 0),
+               sleep: Math.round(safeNum(w.sleep, 0)),
                stress: safeNum(w.stress, 0),
                soreness: w.soreness ?? 0,
                mood: w.mood ?? 0,
@@ -1466,7 +1467,7 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
             athlete.id,
             w.date,
             w.fatigue ?? 0,
-            safeNum(w.sleep, 0),
+            Math.round(safeNum(w.sleep, 0)),
             w.stress ?? 0,
             w.soreness ?? 0,
             w.mood ?? 0,
@@ -2758,7 +2759,7 @@ async function runSetup(retries = 1) {
         athlete_id TEXT REFERENCES athletes(id) ON DELETE CASCADE,
         date VARCHAR(255) NOT NULL,
         fatigue INTEGER,
-        sleep INTEGER,
+        sleep REAL,
         stress INTEGER,
         soreness INTEGER,
         mood INTEGER,
@@ -2766,6 +2767,7 @@ async function runSetup(retries = 1) {
         readiness_score INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`);
+    await client.query(`ALTER TABLE wellness ALTER COLUMN sleep TYPE REAL USING sleep::real;`).catch(() => {});
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS readiness_score INTEGER;`);
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS travel_fatigue INTEGER;`);
     await client.query(`ALTER TABLE wellness ADD COLUMN IF NOT EXISTS sleep_quality INTEGER;`);

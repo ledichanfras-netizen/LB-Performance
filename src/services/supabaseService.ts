@@ -285,13 +285,21 @@ export const supabaseService = {
           academyDays: parsedFields.academyDays,
           courtDays: parsedFields.courtDays,
           injuries: parsedFields.injuries,
-          wellness: (a.wellness || []).map((w: any) => ({
-            ...w,
-            cognitiveLoad: w.cognitive_load,
-            readinessScore: w.readiness_score,
-            travelFatigue: w.travel_fatigue,
-            sleepQuality: w.sleep_quality
-          })).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
+          wellness: (a.wellness || []).map((w: any) => {
+            const exactSleep = w.calculated_sleep_hours !== undefined && w.calculated_sleep_hours !== null 
+              ? Number(w.calculated_sleep_hours) 
+              : safeParseFloat(w.sleep);
+            return {
+              ...w,
+              sleep: exactSleep,
+              cognitiveLoad: w.cognitive_load,
+              readinessScore: w.readiness_score,
+              travelFatigue: w.travel_fatigue,
+              sleepQuality: w.sleep_quality,
+              sleepHoursFormatted: w.sleep_hours_formatted,
+              calculatedSleepHours: exactSleep
+            };
+          }).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
           externalSessions: (a.external_sessions || []).map((es: any) => ({
             ...es,
             durationMinutes: es.duration_minutes
@@ -544,7 +552,7 @@ export const supabaseService = {
           athlete_id: athlete.id,
           date: w.date,
           fatigue: w.fatigue,
-          sleep: safeParseFloat(w.sleep) || 0,
+          sleep: Math.round(safeParseFloat(w.sleep) || 0),
           stress: w.stress,
           soreness: w.soreness,
           mood: w.mood,
