@@ -1,7 +1,7 @@
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Athlete, Workout, WellnessEntry, AssessmentType, ExternalSession } from '../types';
-import { getSafeDateTime } from '../utils';
+import { getSafeDateTime, safeParseFloat } from '../utils';
 
 const safeParse = (val: any, defaultVal: any = []) => {
   if (!val) return defaultVal;
@@ -544,14 +544,16 @@ export const supabaseService = {
           athlete_id: athlete.id,
           date: w.date,
           fatigue: w.fatigue,
-          sleep: w.sleep,
+          sleep: safeParseFloat(w.sleep) || 0,
           stress: w.stress,
           soreness: w.soreness,
           mood: w.mood,
           cognitive_load: w.cognitiveLoad !== undefined ? w.cognitiveLoad : (w as any).cognitive_load,
           readiness_score: w.readinessScore !== undefined ? w.readinessScore : (w as any).readiness_score,
           travel_fatigue: w.travelFatigue !== undefined ? w.travelFatigue : (w as any).travel_fatigue,
-          sleep_quality: w.sleepQuality !== undefined ? w.sleepQuality : (w as any).sleep_quality
+          sleep_quality: w.sleepQuality !== undefined ? w.sleepQuality : (w as any).sleep_quality,
+          calculated_sleep_hours: safeParseFloat((w as any).calculatedSleepHours ?? (w as any).calculated_sleep_hours ?? w.sleep) || null,
+          sleep_hours_formatted: w.sleepHoursFormatted || (w as any).sleep_hours_formatted || null,
         })));
         if (wError) {
           logError('[Supabase] Erro ao salvar wellness:', wError);

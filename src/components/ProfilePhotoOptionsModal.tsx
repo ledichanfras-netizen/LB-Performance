@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Athlete } from "../types";
-import { Camera, Upload, Trash2, User, X, Pencil, Eye, Check, RefreshCw, FlipHorizontal, Sparkles, Image as ImageIcon } from "lucide-react";
+import { Camera, Trash2, User, X, Pencil, Check, RefreshCw, FlipHorizontal, Sparkles, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import toast from "react-hot-toast";
 
@@ -60,14 +60,12 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
   onRemovePhoto,
   onEditProfileData,
 }) => {
-  const [showFullImage, setShowFullImage] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const nativeCameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -88,7 +86,6 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
     stopCameraStream();
     setIsCameraActive(false);
     setCapturedImage(null);
-    setShowFullImage(false);
     onClose();
   };
 
@@ -129,7 +126,7 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
       setIsCameraActive(true);
     } catch (err: any) {
       console.error("Erro ao acessar câmera:", err);
-      toast.error("Acesso à câmera indisponível ou negado. Você pode utilizar a câmera nativa do celular ou escolher da galeria.");
+      toast.error("Acesso à câmera indisponível ou negado. Você pode escolher uma foto da galeria.");
       setIsCameraActive(false);
     }
   };
@@ -197,27 +194,18 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
             </div>
             <button
               onClick={handleClose}
-              className="w-9 h-9 rounded-full bg-slate-800/80 text-slate-400 hover:text-white flex items-center justify-center transition-all hover:bg-slate-700"
+              className="w-9 h-9 rounded-full bg-slate-800/80 text-slate-400 hover:text-white flex items-center justify-center transition-all hover:bg-slate-700 cursor-pointer"
+              title="Fechar sem alterar"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Hidden File Inputs */}
-          {/* 1. Gallery input */}
+          {/* Hidden Gallery File Input */}
           <input
             type="file"
             ref={fileInputRef}
             accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          {/* 2. Direct Camera native input for mobile */}
-          <input
-            type="file"
-            ref={nativeCameraInputRef}
-            accept="image/*"
-            capture="user"
             className="hidden"
             onChange={handleFileChange}
           />
@@ -342,7 +330,7 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
 
               {/* Action Options List */}
               <div className="space-y-2.5 mt-5">
-                {/* Option 1: Live WebCam Photo Capture */}
+                {/* Option 1: Live Camera Photo Capture */}
                 <button
                   type="button"
                   onClick={() => startCameraStream()}
@@ -365,29 +353,7 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
                   <span className="text-xs text-brand-primary font-bold">→</span>
                 </button>
 
-                {/* Option 2: Direct Mobile Camera trigger */}
-                <button
-                  type="button"
-                  onClick={() => nativeCameraInputRef.current?.click()}
-                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 text-white transition-all group cursor-pointer"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20 group-hover:bg-purple-500 group-hover:text-slate-950 transition-colors">
-                      <Camera className="w-5 h-5" />
-                    </div>
-                    <div className="text-left">
-                      <div className="text-xs font-black uppercase tracking-wider text-white">
-                        Abrir Câmera do Celular / Tablet
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-medium">
-                        Dispara o aplicativo de câmera nativo do dispositivo
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-xs text-purple-400 font-bold">→</span>
-                </button>
-
-                {/* Option 3: Choose Photo from Gallery */}
+                {/* Option 2: Choose Photo from Gallery */}
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
@@ -409,31 +375,7 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
                   <span className="text-xs text-blue-400 font-bold">→</span>
                 </button>
 
-                {/* Option 4: View Full Size Photo (if exists) */}
-                {athlete.photoUrl && (
-                  <button
-                    type="button"
-                    onClick={() => setShowFullImage(true)}
-                    className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 text-white transition-all group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors">
-                        <Eye className="w-5 h-5" />
-                      </div>
-                      <div className="text-left">
-                        <div className="text-xs font-black uppercase tracking-wider text-white">
-                          Ver Foto em Tamanho Cheio
-                        </div>
-                        <div className="text-[10px] text-slate-400 font-medium">
-                          Visualizar a imagem atual ampliada
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-xs text-cyan-400 font-bold">→</span>
-                  </button>
-                )}
-
-                {/* Option 5: Edit Profile Info */}
+                {/* Option 3: Edit Profile Info */}
                 <button
                   type="button"
                   onClick={() => {
@@ -458,7 +400,7 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
                   <span className="text-xs text-emerald-400 font-bold">→</span>
                 </button>
 
-                {/* Option 6: Remove Photo (if exists) */}
+                {/* Option 4: Remove Photo (if exists) */}
                 {athlete.photoUrl && (
                   <button
                     type="button"
@@ -489,43 +431,19 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
             </>
           )}
 
-          {/* Cancel Button */}
+          {/* Close / Cancel Button */}
           <button
             type="button"
             onClick={handleClose}
-            className="w-full mt-4 py-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-black uppercase tracking-wider border border-slate-800 transition-all cursor-pointer"
+            className="w-full mt-5 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white text-xs font-black uppercase tracking-wider border border-slate-700/80 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
           >
-            Cancelar
+            <X className="w-4 h-4 text-slate-400" />
+            <span>Fechar Edição (Sem Alterar)</span>
           </button>
         </motion.div>
-
-        {/* Full Image Preview Modal */}
-        {showFullImage && athlete.photoUrl && (
-          <div
-            className="fixed inset-0 z-[1300] bg-black/90 flex items-center justify-center p-4"
-            onClick={() => setShowFullImage(false)}
-          >
-            <div className="relative max-w-2xl max-h-[85vh] p-2 bg-slate-900 rounded-3xl border border-slate-800 flex flex-col items-center">
-              <button
-                onClick={() => setShowFullImage(false)}
-                className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-slate-950/80 text-white flex items-center justify-center border border-slate-700 cursor-pointer"
-              >
-                <X className="w-6 h-6" />
-              </button>
-              <img
-                src={athlete.photoUrl}
-                alt={athlete.name}
-                className="max-w-full max-h-[75vh] object-contain rounded-2xl"
-                referrerPolicy="no-referrer"
-              />
-              <span className="text-xs font-black uppercase tracking-wider text-slate-300 mt-3">
-                {athlete.name}
-              </span>
-            </div>
-          </div>
-        )}
       </div>
     </AnimatePresence>
   );
 };
+
 

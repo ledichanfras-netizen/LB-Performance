@@ -67,6 +67,7 @@ import {
   getLocalDateString,
   formatCompetitiveLevel,
   calculateSleepHoursFromTimes,
+  safeParseFloat,
 } from "./utils";
 import {
   generateAIModeling,
@@ -737,7 +738,7 @@ const EliteHubApp: FC<{
         if (!todayWell) return "—";
         if (todayWell.sleepHoursFormatted) return todayWell.sleepHoursFormatted;
         if (todayWell.sleep !== undefined && todayWell.sleep !== null) {
-          const s = Number(todayWell.sleep);
+          const s = safeParseFloat(todayWell.sleep);
           if (!isNaN(s)) {
             const h = Math.floor(s);
             const m = Math.round((s - h) * 60);
@@ -5224,9 +5225,10 @@ const DashboardView: FC<{
     if (!dashboardProRef.current) return;
     const toastId = toast.loading("Capturando painel PRO de alta definição...");
     try {
+      const isLightMode = document.body.classList.contains("light-theme");
       const dataUrl = await toJpeg(dashboardProRef.current, {
         quality: 0.98,
-        backgroundColor: "#070B15",
+        backgroundColor: isLightMode ? "#f8fafc" : "#070B15",
       });
       const link = document.createElement("a");
       link.download = `Performance_PRO_${athlete.name.replace(/\s+/g, "_")}_Dashboard.jpeg`;
@@ -6017,7 +6019,7 @@ const DashboardView: FC<{
                           Sono: {(() => {
                             if (w.sleepHoursFormatted) return w.sleepHoursFormatted;
                             if (w.sleep !== undefined && w.sleep !== null) {
-                              const s = Number(w.sleep);
+                              const s = safeParseFloat(w.sleep);
                               if (!isNaN(s)) {
                                 const h = Math.floor(s);
                                 const m = Math.round((s - h) * 60);
@@ -6192,7 +6194,7 @@ const DashboardView: FC<{
         const activeReadiness = hasRealWellnessData ? latestWellness.readinessScore || 0 : 0;
         
         const avgSleepHours = hasRealWellnessData 
-          ? parseFloat((wellnessHistory.reduce((acc, w) => acc + (w.sleep || 8), 0) / wellnessHistory.length).toFixed(1))
+          ? parseFloat((wellnessHistory.reduce((acc, w) => acc + (safeParseFloat(w.sleep) || 8), 0) / wellnessHistory.length).toFixed(1))
           : 0;
         const avgHoursInt = Math.floor(avgSleepHours);
         const avgMins = Math.round((avgSleepHours - avgHoursInt) * 60);
@@ -6201,7 +6203,7 @@ const DashboardView: FC<{
           ? Math.min(100, Math.max(0, latestWellness.sleepQuality 
               ? (latestWellness.sleepQuality > 10 ? latestWellness.sleepQuality : latestWellness.sleepQuality * 10)
               : (latestWellness.sleep 
-                  ? Math.min(100, Math.round((latestWellness.sleep / 8) * 100)) 
+                  ? Math.min(100, Math.round(((safeParseFloat(latestWellness.sleep) || 0) / 8) * 100)) 
                   : 0)))
           : 0;
 
@@ -17436,7 +17438,7 @@ const WellnessForm: FC<{
                 max="24"
                 value={data.sleep || ""}
                 onChange={(e) => {
-                  const h = Math.min(24, Math.max(0, parseFloat(e.target.value) || 0));
+                  const h = Math.min(24, Math.max(0, safeParseFloat(e.target.value) || 0));
                   setData((prev: any) => ({
                     ...prev,
                     sleep: h,

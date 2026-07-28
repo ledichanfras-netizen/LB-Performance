@@ -13,6 +13,17 @@ export const calculateAge = (dob: string): number => {
   return age;
 };
 
+export const safeParseFloat = (val: any): number => {
+  if (val === undefined || val === null || val === '') return NaN;
+  if (typeof val === 'number') return isNaN(val) ? NaN : val;
+  if (typeof val === 'string') {
+    const cleaned = val.trim().replace(',', '.').replace(/[^0-9.-]/g, '');
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? NaN : parsed;
+  }
+  return NaN;
+};
+
 export const calculateSleepHoursFromTimes = (sleepStartTime?: string, wakeUpTime?: string): { hours: number; formatted: string } | null => {
   if (!sleepStartTime || !wakeUpTime) return null;
   const [startH, startM] = sleepStartTime.split(':').map(Number);
@@ -33,14 +44,29 @@ export const calculateSleepHoursFromTimes = (sleepStartTime?: string, wakeUpTime
 };
 
 export const calculateReadiness = (w: Omit<WellnessEntry, 'id' | 'readinessScore' | 'date'> & { isMatchDay?: boolean; emotionalReadiness?: number; psychologicalReadiness?: number }): number => {
-  // Escala de 0 a 10. Maior é melhor para: Sono (Qualidade) e Humor. 
+  // Escala de 0 a 10. Maior é melhor para: Sono (Quantidade + Qualidade) e Humor. 
   // Menor é melhor para: Fadiga, Estresse, Dor, Carga Cognitiva e Viagem.
   const moodPts = w.mood !== undefined && w.mood !== null ? Number(w.mood) : 10;
   
-  // Fallback para sleep (horas de sono) caso sleepQuality esteja ausente/nulo
-  const sleepPts = w.sleepQuality !== undefined && w.sleepQuality !== null 
-    ? Number(w.sleepQuality) 
-    : (w.sleep !== undefined && w.sleep !== null && Number(w.sleep) > 0 ? Math.min(10, Number(w.sleep)) : 10);
+  // Cálculo integrado dos pontos de Sono combinando Quantidade (Horas) e Qualidade
+  let sleepPts = 10;
+  const rawSleep = w.sleep !== undefined && w.sleep !== null ? w.sleep : w.calculatedSleepHours;
+  const sleepHours = safeParseFloat(rawSleep);
+  
+  if (!isNaN(sleepHours)) {
+    // Escala fisiológica de horas de sono (8h+ = 10 pts, 7h = 8.75 pts, 6h = 7.5 pts, 5h = 6.25 pts, 4h = 5 pts, <=2h = 2 pts)
+    const durationPts = Math.min(10, Math.max(0, (sleepHours / 8) * 10));
+    
+    if (w.sleepQuality !== undefined && w.sleepQuality !== null) {
+      const qualityPts = Number(w.sleepQuality);
+      // Ponderação ponderada: 50% duração fisiológica + 50% percepção da qualidade do sono
+      sleepPts = (durationPts * 0.5) + (qualityPts * 0.5);
+    } else {
+      sleepPts = durationPts;
+    }
+  } else if (w.sleepQuality !== undefined && w.sleepQuality !== null) {
+    sleepPts = Number(w.sleepQuality);
+  }
   
   const cognitivePts = 10 - (w.cognitiveLoad !== undefined && w.cognitiveLoad !== null ? Number(w.cognitiveLoad) : 0);
   const fatiguePts = 10 - (w.fatigue !== undefined && w.fatigue !== null ? Number(w.fatigue) : 0);

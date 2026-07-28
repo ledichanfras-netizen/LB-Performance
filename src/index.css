@@ -104,7 +104,7 @@ body.light-theme .cartao-de-vidro:hover {
   box-shadow: 0 10px 25px -3px rgba(16, 185, 129, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.04) !important;
 }
 
-/* Top-level dark backgrounds mapped to light canvas */
+/* Top-level dark backgrounds mapped to light canvas in Painel & Dashboard */
 body.light-theme .bg-slate-900,
 body.light-theme .bg-slate-900\/90,
 body.light-theme .bg-slate-900\/80,
@@ -120,36 +120,30 @@ body.light-theme .bg-slate-950\/60,
 body.light-theme .bg-slate-950\/50,
 body.light-theme .bg-slate-950\/40,
 body.light-theme .bg-slate-950\/25,
-body.light-theme .bg-\[\#020617\],
-body.light-theme .bg-\[\#030712\],
-body.light-theme .bg-\[\#05080e\],
-body.light-theme .bg-\[\#060b18\],
-body.light-theme .bg-\[\#060b18\]\/80,
-body.light-theme .bg-\[\#070b14\],
-body.light-theme .bg-\[\#080c14\],
-body.light-theme .bg-\[\#080d16\],
-body.light-theme .bg-\[\#080D16\],
-body.light-theme .bg-\[\#080d1a\],
-body.light-theme .bg-\[\#080D1A\],
-body.light-theme .bg-\[\#0a0f1d\],
-body.light-theme .bg-\[\#0A0D16\],
-body.light-theme .bg-\[\#0b0f19\],
-body.light-theme .bg-\[\#0B0F19\],
-body.light-theme .bg-\[\#0c111d\],
-body.light-theme .bg-\[\#0c111d\]\/80,
-body.light-theme .bg-\[\#0c111d\]\/60,
-body.light-theme .bg-\[\#0d1324\],
-body.light-theme .bg-\[\#0D1324\],
-body.light-theme .bg-\[\#0e1322\],
-body.light-theme .bg-\[\#0E1322\],
-body.light-theme .bg-\[\#0e1627\],
-body.light-theme .bg-\[\#111622\],
-body.light-theme .bg-\[\#111625\],
-body.light-theme .bg-\[\#111726\],
-body.light-theme .bg-\[\#111827\],
-body.light-theme .bg-\[\#151c2c\],
-body.light-theme .bg-\[\#161b26\],
-body.light-theme .bg-brand-dark {
+body.light-theme .bg-brand-dark,
+body.light-theme [class*="bg-[#020617]"],
+body.light-theme [class*="bg-[#030712]"],
+body.light-theme [class*="bg-[#05080e]"],
+body.light-theme [class*="bg-[#060b18]"],
+body.light-theme [class*="bg-[#070b14]"],
+body.light-theme [class*="bg-[#070b16]"],
+body.light-theme [class*="bg-[#080c14]"],
+body.light-theme [class*="bg-[#080d16]"],
+body.light-theme [class*="bg-[#080d1a]"],
+body.light-theme [class*="bg-[#0a0f1d]"],
+body.light-theme [class*="bg-[#0A0D16]"],
+body.light-theme [class*="bg-[#0b0f19]"],
+body.light-theme [class*="bg-[#0c111d]"],
+body.light-theme [class*="bg-[#0d1324]"],
+body.light-theme [class*="bg-[#0e1322]"],
+body.light-theme [class*="bg-[#0E1322]"],
+body.light-theme [class*="bg-[#0e1627]"],
+body.light-theme [class*="bg-[#111622]"],
+body.light-theme [class*="bg-[#111625]"],
+body.light-theme [class*="bg-[#111726]"],
+body.light-theme [class*="bg-[#111827]"],
+body.light-theme [class*="bg-[#151c2c]"],
+body.light-theme [class*="bg-[#161b26]"] {
   background-color: #ffffff !important;
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
@@ -157,8 +151,9 @@ body.light-theme .bg-brand-dark {
 
 /* Subtabs Segmented Controller & Navigation Bars in Light Mode */
 body.light-theme .bg-\[\#0d1324\]\/50,
-body.light-theme .bg-\[\#0d1324\] {
-  background-color: #e2e8f0 !important;
+body.light-theme .bg-\[\#0d1324\],
+body.light-theme [class*="bg-[#0d1324]"] {
+  background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;
 }
 
@@ -184,23 +179,9 @@ body.light-theme .bg-slate-800\/30,
 body.light-theme .bg-slate-800\/20,
 body.light-theme .bg-slate-850\/90,
 body.light-theme .bg-slate-850,
-body.light-theme .bg-\[\#111625\]\/80,
-body.light-theme .bg-\[\#0e1322\]\/30,
-body.light-theme .bg-\[\#0e1322\]\/80,
-body.light-theme .bg-\[\#0e1322\]\/95,
-body.light-theme .bg-\[\#111827\]\/40,
-body.light-theme .bg-\[\#0b0f19\]\/40,
-body.light-theme .bg-\[\#0c111d\],
-body.light-theme .bg-\[\#0c111d\]\/80,
-body.light-theme .bg-\[\#0c111d\]\/60,
-body.light-theme .bg-\[\#0a0f1d\],
-body.light-theme .bg-\[\#161b26\],
-body.light-theme .bg-\[\#111622\],
-body.light-theme .bg-\[\#151c2c\],
-body.light-theme .bg-\[\#0e1627\],
-body.light-theme .bg-amber-950\/25,
-body.light-theme .bg-amber-950\/30,
-body.light-theme .bg-emerald-950\/25 {
+body.light-theme [class*="bg-slate-800"],
+body.light-theme [class*="bg-amber-950"],
+body.light-theme [class*="bg-emerald-950"] {
   background-color: #f8fafc !important;
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
@@ -210,21 +191,22 @@ body.light-theme .bg-emerald-950\/25 {
 body.light-theme .hover\:bg-slate-900:hover,
 body.light-theme .hover\:bg-slate-850:hover,
 body.light-theme .hover\:bg-slate-800:hover,
-body.light-theme .hover\:bg-\[\#0c111d\]\/80:hover,
-body.light-theme .hover\:bg-\[\#151c2c\]:hover,
-body.light-theme .hover\:bg-\[\#0e1322\]\/80:hover {
+body.light-theme [class*="hover:bg-slate-900"]:hover,
+body.light-theme [class*="hover:bg-slate-800"]:hover {
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
 }
 
 /* Specific Light Theme Gradients for PERFORMANCE LB-X, Athlete Dashboard, DM & Readiness Cards */
-body.light-theme .bg-gradient-to-br.from-slate-900.via-slate-950.to-slate-900 {
+body.light-theme .bg-gradient-to-br.from-slate-900.via-slate-950.to-slate-900,
+body.light-theme [class*="from-slate-900"] {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%) !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05) !important;
 }
 
+body.light-theme [class*="from-[#02050E]"],
 body.light-theme .bg-gradient-to-br.from-\[\#02050E\].to-\[\#0A1227\] {
   background: linear-gradient(135deg, #ffffff 0%, #f0f6ff 100%) !important;
   border-color: #60a5fa !important;
@@ -232,27 +214,30 @@ body.light-theme .bg-gradient-to-br.from-\[\#02050E\].to-\[\#0A1227\] {
   box-shadow: 0 12px 32px -6px rgba(48, 143, 250, 0.18) !important;
 }
 
+body.light-theme [class*="from-[#02050E]"] .text-[#308FFA]\/40,
 body.light-theme .bg-gradient-to-br.from-\[\#02050E\].to-\[\#0A1227\] .text-[#308FFA]\/40 {
   color: #2563eb !important;
 }
 
-body.light-theme .bg-gradient-to-br.from-\[\#111827\].to-\[\#0b0f19\] {
+body.light-theme .bg-gradient-to-br.from-\[\#111827\].to-\[\#0b0f19\],
+body.light-theme [class*="from-[#111827]"] {
   background: linear-gradient(to bottom right, #ffffff, #f1f5f9) !important;
   border-color: #cbd5e1 !important;
 }
 
-body.light-theme .bg-gradient-to-br.from-\[\#064e3b\]\/30.to-\[\#022c22\]\/10 {
+body.light-theme .bg-gradient-to-br.from-\[\#064e3b\]\/30.to-\[\#022c22\]\/10,
+body.light-theme [class*="from-[#064e3b]"] {
   background: linear-gradient(to bottom right, rgba(16, 185, 129, 0.1), rgba(209, 250, 229, 0.4)) !important;
   border-color: #a7f3d0 !important;
 }
 
-body.light-theme .bg-gradient-to-br.from-\[\#241a02\].via-\[\#0f0a00\].to-slate-950,
-body.light-theme .bg-gradient-to-br.from-\[\#1e1c0c\].via-\[\#100e05\].to-\[\#0d0a02\] {
+body.light-theme [class*="from-[#241a02]"],
+body.light-theme [class*="from-[#1e1c0c]"] {
   background: linear-gradient(to bottom right, #fffbeb, #fef3c7) !important;
   border-color: #f59e0b !important;
 }
 
-body.light-theme .bg-gradient-to-br.from-\[\#021d15\].via-\[\#04100c\].to-brand-dark {
+body.light-theme [class*="from-[#021d15]"] {
   background: linear-gradient(to bottom right, #ecfdf5, #ffffff) !important;
   border-color: #10b981 !important;
 }
@@ -320,50 +305,30 @@ body.light-theme .text-slate-600 {
 
 /* High-Contrast Neon Green (#39FF14) & Accents in Light Mode */
 body.light-theme .text-\[\#39FF14\],
-body.light-theme .text-\[\#39FF14\]\/90,
-body.light-theme .text-\[\#39FF14\]\/80,
-body.light-theme .hover\:text-\[\#39FF14\]:hover,
-body.light-theme .group-hover\:text-\[\#39FF14\]:group-hover,
-body.light-theme .group-hover\/item\:text-\[\#39FF14\],
-body.light-theme .group\:hover\:text-\[\#39FF14\] {
+body.light-theme [class*="text-[#39FF14]"] {
   color: #15803d !important;
 }
 
-body.light-theme .bg-\[\#39FF14\]\/5,
-body.light-theme .bg-\[\#39FF14\]\/10,
-body.light-theme .bg-\[\#39FF14\]\/15,
-body.light-theme .bg-\[\#39FF14\]\/20,
-body.light-theme .bg-\[\#39FF14\]\/25,
-body.light-theme .bg-\[\#39FF14\]\/30 {
+body.light-theme [class*="bg-[#39FF14]/"] {
   background-color: rgba(22, 163, 74, 0.12) !important;
   color: #15803d !important;
   border-color: rgba(22, 163, 74, 0.3) !important;
 }
 
-body.light-theme .border-\[\#39FF14\],
-body.light-theme .border-\[\#39FF14\]\/10,
-body.light-theme .border-\[\#39FF14\]\/20,
-body.light-theme .border-\[\#39FF14\]\/25,
-body.light-theme .border-\[\#39FF14\]\/30,
-body.light-theme .border-\[\#39FF14\]\/40,
-body.light-theme .border-\[\#39FF14\]\/50,
-body.light-theme .focus\:border-\[\#39FF14\]:focus,
-body.light-theme .focus\:border-\[\#39FF14\]\/50:focus,
-body.light-theme .focus\:border-\[\#39FF14\]\/40:focus {
+body.light-theme [class*="border-[#39FF14]"] {
   border-color: #16a34a !important;
 }
 
 /* Primary Action Buttons with bg-[#39FF14] in Light Mode */
 body.light-theme .bg-\[\#39FF14\],
-body.light-theme .hover\:bg-\[\#32e00f\]:hover {
+body.light-theme [class*="bg-[#39FF14]"] {
   background-color: #16a34a !important;
   color: #ffffff !important;
   border-color: #15803d !important;
   box-shadow: 0 4px 14px 0 rgba(22, 163, 74, 0.3) !important;
 }
 
-body.light-theme .bg-\[\#39FF14\] svg,
-body.light-theme .hover\:bg-\[\#32e00f\]:hover svg {
+body.light-theme [class*="bg-[#39FF14]"] svg {
   color: #ffffff !important;
 }
 
@@ -475,17 +440,22 @@ body.light-theme table tbody tr:hover {
   background-color: #f8fafc !important;
 }
 
-/* Recharts Charts in Light Mode */
+/* Recharts Charts & Tooltips in Light Mode */
 body.light-theme .recharts-cartesian-grid-horizontal line,
 body.light-theme .recharts-cartesian-grid-vertical line {
   stroke: #cbd5e1 !important;
 }
 
-body.light-theme .recharts-default-tooltip {
+body.light-theme .recharts-default-tooltip,
+body.light-theme .recharts-tooltip-wrapper > div {
   background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1) !important;
+}
+
+body.light-theme .recharts-text {
+  fill: #475569 !important;
 }
 
 html, body {

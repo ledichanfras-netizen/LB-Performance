@@ -14,6 +14,17 @@ import { GoogleGenAI, Type } from '@google/genai';
 
 dotenv.config();
 
+function safeNum(val: any, fallback: number = 0): number {
+  if (val === undefined || val === null || val === '') return fallback;
+  if (typeof val === 'number') return isNaN(val) ? fallback : val;
+  if (typeof val === 'string') {
+    const cleaned = val.trim().replace(',', '.').replace(/[^0-9.-]/g, '');
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? fallback : parsed;
+  }
+  return fallback;
+}
+
 const aiGenClient = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
   httpOptions: {
@@ -1053,9 +1064,9 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
                id: w.id || `wl-${Date.now()}-${Math.random()}`,
                athlete_id: athlete.id,
                date: w.date,
-               fatigue: w.fatigue ?? 0,
-               sleep: w.sleep ?? 0,
-               stress: w.stress ?? 0,
+               fatigue: safeNum(w.fatigue, 0),
+               sleep: safeNum(w.sleep, 0),
+               stress: safeNum(w.stress, 0),
                soreness: w.soreness ?? 0,
                mood: w.mood ?? 0,
                cognitive_load: w.cognitiveLoad ?? 0,
@@ -1068,7 +1079,7 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
                 sleep_hours_formatted: w.sleepHoursFormatted || null,
                 sleep_start_time: w.sleepStartTime || null,
                 wake_up_time: w.wakeUpTime || null,
-                calculated_sleep_hours: w.calculatedSleepHours ?? null,
+                calculated_sleep_hours: w.calculatedSleepHours !== undefined && w.calculatedSleepHours !== null ? safeNum(w.calculatedSleepHours, 0) : safeNum(w.sleep, 0),
                 is_match_day: w.isMatchDay ?? false,
                 emotional_readiness: w.emotionalReadiness ?? null,
                 psychological_readiness: w.psychologicalReadiness ?? null,
@@ -1455,7 +1466,7 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
             athlete.id,
             w.date,
             w.fatigue ?? 0,
-            w.sleep ?? 0,
+            safeNum(w.sleep, 0),
             w.stress ?? 0,
             w.soreness ?? 0,
             w.mood ?? 0,
@@ -1469,7 +1480,7 @@ apiRouter.post('/salvar', authMiddleware, async (req, res) => {
             w.sleepHoursFormatted || null,
             w.sleepStartTime || null,
             w.wakeUpTime || null,
-            w.calculatedSleepHours ?? null,
+            w.calculatedSleepHours !== undefined && w.calculatedSleepHours !== null ? safeNum(w.calculatedSleepHours, 0) : safeNum(w.sleep, 0),
             w.isMatchDay ?? false,
             w.emotionalReadiness ?? null,
             w.psychologicalReadiness ?? null,
