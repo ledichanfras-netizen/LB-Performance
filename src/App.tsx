@@ -388,7 +388,7 @@ const Login: FC<{
         <div className="flex flex-col items-center mb-12">
           <div className="w-24 h-24 rounded-[2rem] bg-slate-900/90 p-2.5 shadow-[0_0_50px_rgba(57,255,20,0.35)] mb-8 flex items-center justify-center border border-brand-primary/30">
             <img
-              src="/pwa-192x192.svg?v=3"
+              src="/pwa-192x192.svg"
               className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(57,255,20,0.3)]"
               alt="Logo"
             />
@@ -503,7 +503,7 @@ const ReportPage: FC<{
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center p-1 shadow-lg border border-slate-800 shrink-0">
             <img
-              src="/pwa-192x192.svg?v=3"
+              src="/pwa-192x192.svg"
               className="w-full h-full object-contain"
               alt="LB"
             />
@@ -546,9 +546,9 @@ const ReportHeader: FC<{
     
     <div className="relative z-10 w-full">
       <div className="flex items-center gap-4 mb-4">
-        <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center p-1.5 shadow-md border border-emerald-400/30 shrink-0">
+        <div className="w-13 h-13 rounded-2xl bg-slate-900 flex items-center justify-center p-1.5 shadow-md border border-emerald-400/30 shrink-0">
           <img
-            src="/pwa-192x192.svg?v=3"
+            src="/pwa-192x192.svg"
             className="w-full h-full object-contain"
             alt="Logo"
           />
@@ -1019,7 +1019,7 @@ const EliteHubApp: FC<{
       toast.success("Notificações ativadas! Você receberá alertas de treino.");
       new Notification("LBHUB Ativado", {
         body: "Você receberá notificações sobre seus planos e feedbacks.",
-        icon: "/pwa-192x192.svg?v=3",
+        icon: "/pwa-192x192.svg",
       });
     } else {
       toast.error("Permissão de notificação negada.");
@@ -1326,7 +1326,7 @@ const EliteHubApp: FC<{
         <div className="relative z-10 flex flex-col items-center">
           <div className="w-28 h-28 rounded-[2.5rem] bg-slate-900/90 p-3 shadow-[0_0_60px_rgba(16,185,129,0.4)] border border-brand-primary/30 flex items-center justify-center mb-8 animate-bounce">
             <img
-              src="/pwa-192x192.svg?v=3"
+              src="/pwa-192x192.svg"
               className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(16,185,129,0.4)]"
               alt="LB Logo"
             />
@@ -1406,7 +1406,7 @@ const EliteHubApp: FC<{
           <div className="w-28 h-28 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin absolute inset-0"></div>
           <div className="w-16 h-16 rounded-2xl bg-slate-900/90 p-2 border border-brand-primary/30 flex items-center justify-center z-10 shadow-[0_0_20px_rgba(57,255,20,0.3)]">
             <img
-              src="/pwa-192x192.svg?v=3"
+              src="/pwa-192x192.svg"
               className="w-full h-full object-contain"
               alt="Logo"
             />
@@ -1601,8 +1601,8 @@ const EliteHubApp: FC<{
               {/* Premium Performance Pro Logo Bracket & Theme Toggle */}
               <div className="hidden md:flex items-center justify-between mb-10 mt-2 px-2">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-slate-900/80 flex items-center justify-center p-1.5 border border-slate-800 shadow-[0_0_20px_rgba(16,185,129,0.25)] shrink-0">
-                    <img src="/pwa-192x192.svg?v=3" className="w-full h-full object-contain" alt="LB Logo" />
+                  <div className="w-10 h-10 rounded-xl bg-slate-900/80 flex items-center justify-center p-1 border border-slate-800 shadow-[0_0_20px_rgba(16,185,129,0.25)] shrink-0">
+                    <img src="/pwa-192x192.svg" className="w-8 h-8 object-contain" alt="LB Logo" />
                   </div>
                   <div className="flex flex-col">
                     <span className="font-extrabold text-xs tracking-[0.14em] uppercase text-white/90 leading-none">
@@ -1987,9 +1987,9 @@ const EliteHubApp: FC<{
 
                   <div className="relative z-10 min-w-0">
                     <div className="flex items-center gap-3 sm:gap-4">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-900 flex items-center justify-center p-1.5 border border-brand-primary/30 shrink-0 shadow-lg">
+                      <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl bg-slate-900 flex items-center justify-center p-1.5 border border-brand-primary/30 shrink-0 shadow-lg">
                         <img
-                          src="/pwa-192x192.svg?v=3"
+                          src="/pwa-192x192.svg"
                           className="w-full h-full object-contain"
                           alt="Logo"
                         />

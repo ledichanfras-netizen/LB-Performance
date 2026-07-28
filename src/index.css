@@ -110,28 +110,45 @@ body.light-theme .bg-slate-900\/90,
 body.light-theme .bg-slate-900\/80,
 body.light-theme .bg-slate-900\/60,
 body.light-theme .bg-slate-900\/50,
+body.light-theme .bg-slate-900\/40,
+body.light-theme .bg-slate-900\/30,
+body.light-theme .bg-slate-900\/20,
 body.light-theme .bg-slate-950,
 body.light-theme .bg-slate-950\/90,
 body.light-theme .bg-slate-950\/80,
 body.light-theme .bg-slate-950\/60,
+body.light-theme .bg-slate-950\/50,
+body.light-theme .bg-slate-950\/40,
+body.light-theme .bg-slate-950\/25,
 body.light-theme .bg-\[\#020617\],
+body.light-theme .bg-\[\#030712\],
+body.light-theme .bg-\[\#05080e\],
+body.light-theme .bg-\[\#060b18\],
+body.light-theme .bg-\[\#060b18\]\/80,
 body.light-theme .bg-\[\#070b14\],
 body.light-theme .bg-\[\#080c14\],
-body.light-theme .bg-\[\#0B0F19\],
-body.light-theme .bg-\[\#0A0D16\],
 body.light-theme .bg-\[\#080d16\],
 body.light-theme .bg-\[\#080D16\],
-body.light-theme .bg-\[\#0e1322\],
-body.light-theme .bg-\[\#0E1322\],
-body.light-theme .bg-\[\#0d1324\],
-body.light-theme .bg-\[\#0D1324\],
-body.light-theme .bg-\[\#111625\],
-body.light-theme .bg-\[\#111726\],
 body.light-theme .bg-\[\#080d1a\],
 body.light-theme .bg-\[\#080D1A\],
-body.light-theme .bg-\[\#0c111d\],
-body.light-theme .bg-\[\#111827\],
+body.light-theme .bg-\[\#0a0f1d\],
+body.light-theme .bg-\[\#0A0D16\],
 body.light-theme .bg-\[\#0b0f19\],
+body.light-theme .bg-\[\#0B0F19\],
+body.light-theme .bg-\[\#0c111d\],
+body.light-theme .bg-\[\#0c111d\]\/80,
+body.light-theme .bg-\[\#0c111d\]\/60,
+body.light-theme .bg-\[\#0d1324\],
+body.light-theme .bg-\[\#0D1324\],
+body.light-theme .bg-\[\#0e1322\],
+body.light-theme .bg-\[\#0E1322\],
+body.light-theme .bg-\[\#0e1627\],
+body.light-theme .bg-\[\#111622\],
+body.light-theme .bg-\[\#111625\],
+body.light-theme .bg-\[\#111726\],
+body.light-theme .bg-\[\#111827\],
+body.light-theme .bg-\[\#151c2c\],
+body.light-theme .bg-\[\#161b26\],
 body.light-theme .bg-brand-dark {
   background-color: #ffffff !important;
   color: #0f172a !important;
@@ -157,7 +174,7 @@ body.light-theme button.text-slate-500:hover {
   background-color: rgba(203, 213, 225, 0.5) !important;
 }
 
-/* Inner block containers (slate-800, sub-panels) for nested contrast */
+/* Inner block containers (slate-800, exercise items, sub-panels) for high contrast in Light Mode */
 body.light-theme .bg-slate-800,
 body.light-theme .bg-slate-800\/80,
 body.light-theme .bg-slate-800\/60,
@@ -173,19 +190,31 @@ body.light-theme .bg-\[\#0e1322\]\/80,
 body.light-theme .bg-\[\#0e1322\]\/95,
 body.light-theme .bg-\[\#111827\]\/40,
 body.light-theme .bg-\[\#0b0f19\]\/40,
-body.light-theme .bg-slate-950\/25,
-body.light-theme .bg-slate-950\/40,
-body.light-theme .bg-slate-950\/60,
-body.light-theme .bg-slate-900\/60,
-body.light-theme .bg-slate-900\/50,
-body.light-theme .bg-slate-900\/30,
-body.light-theme .bg-slate-900\/20,
+body.light-theme .bg-\[\#0c111d\],
+body.light-theme .bg-\[\#0c111d\]\/80,
+body.light-theme .bg-\[\#0c111d\]\/60,
+body.light-theme .bg-\[\#0a0f1d\],
+body.light-theme .bg-\[\#161b26\],
+body.light-theme .bg-\[\#111622\],
+body.light-theme .bg-\[\#151c2c\],
+body.light-theme .bg-\[\#0e1627\],
 body.light-theme .bg-amber-950\/25,
 body.light-theme .bg-amber-950\/30,
 body.light-theme .bg-emerald-950\/25 {
   background-color: #f8fafc !important;
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
+}
+
+/* Hover States for Cards & Prescription List Items in Light Mode */
+body.light-theme .hover\:bg-slate-900:hover,
+body.light-theme .hover\:bg-slate-850:hover,
+body.light-theme .hover\:bg-slate-800:hover,
+body.light-theme .hover\:bg-\[\#0c111d\]\/80:hover,
+body.light-theme .hover\:bg-\[\#151c2c\]:hover,
+body.light-theme .hover\:bg-\[\#0e1322\]\/80:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
 }
 
 /* Specific Light Theme Gradients for PERFORMANCE LB-X, Athlete Dashboard, DM & Readiness Cards */
@@ -242,6 +271,12 @@ body.light-theme svg g[fill="#0f172a"] {
 }
 
 /* Borders */
+body.light-theme .border-slate-900,
+body.light-theme .border-slate-900\/80,
+body.light-theme .border-slate-900\/60,
+body.light-theme .border-slate-900\/40,
+body.light-theme .border-slate-850,
+body.light-theme .border-slate-850\/90,
 body.light-theme .border-slate-800,
 body.light-theme .border-slate-800\/80,
 body.light-theme .border-slate-800\/60,
@@ -249,7 +284,7 @@ body.light-theme .border-slate-800\/40,
 body.light-theme .border-slate-800\/20,
 body.light-theme .border-slate-700,
 body.light-theme .border-slate-700\/60,
-body.light-theme .border-slate-850\/90,
+body.light-theme .border-slate-700\/40,
 body.light-theme .border-white\/5,
 body.light-theme .border-white\/10,
 body.light-theme .border-white\/20 {
@@ -272,14 +307,67 @@ body.light-theme .text-white\/60 {
 }
 
 body.light-theme .text-slate-400 {
-  color: #475569 !important;
+  color: #334155 !important;
 }
 
 body.light-theme .text-slate-500 {
+  color: #475569 !important;
+}
+
+body.light-theme .text-slate-600 {
   color: #64748b !important;
 }
 
-/* Inputs, Selects & Textareas */
+/* High-Contrast Neon Green (#39FF14) & Accents in Light Mode */
+body.light-theme .text-\[\#39FF14\],
+body.light-theme .text-\[\#39FF14\]\/90,
+body.light-theme .text-\[\#39FF14\]\/80,
+body.light-theme .hover\:text-\[\#39FF14\]:hover,
+body.light-theme .group-hover\:text-\[\#39FF14\]:group-hover,
+body.light-theme .group-hover\/item\:text-\[\#39FF14\],
+body.light-theme .group\:hover\:text-\[\#39FF14\] {
+  color: #15803d !important;
+}
+
+body.light-theme .bg-\[\#39FF14\]\/5,
+body.light-theme .bg-\[\#39FF14\]\/10,
+body.light-theme .bg-\[\#39FF14\]\/15,
+body.light-theme .bg-\[\#39FF14\]\/20,
+body.light-theme .bg-\[\#39FF14\]\/25,
+body.light-theme .bg-\[\#39FF14\]\/30 {
+  background-color: rgba(22, 163, 74, 0.12) !important;
+  color: #15803d !important;
+  border-color: rgba(22, 163, 74, 0.3) !important;
+}
+
+body.light-theme .border-\[\#39FF14\],
+body.light-theme .border-\[\#39FF14\]\/10,
+body.light-theme .border-\[\#39FF14\]\/20,
+body.light-theme .border-\[\#39FF14\]\/25,
+body.light-theme .border-\[\#39FF14\]\/30,
+body.light-theme .border-\[\#39FF14\]\/40,
+body.light-theme .border-\[\#39FF14\]\/50,
+body.light-theme .focus\:border-\[\#39FF14\]:focus,
+body.light-theme .focus\:border-\[\#39FF14\]\/50:focus,
+body.light-theme .focus\:border-\[\#39FF14\]\/40:focus {
+  border-color: #16a34a !important;
+}
+
+/* Primary Action Buttons with bg-[#39FF14] in Light Mode */
+body.light-theme .bg-\[\#39FF14\],
+body.light-theme .hover\:bg-\[\#32e00f\]:hover {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+  border-color: #15803d !important;
+  box-shadow: 0 4px 14px 0 rgba(22, 163, 74, 0.3) !important;
+}
+
+body.light-theme .bg-\[\#39FF14\] svg,
+body.light-theme .hover\:bg-\[\#32e00f\]:hover svg {
+  color: #ffffff !important;
+}
+
+/* Inputs, Selects & Textareas in Light Mode */
 body.light-theme input,
 body.light-theme select,
 body.light-theme textarea {
@@ -289,13 +377,43 @@ body.light-theme textarea {
 }
 
 body.light-theme input::placeholder,
-body.light-theme textarea::placeholder {
+body.light-theme textarea::placeholder,
+body.light-theme .placeholder-slate-700::placeholder,
+body.light-theme .placeholder\:text-slate-700::placeholder,
+body.light-theme .placeholder-slate-600::placeholder {
   color: #94a3b8 !important;
 }
 
 body.light-theme select option {
   background-color: #ffffff !important;
   color: #0f172a !important;
+}
+
+/* Control Icon Buttons (Floating Up/Down/Duplicate/Trash) */
+body.light-theme button.bg-slate-950,
+body.light-theme div.bg-slate-950 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+body.light-theme button.bg-slate-950:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Red / Trash Buttons in Light Mode */
+body.light-theme .bg-red-950\/20,
+body.light-theme .bg-red-900\/20 {
+  background-color: #fef2f2 !important;
+  border-color: #fca5a5 !important;
+  color: #dc2626 !important;
+}
+
+body.light-theme .bg-red-950\/20:hover,
+body.light-theme .hover\:bg-red-500:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
 }
 
 /* Accent Badges & Tints in Light Mode */
