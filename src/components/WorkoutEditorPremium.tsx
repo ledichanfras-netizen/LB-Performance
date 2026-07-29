@@ -1286,7 +1286,6 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={(e) => e.target.select()}
                   className="w-full bg-[#161b26] border border-slate-850 rounded-xl py-3 pl-10 pr-4 text-xs font-semibold text-slate-200 outline-none focus:ring-2 focus:ring-[#39FF14]/10 focus:border-[#39FF14] transition-all"
                   placeholder="Pesquisar por nome, músculo, equipamento..."
                   onKeyDown={(e) => {
@@ -1558,7 +1557,6 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                   type="text"
                   value={customExerciseName}
                   onChange={(e) => setCustomExerciseName(e.target.value)}
-                  onFocus={(e) => e.target.select()}
                   className="flex-1 bg-[#161b26] border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 font-medium outline-none focus:border-[#39FF14] focus:ring-1 focus:ring-[#39FF14]/10"
                   placeholder="Ex: Saltos Unilaterais Caixa"
                 />
@@ -1631,7 +1629,6 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                       type="text"
                       value={aiFocusModality}
                       onChange={(e) => setAiFocusModality(e.target.value)}
-                      onFocus={(e) => e.target.select()}
                       className="w-full bg-[#161b26] text-[9px] font-black uppercase text-slate-200 border border-slate-850 p-2 rounded-lg focus:border-[#39FF14]"
                     />
                   </div>
@@ -1641,7 +1638,6 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                       type="text"
                       value={aiFocusGoal}
                       onChange={(e) => setAiFocusGoal(e.target.value)}
-                      onFocus={(e) => e.target.select()}
                       className="w-full bg-[#161b26] text-[9px] font-black uppercase text-slate-200 border border-slate-850 p-2 rounded-lg focus:border-[#39FF14]"
                     />
                   </div>
@@ -2045,7 +2041,6 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                   <input
                     value={edited.name}
                     onChange={(e) => setEdited({ ...edited, name: e.target.value })}
-                    onFocus={(e) => e.target.select()}
                     className="w-full bg-[#0c111d] border border-slate-800 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-[#39FF14]/10 focus:border-[#39FF14] text-white font-extrabold"
                     placeholder="Ex: Bloco de Potência A"
                   />
@@ -2437,16 +2432,12 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                             <input
                               value={ex.name}
                               onChange={(e) => updateExField(ex.id, "name", e.target.value)}
-                              onFocus={(e) => e.target.select()}
-                              onClick={(e) => (e.target as HTMLInputElement).select()}
                               className="bg-transparent border-b border-dashed border-slate-700 focus:border-b-[#39FF14] outline-none text-base md:text-lg text-slate-100 font-extrabold w-full py-1 transition-colors"
                             />
                           </div>
                           <input
                             value={ex.muscleGroup}
                             onChange={(e) => updateExField(ex.id, "muscleGroup", e.target.value)}
-                            onFocus={(e) => e.target.select()}
-                            onClick={(e) => (e.target as HTMLInputElement).select()}
                             className="bg-transparent text-[10px] font-black uppercase text-slate-400 w-full outline-none focus:text-slate-300"
                             placeholder="Grupo Muscular"
                           />
@@ -2514,7 +2505,6 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                               value={ex.rest || "90s"}
                               onChange={(e) => updateExField(ex.id, "rest", e.target.value)}
                               onFocus={(e) => e.target.select()}
-                              onClick={(e) => (e.target as HTMLInputElement).select()}
                               className="w-full bg-slate-950/50 border border-slate-800 focus:border-[#39FF14]/50 rounded-xl p-3 text-sm text-amber-400 text-center font-extrabold transition-all"
                               placeholder="90s"
                             />
@@ -2527,7 +2517,6 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                           <input 
                             value={ex.notes || ""}
                             onChange={(e) => updateExField(ex.id, "notes", e.target.value)}
-                            onFocus={(e) => e.target.select()}
                             className="w-full flex-1 bg-slate-950/40 border border-slate-900 focus:border-[#39FF14]/40 rounded-xl px-4 py-2 text-xs md:text-sm text-slate-300 focus:text-slate-100 placeholder-slate-700 font-medium outline-none transition-all"
                             placeholder="Adicione observações de velocidade de execução, VBT, posicionamento, etc."
                           />

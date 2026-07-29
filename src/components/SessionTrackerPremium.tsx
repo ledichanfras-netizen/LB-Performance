@@ -1230,7 +1230,6 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                         value={activeEx.performedSets?.length || ""}
                         onChange={(e) => updateSimpleSetsCount(activeEx.id, parseInt(e.target.value) || 1)}
                         onFocus={(e) => e.target.select()}
-                        onClick={(e) => (e.target as HTMLInputElement).select()}
                         className="w-12 bg-transparent text-center font-black text-white text-base outline-none"
                       />
                       <button onClick={() => addSetToExercise(activeEx.id)} className="text-slate-400 hover:text-white text-base font-bold px-2.5 py-1 bg-slate-900 rounded-lg cursor-pointer">+</button>
@@ -1246,7 +1245,6 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                         value={activeEx.performedSets?.[0]?.reps === 0 ? "" : activeEx.performedSets?.[0]?.reps || ""}
                         onChange={(e) => updateSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "reps", parseInt(e.target.value) || 0)}
                         onFocus={(e) => e.target.select()}
-                        onClick={(e) => (e.target as HTMLInputElement).select()}
                         className="w-14 bg-transparent text-center font-black text-white text-base outline-none"
                         placeholder="0"
                       />
@@ -1263,7 +1261,6 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                         value={activeEx.performedSets?.[0]?.weight === 0 ? "" : activeEx.performedSets?.[0]?.weight || ""}
                         onChange={(e) => updateSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "weight", parseFloat(e.target.value) || 0)}
                         onFocus={(e) => e.target.select()}
-                        onClick={(e) => (e.target as HTMLInputElement).select()}
                         className="w-14 bg-transparent text-center font-black text-white text-base outline-none"
                         placeholder="0"
                       />
@@ -1404,7 +1401,6 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                               value={set.weight || ""}
                               onChange={(e) => updateSetField(activeEx.id, set.id, "weight", parseFloat(e.target.value) || 0)}
                               onFocus={(e) => e.target.select()}
-                              onClick={(e) => (e.target as HTMLInputElement).select()}
                               className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-2.5 px-2 text-center font-extrabold text-sm md:text-base text-white transition-all"
                               placeholder="0"
                             />
@@ -1418,7 +1414,6 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                               value={set.reps || ""}
                               onChange={(e) => updateSetField(activeEx.id, set.id, "reps", parseInt(e.target.value) || 0)}
                               onFocus={(e) => e.target.select()}
-                              onClick={(e) => (e.target as HTMLInputElement).select()}
                               className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-2.5 px-2 text-center font-extrabold text-sm md:text-base text-white transition-all"
                               placeholder="0"
                             />
