@@ -113,6 +113,7 @@ body.light-theme .bg-slate-900\/50,
 body.light-theme .bg-slate-900\/40,
 body.light-theme .bg-slate-900\/30,
 body.light-theme .bg-slate-900\/20,
+body.light-theme .bg-slate-900\/10,
 body.light-theme .bg-slate-950,
 body.light-theme .bg-slate-950\/90,
 body.light-theme .bg-slate-950\/80,
@@ -127,13 +128,19 @@ body.light-theme [class*="bg-[#05080e]"],
 body.light-theme [class*="bg-[#060b18]"],
 body.light-theme [class*="bg-[#070b14]"],
 body.light-theme [class*="bg-[#070b16]"],
+body.light-theme [class*="bg-[#070c14]"],
 body.light-theme [class*="bg-[#080c14]"],
 body.light-theme [class*="bg-[#080d16]"],
 body.light-theme [class*="bg-[#080d1a]"],
+body.light-theme [class*="bg-[#090d16]"],
+body.light-theme [class*="bg-[#090e1a]"],
 body.light-theme [class*="bg-[#0a0f1d]"],
 body.light-theme [class*="bg-[#0A0D16]"],
 body.light-theme [class*="bg-[#0b0f19]"],
+body.light-theme [class*="bg-[#0b1c11]"],
+body.light-theme [class*="bg-[#0c101b]"],
 body.light-theme [class*="bg-[#0c111d]"],
+body.light-theme [class*="bg-[#0d1220]"],
 body.light-theme [class*="bg-[#0d1324]"],
 body.light-theme [class*="bg-[#0e1322]"],
 body.light-theme [class*="bg-[#0E1322]"],
@@ -143,7 +150,8 @@ body.light-theme [class*="bg-[#111625]"],
 body.light-theme [class*="bg-[#111726]"],
 body.light-theme [class*="bg-[#111827]"],
 body.light-theme [class*="bg-[#151c2c]"],
-body.light-theme [class*="bg-[#161b26]"] {
+body.light-theme [class*="bg-[#161b26]"],
+body.light-theme [class*="bg-[#1a0e0e]"] {
   background-color: #ffffff !important;
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
@@ -181,7 +189,10 @@ body.light-theme .bg-slate-850\/90,
 body.light-theme .bg-slate-850,
 body.light-theme [class*="bg-slate-800"],
 body.light-theme [class*="bg-amber-950"],
-body.light-theme [class*="bg-emerald-950"] {
+body.light-theme [class*="bg-emerald-950"],
+body.light-theme [class*="bg-indigo-950"],
+body.light-theme [class*="bg-rose-950"],
+body.light-theme [class*="bg-red-950"] {
   background-color: #f8fafc !important;
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
@@ -204,6 +215,18 @@ body.light-theme [class*="from-slate-900"] {
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05) !important;
+}
+
+body.light-theme [class*="from-[#112d1b]"] {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #f8fafc 100%) !important;
+  border-color: #86efac !important;
+  color: #0f172a !important;
+}
+
+body.light-theme [class*="from-[#111622]"],
+body.light-theme [class*="from-[#0c111d]"] {
+  background: linear-gradient(to bottom right, #ffffff, #f1f5f9) !important;
+  border-color: #cbd5e1 !important;
 }
 
 body.light-theme [class*="from-[#02050E]"],
@@ -282,6 +305,27 @@ body.light-theme .text-slate-100,
 body.light-theme .text-slate-200,
 body.light-theme .text-slate-300 {
   color: #0f172a !important;
+}
+
+/* Ensure text inside solid colored action buttons stays white in Light Mode */
+body.light-theme button.bg-rose-600,
+body.light-theme button.bg-rose-500,
+body.light-theme button.bg-red-600,
+body.light-theme button.bg-red-500,
+body.light-theme button.bg-indigo-600,
+body.light-theme button.bg-indigo-500,
+body.light-theme button.bg-blue-600,
+body.light-theme button.bg-blue-500,
+body.light-theme button.bg-emerald-600,
+body.light-theme button.bg-emerald-500,
+body.light-theme button.bg-brand-primary,
+body.light-theme .bg-rose-600 .text-white,
+body.light-theme .bg-red-600 .text-white,
+body.light-theme .bg-indigo-600 .text-white,
+body.light-theme .bg-blue-600 .text-white,
+body.light-theme .bg-emerald-600 .text-white,
+body.light-theme .bg-brand-primary .text-white {
+  color: #ffffff !important;
 }
 
 body.light-theme .text-white\/90,
