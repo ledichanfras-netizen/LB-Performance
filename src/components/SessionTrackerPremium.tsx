@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { toast } from "react-hot-toast";
 import { Workout, PrescribedExercise, ExerciseSet } from "../types";
 import { ENRICHED_LIBRARY } from "../data/exercises";
-import { calculateWorkoutLoad } from "../utils";
+import { calculateWorkoutLoad, isTimeExercise } from "../utils";
 
 // TTS Voice announcer
 const speakText = (text: string, enabled: boolean) => {
@@ -96,8 +96,10 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
               isCompleted: isEditingCompleted ? true : false // New flag for state tracking
             }));
 
+        const isTime = isTimeExercise(ex);
         return {
           ...ex,
+          repsType: isTime ? ("time" as const) : ("reps" as const),
           isSimpleEntry: ex.isSimpleEntry !== undefined ? ex.isSimpleEntry : true,
           painLevel: ex.painLevel || 0,
           performedSets: initialSets,
@@ -437,7 +439,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
     if (index < 0 || index >= session.exercises.length) return;
     setCurrentExerciseIndex(index);
     const targetEx = session.exercises[index];
-    const unit = targetEx.repsType === "time" ? "segundos" : "repetições";
+    const unit = isTimeExercise(targetEx) ? "segundos" : "repetições";
     speakText(`Próximo exercício: ${targetEx.name}. Prescrito: ${targetEx.sets} séries de ${targetEx.reps} ${unit}.`, isVoiceEnabled);
   };
 
@@ -655,7 +657,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                       <span>{ex.name}</span>
                     </h4>
                     <span className="text-[8.5px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 block">
-                      Grupo: {ex.muscleGroup || "GERAL"} • Prescrição: {prescribedSets}x{ex.repsType === "time" ? `${String(prescribedReps).replace(/s/gi, "")}s` : prescribedReps} @ {prescribedWeight}
+                      Grupo: {ex.muscleGroup || "GERAL"} • Prescrição: {prescribedSets}x{isTimeExercise(ex) ? `${String(prescribedReps).replace(/s/gi, "")}s` : prescribedReps} @ {prescribedWeight}
                     </span>
                   </div>
 
@@ -722,7 +724,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                           placeholder="0"
                         />
                         <span className="absolute right-2 text-[9px] font-black text-slate-500 uppercase select-none pointer-events-none">
-                          {ex.repsType === "time" ? "s" : "r"}
+                          {isTimeExercise(ex) ? "s" : "r"}
                         </span>
                       </div>
 
@@ -1128,7 +1130,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                 <div className="flex flex-col items-end shrink-0">
                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">PRESCRIÇÃO</span>
                   <span className="text-sm font-black text-[#39FF14] bg-[#39FF14]/10 border border-[#39FF14]/20 px-4 py-2 rounded-xl italic">
-                    {activeEx.sets}x{activeEx.repsType === "time" ? `${String(activeEx.reps).replace(/s/gi, "")}s` : activeEx.reps} @ {activeEx.weight}
+                    {activeEx.sets}x{isTimeExercise(activeEx) ? `${String(activeEx.reps).replace(/s/gi, "")}s` : activeEx.reps} @ {activeEx.weight}
                   </span>
                 </div>
               </div>
@@ -1236,7 +1238,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                   </div>
 
                   <div className="bg-slate-950 p-3 rounded-xl border border-slate-900">
-                    <label className="text-[9px] text-slate-500 uppercase font-black block tracking-widest text-center mb-1">{activeEx.repsType === "time" ? "TEMPO (SEG)" : "REPETIÇÕES"}</label>
+                    <label className="text-[9px] text-slate-500 uppercase font-black block tracking-widest text-center mb-1">{isTimeExercise(activeEx) ? "TEMPO (SEG)" : "REPETIÇÕES"}</label>
                     <div className="flex items-center justify-between">
                       <button onClick={() => adjustSetField(activeEx.id, activeEx.performedSets?.[0]?.id || "", "reps", -1)} className="text-slate-400 hover:text-white text-base font-bold px-2.5 py-1 bg-slate-900 rounded-lg">-</button>
                       <input
@@ -1344,7 +1346,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                           Série {currentSetIndexForActiveEx + 1} de {(activeEx.performedSets || []).length}
                         </h3>
                         <p className="text-[10px] font-bold text-slate-500 uppercase mt-0.5 tracking-wider">
-                          Meta: {activeEx.repsType === "time" ? `${String(activeEx.reps).replace(/s/gi, "")}s (Tempo)` : `${activeEx.reps} Reps`} • Carga: {activeEx.performedSets?.[currentSetIndexForActiveEx]?.weight || activeEx.weight || 0} kg
+                          Meta: {isTimeExercise(activeEx) ? `${String(activeEx.reps).replace(/s/gi, "")}s (Tempo)` : `${activeEx.reps} Reps`} • Carga: {activeEx.performedSets?.[currentSetIndexForActiveEx]?.weight || activeEx.weight || 0} kg
                         </p>
                       </div>
 
@@ -1420,7 +1422,7 @@ export const SessionTrackerPremium: FC<SessionTrackerPremiumProps> = ({
                               className="w-full bg-slate-950 border border-slate-800 focus:border-[#39FF14] rounded-xl py-2.5 px-2 text-center font-extrabold text-sm md:text-base text-white transition-all"
                               placeholder="0"
                             />
-                            <span className="text-[9px] font-black text-slate-500 uppercase">{activeEx.repsType === "time" ? "SEG" : "REPS"}</span>
+                            <span className="text-[9px] font-black text-slate-500 uppercase">{isTimeExercise(activeEx) ? "SEG" : "REPS"}</span>
                           </div>
 
                           {/* RPE input */}

@@ -14,6 +14,7 @@ import { Workout, PrescribedExercise } from "../types";
 import { ENRICHED_LIBRARY, EnrichedExercise, getBiomechanicalDetails, BiomechanicalDetails } from "../data/exercises";
 import { searchExercisesWithAi, prescribeWorkoutWithAi } from "../services/aiPerformanceService";
 import { ExerciseEditorModal } from "./ExerciseEditorModal";
+import { isTimeExercise } from "../utils";
 
 interface WorkoutEditorPremiumProps {
   workout: Partial<Workout>;
@@ -787,9 +788,16 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
   const updateExField = (id: string, field: keyof PrescribedExercise, value: any) => {
     setEdited({
       ...edited,
-      exercises: (edited.exercises || []).map((ex, i) =>
-        ex.id === id ? { ...ex, [field]: value, order_index: i } : { ...ex, order_index: i }
-      ),
+      exercises: (edited.exercises || []).map((ex, i) => {
+        if (ex.id === id) {
+          const updated = { ...ex, [field]: value, order_index: i };
+          if (field === "repsType" && value === "time") {
+            updated.repsType = "time";
+          }
+          return updated;
+        }
+        return { ...ex, order_index: i };
+      }),
     });
   };
 
@@ -2464,7 +2472,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                               Tipo
                             </label>
                             <select
-                              value={ex.repsType || "reps"}
+                              value={ex.repsType || (isTimeExercise(ex) ? "time" : "reps")}
                               onChange={(e) => updateExField(ex.id, "repsType", e.target.value)}
                               className="w-full bg-slate-950/50 border border-slate-800 focus:border-[#39FF14]/50 rounded-xl p-3 text-sm text-slate-300 font-extrabold transition-all"
                             >
@@ -2482,7 +2490,7 @@ export const WorkoutEditorPremium: FC<WorkoutEditorPremiumProps> = ({
                               onFocus={(e) => e.target.select()}
                               onClick={(e) => (e.target as HTMLInputElement).select()}
                               className="w-full bg-slate-950/50 border border-slate-800 focus:border-[#39FF14]/50 rounded-xl p-3 text-sm text-white text-center font-extrabold transition-all"
-                              placeholder={ex.repsType === "time" ? "30s" : "10"}
+                              placeholder={isTimeExercise(ex) ? "30s" : "10"}
                             />
                           </div>
                           <div>

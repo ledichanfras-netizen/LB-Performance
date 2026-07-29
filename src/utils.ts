@@ -749,3 +749,15 @@ export function getEmbedVideoInfo(url?: string): {
   };
 }
 
+export const isTimeExercise = (ex?: { repsType?: string; reps?: string | number } | null): boolean => {
+  if (!ex) return false;
+  if (ex.repsType === "time" || (ex.repsType as string)?.toLowerCase() === "time") return true;
+  if (typeof ex.reps === "string") {
+    const lower = ex.reps.toLowerCase().trim();
+    if (lower.includes("s") || lower.includes("seg") || lower.includes("min") || lower.includes("tempo") || lower.includes("sec")) {
+      return true;
+    }
+  }
+  return false;
+};
+
