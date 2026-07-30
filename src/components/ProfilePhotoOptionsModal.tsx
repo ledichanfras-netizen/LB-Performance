@@ -66,6 +66,7 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -81,6 +82,16 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
       stopCameraStream();
     };
   }, []);
+
+  // Ensure video stream is bound whenever videoRef is mounted in DOM
+  useEffect(() => {
+    if (isCameraActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch((err) => {
+        console.warn("Erro ao iniciar reprodução do vídeo da câmera:", err);
+      });
+    }
+  }, [isCameraActive, capturedImage]);
 
   const handleClose = () => {
     stopCameraStream();
@@ -105,9 +116,17 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
   const startCameraStream = async (mode: "user" | "environment" = facingMode) => {
     stopCameraStream();
     setCapturedImage(null);
+
+    // Fallback if mediaDevices is not supported in current environment/iframe
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast("Abrindo câmera nativa do dispositivo...");
+      cameraInputRef.current?.click();
+      return;
+    }
+
     try {
-      const devices = await navigator.mediaDevices?.enumerateDevices();
-      const videoDevices = devices?.filter((d) => d.kind === "videoinput") || [];
+      const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+      const videoDevices = devices.filter((d) => d.kind === "videoinput");
       setHasMultipleCameras(videoDevices.length > 1);
 
       const constraints: MediaStreamConstraints = {
@@ -120,14 +139,19 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
+      setIsCameraActive(true);
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
       }
-      setIsCameraActive(true);
     } catch (err: any) {
-      console.error("Erro ao acessar câmera:", err);
-      toast.error("Acesso à câmera indisponível ou negado. Você pode escolher uma foto da galeria.");
+      console.error("Erro ao acessar câmera em tempo real:", err);
+      toast("Iniciando câmera nativa do aparelho...");
       setIsCameraActive(false);
+      setTimeout(() => {
+        cameraInputRef.current?.click();
+      }, 200);
     }
   };
 
@@ -206,6 +230,16 @@ export const ProfilePhotoOptionsModal: React.FC<ProfilePhotoOptionsModalProps> =
             type="file"
             ref={fileInputRef}
             accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          {/* Hidden Native Device Camera Shutter Input */}
+          <input
+            type="file"
+            ref={cameraInputRef}
+            accept="image/*"
+            capture="user"
             className="hidden"
             onChange={handleFileChange}
           />

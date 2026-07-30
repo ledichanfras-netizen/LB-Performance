@@ -397,7 +397,7 @@ apiRouter.post('/auth/login', async (req, res) => {
           }
         }
 
-        const athletesRes = await pool.query('SELECT * FROM athletes WHERE LOWER(name) = LOWER($1)', [trimmedUsername]);
+        const athletesRes = await pool.query('SELECT * FROM athletes WHERE LOWER(TRIM(name)) = LOWER($1)', [trimmedUsername]);
         if (athletesRes.rows.length > 0) {
           const athlete = athletesRes.rows[0];
           if (athlete.dob) {
@@ -448,11 +448,24 @@ apiRouter.post('/auth/login', async (req, res) => {
         }
       }
 
-      const { data: sbAthlete, error: sbAthError } = await supabase
+      let sbAthlete: any = null;
+      const { data: directAth } = await supabase
         .from('athletes')
         .select('*')
         .ilike('name', trimmedUsername)
         .maybeSingle();
+
+      if (directAth) {
+        sbAthlete = directAth;
+      } else {
+        const { data: listAth } = await supabase
+          .from('athletes')
+          .select('*')
+          .ilike('name', `%${trimmedUsername}%`);
+        if (listAth && listAth.length > 0) {
+          sbAthlete = listAth.find(a => (a.name || '').trim().toLowerCase() === trimmedUsername.toLowerCase()) || listAth[0];
+        }
+      }
 
       if (sbAthlete && sbAthlete.dob) {
         // Supabase often returns dates as ISO strings from its client

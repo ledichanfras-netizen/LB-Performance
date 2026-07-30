@@ -16097,10 +16097,29 @@ const AthleteForm: FC<{
                   )}
                 </div>
                 <div className="flex flex-col gap-2 flex-grow">
-                  <div className="flex items-center gap-2">
-                    <label className="px-4 py-2 bg-brand-primary text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl cursor-pointer hover:bg-brand-primary/90 transition-all flex items-center gap-1.5 shadow-md">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="px-3.5 py-2 bg-brand-primary text-slate-950 font-black text-[10px] uppercase tracking-wider rounded-xl cursor-pointer hover:bg-brand-primary/90 transition-all flex items-center gap-1.5 shadow-md">
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>Tirar Foto</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="user"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            processProfileImageFile(file, (base64) => {
+                              update({ photoUrl: base64 });
+                              toast.success("Foto tirada e atualizada!");
+                            });
+                          }
+                        }}
+                      />
+                    </label>
+                    <label className="px-3.5 py-2 bg-slate-800 text-slate-200 border border-slate-700 font-black text-[10px] uppercase tracking-wider rounded-xl cursor-pointer hover:bg-slate-700 transition-all flex items-center gap-1.5 shadow-md">
                       <Upload className="w-3.5 h-3.5" />
-                      <span>{formData.photoUrl ? "Alterar Foto" : "Carregar Foto"}</span>
+                      <span>Galeria</span>
                       <input
                         type="file"
                         accept="image/*"
