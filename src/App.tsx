@@ -67,6 +67,7 @@ import {
   getLocalDateString,
   formatCompetitiveLevel,
   calculateSleepHoursFromTimes,
+  formatSleepHours,
   safeParseFloat,
 } from "./utils";
 import {
@@ -17319,18 +17320,21 @@ const WellnessForm: FC<{
     return calculateSleepHoursFromTimes(sleepStartTime, wakeUpTime);
   }, [sleepStartTime, wakeUpTime]);
 
-  useEffect(() => {
-    if (calculatedSleep) {
+  const handleSleepTimeChange = (newStartTime: string, newWakeTime: string) => {
+    setSleepStartTime(newStartTime);
+    setWakeUpTime(newWakeTime);
+    const calc = calculateSleepHoursFromTimes(newStartTime, newWakeTime);
+    if (calc) {
       setData((prev: any) => ({
         ...prev,
-        sleep: calculatedSleep.hours,
-        sleepHoursFormatted: calculatedSleep.formatted,
-        sleepStartTime,
-        wakeUpTime,
-        calculatedSleepHours: calculatedSleep.hours,
+        sleep: calc.hours,
+        sleepHoursFormatted: calc.formatted,
+        sleepStartTime: newStartTime,
+        wakeUpTime: newWakeTime,
+        calculatedSleepHours: calc.hours,
       }));
     }
-  }, [calculatedSleep, sleepStartTime, wakeUpTime]);
+  };
 
   useEffect(() => {
     setData((prev: any) => ({
@@ -17454,12 +17458,16 @@ const WellnessForm: FC<{
                 step="0.1"
                 min="0"
                 max="24"
-                value={data.sleep || ""}
+                value={data.sleep !== undefined && data.sleep !== null ? data.sleep : ""}
                 onChange={(e) => {
-                  const h = Math.min(24, Math.max(0, safeParseFloat(e.target.value) || 0));
+                  const valStr = e.target.value;
+                  const h = valStr === "" ? 0 : Math.min(24, Math.max(0, safeParseFloat(valStr) || 0));
+                  const formatted = formatSleepHours(h);
                   setData((prev: any) => ({
                     ...prev,
                     sleep: h,
+                    sleepHoursFormatted: formatted,
+                    calculatedSleepHours: h,
                   }));
                 }}
                 onFocus={(e) => e.target.select()}
@@ -17493,7 +17501,7 @@ const WellnessForm: FC<{
               <input
                 type="time"
                 value={sleepStartTime}
-                onChange={(e) => setSleepStartTime(e.target.value)}
+                onChange={(e) => handleSleepTimeChange(e.target.value, wakeUpTime)}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-white font-black text-sm outline-none focus:border-indigo-500 transition-all shadow-inner"
               />
             </div>
@@ -17504,7 +17512,7 @@ const WellnessForm: FC<{
               <input
                 type="time"
                 value={wakeUpTime}
-                onChange={(e) => setWakeUpTime(e.target.value)}
+                onChange={(e) => handleSleepTimeChange(sleepStartTime, e.target.value)}
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3.5 text-white font-black text-sm outline-none focus:border-indigo-500 transition-all shadow-inner"
               />
             </div>
@@ -17863,15 +17871,15 @@ const WellnessForm: FC<{
         </Button>
         <Button
           onClick={() => {
-            const h = calculatedSleep ? calculatedSleep.hours : (typeof data.sleep === 'number' ? data.sleep : parseFloat(data.sleep) || 0);
-            const sleepHoursFormatted = calculatedSleep ? calculatedSleep.formatted : `${h}h`;
+            const rawSleep = typeof data.sleep === 'number' && !isNaN(data.sleep) ? data.sleep : safeParseFloat(data.sleep) || 8;
+            const sleepHoursFormatted = data.sleepHoursFormatted || formatSleepHours(rawSleep);
             onSave({ 
               ...data, 
-              sleep: h, 
+              sleep: rawSleep, 
               sleepHoursFormatted, 
               sleepStartTime,
               wakeUpTime,
-              calculatedSleepHours: h,
+              calculatedSleepHours: rawSleep,
               isMatchDay,
               emotionalReadiness,
               psychologicalReadiness,

@@ -1,7 +1,7 @@
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Athlete, Workout, WellnessEntry, AssessmentType, ExternalSession } from '../types';
-import { getSafeDateTime, safeParseFloat } from '../utils';
+import { getSafeDateTime, safeParseFloat, formatSleepHours } from '../utils';
 
 const safeParse = (val: any, defaultVal: any = []) => {
   if (!val) return defaultVal;
@@ -298,12 +298,18 @@ export const supabaseService = {
             return {
               ...w,
               sleep: exactSleep,
-              cognitiveLoad: w.cognitive_load,
-              readinessScore: w.readiness_score,
-              travelFatigue: w.travel_fatigue,
-              sleepQuality: w.sleep_quality,
-              sleepHoursFormatted: w.sleep_hours_formatted,
-              calculatedSleepHours: exactSleep
+              cognitiveLoad: w.cognitive_load !== undefined ? w.cognitive_load : w.cognitiveLoad,
+              readinessScore: w.readiness_score !== undefined ? w.readiness_score : w.readinessScore,
+              travelFatigue: w.travel_fatigue !== undefined ? w.travel_fatigue : w.travelFatigue,
+              sleepQuality: w.sleep_quality !== undefined ? w.sleep_quality : w.sleepQuality,
+              sleepHoursFormatted: w.sleep_hours_formatted || (exactSleep ? formatSleepHours(exactSleep) : undefined),
+              sleepStartTime: w.sleep_start_time || w.sleepStartTime,
+              wakeUpTime: w.wake_up_time || w.wakeUpTime,
+              calculatedSleepHours: exactSleep,
+              isMatchDay: w.is_match_day !== undefined ? w.is_match_day : w.isMatchDay,
+              emotionalReadiness: w.emotional_readiness !== undefined ? w.emotional_readiness : w.emotionalReadiness,
+              psychologicalReadiness: w.psychological_readiness !== undefined ? w.psychological_readiness : w.psychologicalReadiness,
+              psychologyNotes: w.psychology_notes || w.psychologyNotes,
             };
           }).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
           externalSessions: (a.external_sessions || []).map((es: any) => ({
@@ -557,17 +563,15 @@ export const supabaseService = {
           id: w.id,
           athlete_id: athlete.id,
           date: w.date,
-          fatigue: w.fatigue,
+          fatigue: Number(w.fatigue || 0),
           sleep: Math.round(safeParseFloat(w.sleep) || 0),
-          stress: w.stress,
-          soreness: w.soreness,
-          mood: w.mood,
-          cognitive_load: w.cognitiveLoad !== undefined ? w.cognitiveLoad : (w as any).cognitive_load,
-          readiness_score: w.readinessScore !== undefined ? w.readinessScore : (w as any).readiness_score,
-          travel_fatigue: w.travelFatigue !== undefined ? w.travelFatigue : (w as any).travel_fatigue,
-          sleep_quality: w.sleepQuality !== undefined ? w.sleepQuality : (w as any).sleep_quality,
-          calculated_sleep_hours: safeParseFloat((w as any).calculatedSleepHours ?? (w as any).calculated_sleep_hours ?? w.sleep) || null,
-          sleep_hours_formatted: w.sleepHoursFormatted || (w as any).sleep_hours_formatted || null,
+          stress: Number(w.stress || 0),
+          soreness: Number(w.soreness || 0),
+          mood: Number(w.mood || 0),
+          cognitive_load: w.cognitiveLoad !== undefined ? Number(w.cognitiveLoad) : (w as any).cognitive_load !== undefined ? Number((w as any).cognitive_load) : 0,
+          readiness_score: w.readinessScore !== undefined ? Number(w.readinessScore) : (w as any).readiness_score !== undefined ? Number((w as any).readiness_score) : 0,
+          travel_fatigue: w.travelFatigue !== undefined ? Number(w.travelFatigue) : (w as any).travel_fatigue !== undefined ? Number((w as any).travel_fatigue) : 0,
+          sleep_quality: w.sleepQuality !== undefined ? Number(w.sleepQuality) : (w as any).sleep_quality !== undefined ? Number((w as any).sleep_quality) : 8,
         })));
         if (wError) {
           logError('[Supabase] Erro ao salvar wellness:', wError);

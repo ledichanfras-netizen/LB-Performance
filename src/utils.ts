@@ -24,6 +24,14 @@ export const safeParseFloat = (val: any): number => {
   return NaN;
 };
 
+export const formatSleepHours = (hours: number): string => {
+  if (isNaN(hours) || hours <= 0) return "0h";
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  if (m >= 60) return `${h + 1}h`;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+};
+
 export const calculateSleepHoursFromTimes = (sleepStartTime?: string, wakeUpTime?: string): { hours: number; formatted: string } | null => {
   if (!sleepStartTime || !wakeUpTime) return null;
   const [startH, startM] = sleepStartTime.split(':').map(Number);

@@ -556,6 +556,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
             matches: parsedFields.matches || [],
           wellness: (a.wellness || []).map((w: any) => ({
             ...w,
+            sleep: w.calculated_sleep_hours !== undefined && w.calculated_sleep_hours !== null ? Number(w.calculated_sleep_hours) : (typeof w.sleep === 'number' ? w.sleep : parseFloat(w.sleep) || 0),
             cognitiveLoad: w.cognitive_load,
             readinessScore: w.readiness_score,
             travelFatigue: w.travel_fatigue,
@@ -567,7 +568,14 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
               ? JSON.parse(w.menstrual_symptoms)
               : [],
             hrv: w.hrv,
-            sleepHoursFormatted: w.sleep_hours_formatted
+            sleepHoursFormatted: w.sleep_hours_formatted,
+            sleepStartTime: w.sleep_start_time || w.sleepStartTime,
+            wakeUpTime: w.wake_up_time || w.wakeUpTime,
+            calculatedSleepHours: w.calculated_sleep_hours ?? w.calculatedSleepHours,
+            isMatchDay: w.is_match_day ?? w.isMatchDay ?? false,
+            emotionalReadiness: w.emotional_readiness ?? w.emotionalReadiness,
+            psychologicalReadiness: w.psychological_readiness ?? w.psychologicalReadiness,
+            psychologyNotes: w.psychology_notes || w.psychologyNotes
           })),
           externalSessions: (a.external_sessions || []).map((es: any) => ({
             ...es,
