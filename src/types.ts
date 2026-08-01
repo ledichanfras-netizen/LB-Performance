@@ -24,6 +24,20 @@ export interface BodyMapRecord {
   recordedBy?: 'atleta' | 'coach' | 'fisioterapeuta';
 }
 
+export interface MedicalExam {
+  id: string;
+  date: string;
+  title: string;
+  category: 'Ressonância' | 'Ultrassom' | 'Raio-X' | 'Tomografia' | 'Exame de Sangue' | 'Laudo Médico' | 'Laudo Fisioterapêutico' | 'Outro';
+  fileUrl: string;
+  fileName: string;
+  fileType: 'pdf' | 'image';
+  fileSize?: string;
+  notes?: string;
+  injuryId?: string;
+  recordedBy?: 'atleta' | 'coach' | 'fisioterapeuta' | string;
+}
+
 export interface InjuryEntry {
   id: string;
   date: string;
@@ -40,6 +54,7 @@ export interface InjuryEntry {
   evolution?: EvolutionStatusOption;
   startDate?: string;
   regionId?: string;
+  examIds?: string[];
 }
 
 export type SportOption = 'Futebol' | 'Vôlei' | 'Basquete' | 'Tênis' | 'Corrida / Atletismo' | 'Ciclismo' | 'Natação' | 'Triatlo' | 'Handebol' | 'Outro';
@@ -105,6 +120,7 @@ export interface Athlete {
   injuryHistory: string; // Maintain for backward compatibility/summary
   injuries?: InjuryEntry[]; 
   bodyMapRecords?: BodyMapRecord[];
+  medicalExams?: MedicalExam[];
   matches?: MatchEvent[];
   periodizationStart?: string; 
   periodizationEnd?: string;

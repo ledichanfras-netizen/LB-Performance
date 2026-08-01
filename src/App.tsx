@@ -6341,9 +6341,54 @@ const DashboardView: FC<{
                         domain={[0, 100]}
                       />
                       <Tooltip
-                        contentStyle={{ backgroundColor: "#0e1322", border: "1px solid #1e293b", borderRadius: "1rem" }}
-                        labelStyle={{ fontSize: "10px", fontWeight: "bold", textTransform: "uppercase", color: "#f59e0b" }}
-                        itemStyle={{ fontSize: "10px", fontWeight: "bold" }}
+                        content={({ active, payload, label }: any) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-slate-950/95 border border-slate-800 p-3.5 rounded-2xl shadow-2xl backdrop-blur-xl font-sans min-w-[210px]">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-800/80 pb-2 mb-2 italic">
+                                  Data: {label}
+                                </p>
+                                <div className="space-y-2">
+                                  {payload.map((p: any, idx: number) => {
+                                    let itemColor = p.stroke || p.color || p.fill || "#3b82f6";
+                                    if (p.dataKey === "Carga Aguda" || p.name === "Carga Aguda") {
+                                      itemColor = "#3b82f6";
+                                    } else if (p.dataKey === "Carga Crônica" || p.name === "Carga Crônica") {
+                                      itemColor = "#f59e0b";
+                                    } else if (p.dataKey === "Prontidão" || p.name === "Prontidão" || p.name === "Prontidão (%)") {
+                                      itemColor = "#f43f5e";
+                                    }
+                                    const isProntidao = p.dataKey === "Prontidão" || p.name === "Prontidão (%)";
+                                    return (
+                                      <div key={idx} className="flex items-center justify-between gap-4">
+                                        <div className="flex items-center gap-2">
+                                          <span
+                                            className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm"
+                                            style={{ backgroundColor: itemColor }}
+                                          />
+                                          <span
+                                            className="text-[11px] font-black uppercase tracking-wider"
+                                            style={{ color: itemColor }}
+                                          >
+                                            {p.name || p.dataKey}
+                                          </span>
+                                        </div>
+                                        <span
+                                          className="text-[12px] font-black italic font-mono"
+                                          style={{ color: itemColor }}
+                                        >
+                                          {typeof p.value === "number" ? Math.round(p.value) : p.value}
+                                          {isProntidao ? "%" : " U.A."}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
                       />
                       <Area yAxisId="left" type="monotone" dataKey="Carga Aguda" stroke="#3b82f6" strokeWidth={2.5} fillOpacity={1} fill="url(#acuteGrad)" />
                       <Line yAxisId="left" type="monotone" dataKey="Carga Crônica" stroke="#f59e0b" strokeWidth={2.5} strokeDasharray="5 5" dot={false} />

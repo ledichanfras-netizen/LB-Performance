@@ -18,13 +18,26 @@ import {
   Pencil,
   Check,
   X,
-  FileText
+  FileText,
+  FileCheck,
+  Upload,
+  Eye,
+  Download,
+  Search,
+  Paperclip,
+  Image as ImageIcon,
+  Maximize2,
+  FolderOpen,
+  FileUp,
+  FileSpreadsheet,
+  ExternalLink
 } from "lucide-react";
-import { Athlete, InjuryEntry } from "../types";
+import { Athlete, InjuryEntry, MedicalExam } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { formatDate, getSafeDateTime, getLocalDateString } from "../utils";
 import { HealthReport } from "./HealthReport";
 import { InteractiveBodyMap } from "./InteractiveBodyMap";
+import toast from "react-hot-toast";
 
 interface InjuriesViewProps {
   athlete: Athlete;
@@ -38,9 +51,30 @@ export const InjuriesView: FC<InjuriesViewProps> = ({
   role,
 }) => {
   const injuries = useMemo(() => athlete.injuries || [], [athlete.injuries]);
+  const medicalExams = useMemo(() => athlete.medicalExams || [], [athlete.medicalExams]);
 
-  const [activeSubTab, setActiveSubTab] = useState<"body-map" | "occurrences" | "report">("body-map");
+  const [activeSubTab, setActiveSubTab] = useState<"body-map" | "occurrences" | "exams" | "report">("body-map");
   const [showHealthReport, setShowHealthReport] = useState(false);
+
+  // Exams State
+  const [showAddExamModal, setShowAddExamModal] = useState(false);
+  const [filterExamCategory, setFilterExamCategory] = useState<string>("todos");
+  const [searchExamQuery, setSearchExamQuery] = useState<string>("");
+  const [selectedExamForViewer, setSelectedExamForViewer] = useState<MedicalExam | null>(null);
+  const [confirmDeleteExam, setConfirmDeleteExam] = useState<MedicalExam | null>(null);
+
+  const [newExam, setNewExam] = useState<Omit<MedicalExam, "id">>({
+    date: getLocalDateString(),
+    title: "",
+    category: "Ressonância",
+    fileUrl: "",
+    fileName: "",
+    fileType: "pdf",
+    fileSize: "",
+    notes: "",
+    injuryId: "",
+    recordedBy: role === "coach" ? "coach" : "atleta"
+  });
 
   // Form State
   const [showAddForm, setShowAddForm] = useState(false);
@@ -169,6 +203,137 @@ export const InjuriesView: FC<InjuriesViewProps> = ({
     setEditingInjury(null);
   };
 
+  // Exam Handlers
+  const formatBytes = (bytes: number) => {
+    if (!bytes || bytes === 0) return "0 KB";
+    const k = 1024;
+    if (bytes < k * k) {
+      return (bytes / k).toFixed(1) + " KB";
+    }
+    return (bytes / (k * k)).toFixed(2) + " MB";
+  };
+
+  const handleExamFileUpload = (file: File) => {
+    if (!file) return;
+
+    const isPdf = file.type.toLowerCase().includes("pdf") || file.name.toLowerCase().endsWith(".pdf");
+    const isImg = file.type.toLowerCase().includes("image") || /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(file.name);
+
+    if (!isPdf && !isImg) {
+      toast.error("Formato inválido. Por favor envie arquivos em PDF ou Imagem (PNG, JPG, WEBP).");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      setNewExam((prev) => ({
+        ...prev,
+        fileUrl: dataUrl,
+        fileName: file.name,
+        fileType: isPdf ? "pdf" : "image",
+        fileSize: formatBytes(file.size),
+        title: prev.title || file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ")
+      }));
+      toast.success("Arquivo carregado com sucesso! Preencha os detalhes e confirme o arquivamento.");
+    };
+    reader.onerror = () => {
+      toast.error("Erro ao ler o arquivo selecionado.");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddExam = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newExam.title || !newExam.fileUrl) {
+      toast.error("Preencha o título e selecione um arquivo (PDF ou Imagem).");
+      return;
+    }
+
+    const entry: MedicalExam = {
+      ...newExam,
+      id: `exam-${Date.now()}`,
+    };
+
+    onUpdateAthlete({
+      medicalExams: [entry, ...medicalExams],
+    });
+
+    toast.success("Exame arquivado com sucesso no histórico de DM!");
+    setShowAddExamModal(false);
+    
+    // Reset Form
+    setNewExam({
+      date: getLocalDateString(),
+      title: "",
+      category: "Ressonância",
+      fileUrl: "",
+      fileName: "",
+      fileType: "pdf",
+      fileSize: "",
+      notes: "",
+      injuryId: "",
+      recordedBy: role === "coach" ? "coach" : "atleta"
+    });
+  };
+
+  const handleRemoveExam = (id: string) => {
+    onUpdateAthlete({
+      medicalExams: medicalExams.filter((e) => e.id !== id),
+    });
+    setConfirmDeleteExam(null);
+    toast.success("Exame removido com sucesso do banco de dados.");
+  };
+
+  const getCategoryBadge = (cat: MedicalExam["category"]) => {
+    switch (cat) {
+      case "Ressonância":
+        return "bg-purple-500/20 text-purple-300 border-purple-500/30";
+      case "Ultrassom":
+        return "bg-blue-500/20 text-blue-300 border-blue-500/30";
+      case "Raio-X":
+        return "bg-cyan-500/20 text-cyan-300 border-cyan-500/30";
+      case "Tomografia":
+        return "bg-indigo-500/20 text-indigo-300 border-indigo-500/30";
+      case "Exame de Sangue":
+        return "bg-rose-500/20 text-rose-300 border-rose-500/30";
+      case "Laudo Médico":
+        return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+      case "Laudo Fisioterapêutico":
+        return "bg-teal-500/20 text-teal-300 border-teal-500/30";
+      default:
+        return "bg-slate-500/20 text-slate-300 border-slate-500/30";
+    }
+  };
+
+  // Filtered Exams list
+  const filteredExams = useMemo(() => {
+    let list = [...medicalExams].sort((a, b) => getSafeDateTime(b.date) - getSafeDateTime(a.date));
+    
+    if (filterExamCategory !== "todos") {
+      if (filterExamCategory === "pdf") {
+        list = list.filter((e) => e.fileType === "pdf");
+      } else if (filterExamCategory === "image") {
+        list = list.filter((e) => e.fileType === "image");
+      } else {
+        list = list.filter((e) => e.category === filterExamCategory);
+      }
+    }
+
+    if (searchExamQuery.trim()) {
+      const query = searchExamQuery.toLowerCase();
+      list = list.filter(
+        (e) =>
+          e.title.toLowerCase().includes(query) ||
+          e.fileName.toLowerCase().includes(query) ||
+          (e.notes && e.notes.toLowerCase().includes(query)) ||
+          e.category.toLowerCase().includes(query)
+      );
+    }
+
+    return list;
+  }, [medicalExams, filterExamCategory, searchExamQuery]);
+
   const getSeverityColor = (sev: InjuryEntry['severity']) => {
     switch (sev) {
       case "Leve": return "bg-blue-500/10 text-blue-400 border-blue-500/20";
@@ -268,6 +433,18 @@ export const InjuriesView: FC<InjuriesViewProps> = ({
             <ClipboardList className="w-4 h-4" />
             Ocorrências / Ficha Clínica ({injuries.length})
           </button>
+
+          <button
+            onClick={() => setActiveSubTab("exams")}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all whitespace-nowrap ${
+              activeSubTab === "exams"
+                ? "bg-brand-primary text-slate-950 shadow-lg shadow-brand-primary/20"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <FileCheck className="w-4 h-4" />
+            Exames & Diagnósticos ({medicalExams.length})
+          </button>
         </div>
 
         {role === "coach" && (
@@ -280,6 +457,588 @@ export const InjuriesView: FC<InjuriesViewProps> = ({
           </button>
         )}
       </div>
+
+      {activeSubTab === "exams" && (
+        <div className="space-y-6">
+          {/* EXAMS HEADER & ACTION BAR */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-slate-900/60 border border-slate-800">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <FileCheck className="w-5 h-5 text-brand-primary" />
+                <h3 className="text-xl font-black uppercase text-white italic tracking-tight">
+                  Arquivo de Exames & Diagnósticos Clínicos
+                </h3>
+              </div>
+              <p className="text-xs text-slate-400 font-medium">
+                Central de armazenamento no banco de dados para laudos em PDF, imagens radiológicas (RM, US, Raio-X) e históricos de exames para consulta médica rápida.
+              </p>
+            </div>
+
+            <Button
+              onClick={() => setShowAddExamModal(true)}
+              variant="primary"
+              className="text-[10px] font-black py-3.5 px-6 tracking-widest uppercase shrink-0 shadow-lg shadow-brand-primary/10"
+            >
+              <Upload className="w-4 h-4" />
+              + ANEXAR EXAME OU LAUDO
+            </Button>
+          </div>
+
+          {/* SEARCH & FILTERS TOOLBAR */}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-slate-950/40 p-4 rounded-2xl border border-slate-800">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchExamQuery}
+                onChange={(e) => setSearchExamQuery(e.target.value)}
+                placeholder="Buscar exames por título, laudo ou palavra-chave..."
+                className="w-full bg-slate-900 border border-slate-800 focus:border-brand-primary text-xs font-medium text-white pl-10 pr-4 py-3 rounded-xl outline-none transition-all placeholder:text-slate-500"
+              />
+              {searchExamQuery && (
+                <button
+                  onClick={() => setSearchExamQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs font-bold"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+              {[
+                { id: "todos", label: "Todos" },
+                { id: "Ressonância", label: "Ressonância" },
+                { id: "Ultrassom", label: "Ultrassom" },
+                { id: "Raio-X", label: "Raio-X" },
+                { id: "Tomografia", label: "Tomografia" },
+                { id: "Exame de Sangue", label: "Sangue" },
+                { id: "Laudo Médico", label: "Laudos" },
+                { id: "pdf", label: "PDFs" },
+                { id: "image", label: "Imagens" },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setFilterExamCategory(cat.id)}
+                  className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                    filterExamCategory === cat.id
+                      ? "bg-brand-primary text-slate-950 shadow-md shadow-brand-primary/20"
+                      : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* EXAMS GRID DISPLAY */}
+          {filteredExams.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredExams.map((exam) => {
+                const linkedInjury = injuries.find((i) => i.id === exam.injuryId);
+                return (
+                  <motion.div
+                    key={exam.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-6 rounded-3xl bg-slate-900/50 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between gap-4 group relative overflow-hidden"
+                  >
+                    <div className="space-y-3">
+                      {/* Top Badges */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${getCategoryBadge(exam.category)}`}>
+                          {exam.category}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${
+                            exam.fileType === "pdf"
+                              ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                              : "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                          }`}>
+                            {exam.fileType.toUpperCase()}
+                          </span>
+
+                          <span className="text-[10px] font-bold text-slate-500">
+                            {formatDate(exam.date)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Title & File Name */}
+                      <div>
+                        <h4 className="text-base font-black text-white group-hover:text-brand-primary transition-colors tracking-tight line-clamp-2">
+                          {exam.title}
+                        </h4>
+                        <span className="text-[10px] font-mono text-slate-500 block truncate mt-0.5">
+                          📄 {exam.fileName} {exam.fileSize && `(${exam.fileSize})`}
+                        </span>
+                      </div>
+
+                      {/* Linked Injury Tag */}
+                      {linkedInjury && (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-950 rounded-xl border border-slate-800 text-[9px] text-amber-400 font-bold uppercase">
+                          <Paperclip className="w-3 h-3 shrink-0" />
+                          <span>Ocorrência: {linkedInjury.location || "Lesão"} ({linkedInjury.description})</span>
+                        </div>
+                      )}
+
+                      {/* Thumbnail or Document Preview Card */}
+                      <div
+                        onClick={() => setSelectedExamForViewer(exam)}
+                        className="relative rounded-2xl bg-slate-950 border border-slate-800 h-36 overflow-hidden flex items-center justify-center cursor-pointer group/preview"
+                      >
+                        {exam.fileType === "image" ? (
+                          <img
+                            src={exam.fileUrl}
+                            alt={exam.title}
+                            className="w-full h-full object-cover group-hover/preview:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-slate-400 p-4 text-center">
+                            <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 group-hover/preview:scale-110 transition-transform">
+                              <FileText className="w-6 h-6" />
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-300">
+                              Documento PDF Clínico
+                            </span>
+                            <span className="text-[9px] text-slate-500 font-bold">
+                              Clique para Visualização Rápida
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <span className="px-3 py-1.5 bg-brand-primary text-slate-950 text-[10px] font-black uppercase rounded-xl tracking-wider shadow-lg flex items-center gap-1.5">
+                            <Eye className="w-3.5 h-3.5" />
+                            Abrir Leitor
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Diagnostic Notes excerpt */}
+                      {exam.notes && (
+                        <p className="text-xs text-slate-400 font-medium italic line-clamp-2 bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/60">
+                          "{exam.notes}"
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Card Actions */}
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-800">
+                      <button
+                        onClick={() => setSelectedExamForViewer(exam)}
+                        className="flex-1 py-2.5 px-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-brand-primary" />
+                        <span>Visualizar</span>
+                      </button>
+
+                      <a
+                        href={exam.fileUrl}
+                        download={exam.fileName}
+                        className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-emerald-400 rounded-xl transition-all cursor-pointer"
+                        title="Baixar Arquivo"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </a>
+
+                      {(role === "coach" || exam.recordedBy === "atleta") && (
+                        <button
+                          onClick={() => setConfirmDeleteExam(exam)}
+                          className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-500 hover:text-red-400 rounded-xl transition-all cursor-pointer"
+                          title="Excluir Exame"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-20 text-center space-y-4 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-950/30">
+              <div className="mx-auto w-16 h-16 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500">
+                <FolderOpen className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-black uppercase text-white tracking-widest">
+                  Nenhum exame ou laudo arquivado
+                </h4>
+                <p className="text-xs text-slate-400 max-w-md mx-auto font-medium">
+                  {searchExamQuery || filterExamCategory !== "todos"
+                    ? "Nenhum resultado para os filtros aplicados."
+                    : "Anexe os laudos médicos em PDF, ultrassons ou ressonâncias para arquivamento definitivo no banco de dados."}
+                </p>
+              </div>
+
+              <Button
+                onClick={() => setShowAddExamModal(true)}
+                variant="primary"
+                className="text-[10px] font-black py-3 px-6 tracking-widest uppercase inline-flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                + ANEXAR PRIMEIRO EXAME
+              </Button>
+            </div>
+          )}
+
+          {/* MODAL: UPLOAD NEW EXAM */}
+          <AnimatePresence>
+            {showAddExamModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="w-full max-w-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative my-8"
+                >
+                  <button
+                    onClick={() => setShowAddExamModal(false)}
+                    className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 bg-brand-primary/10 rounded-2xl border border-brand-primary/20 text-brand-primary">
+                      <FileUp className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black italic uppercase tracking-tight text-white">
+                        Anexar Novo Exame / Laudo Médico
+                      </h3>
+                      <p className="text-xs text-slate-400 font-medium">
+                        Upload e armazenamento persistente no banco de dados
+                      </p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleAddExam} className="space-y-6">
+                    {/* File Dropzone */}
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 px-1">
+                        Arquivo do Exame (PDF ou Imagem PNG/JPG) *
+                      </label>
+                      
+                      <div
+                        onClick={() => {
+                          const input = document.getElementById("exam-file-input");
+                          input?.click();
+                        }}
+                        className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+                          newExam.fileUrl
+                            ? "border-emerald-500/50 bg-emerald-500/5"
+                            : "border-slate-800 hover:border-brand-primary/50 bg-slate-950/60"
+                        }`}
+                      >
+                        <input
+                          id="exam-file-input"
+                          type="file"
+                          accept=".pdf,image/*"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              handleExamFileUpload(e.target.files[0]);
+                            }
+                          }}
+                          className="hidden"
+                        />
+
+                        {newExam.fileUrl ? (
+                          <div className="space-y-2">
+                            <div className="mx-auto w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                              {newExam.fileType === "pdf" ? (
+                                <FileText className="w-6 h-6" />
+                              ) : (
+                                <ImageIcon className="w-6 h-6" />
+                              )}
+                            </div>
+                            <div className="text-xs font-black text-white">
+                              {newExam.fileName}
+                            </div>
+                            <div className="text-[10px] text-emerald-400 font-mono font-bold">
+                              ✓ Arquivo carregado ({newExam.fileSize}) - Clique para alterar
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="mx-auto w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center">
+                              <Upload className="w-6 h-6" />
+                            </div>
+                            <div className="text-xs font-bold text-slate-300">
+                              Clique para selecionar ou arraste o arquivo aqui
+                            </div>
+                            <div className="text-[10px] text-slate-500 font-medium">
+                              Suporta documentos em PDF, imagens de Ressonância, Ultrassom, Raio-X ou fotos
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Metadata fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 px-1">
+                          Título / Identificação do Exame *
+                        </label>
+                        <input
+                          type="text"
+                          value={newExam.title}
+                          onChange={(e) => setNewExam({ ...newExam, title: e.target.value })}
+                          placeholder="Ex: RM de Joelho Esquerdo"
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3.5 text-xs text-white font-black outline-none"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 px-1">
+                          Categoria Médica
+                        </label>
+                        <select
+                          value={newExam.category}
+                          onChange={(e) => setNewExam({ ...newExam, category: e.target.value as any })}
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3.5 text-xs text-white font-black outline-none"
+                        >
+                          <option value="Ressonância" className="bg-slate-900">Ressonância Magnética (RM)</option>
+                          <option value="Ultrassom" className="bg-slate-900">Ultrassonografia (USG)</option>
+                          <option value="Raio-X" className="bg-slate-900">Radiografia (Raio-X)</option>
+                          <option value="Tomografia" className="bg-slate-900">Tomografia Computadorizada (TC)</option>
+                          <option value="Exame de Sangue" className="bg-slate-900">Exame de Sangue / CPK</option>
+                          <option value="Laudo Médico" className="bg-slate-900">Laudo Médico / Atestado</option>
+                          <option value="Laudo Fisioterapêutico" className="bg-slate-900">Laudo Fisioterapêutico</option>
+                          <option value="Outro" className="bg-slate-900">Outro Documento</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 px-1">
+                          Data da Realização
+                        </label>
+                        <input
+                          type="date"
+                          value={newExam.date}
+                          onChange={(e) => setNewExam({ ...newExam, date: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3.5 text-xs text-white font-black outline-none"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 px-1">
+                          Relacionar a Ocorrência do DM (Opcional)
+                        </label>
+                        <select
+                          value={newExam.injuryId || ""}
+                          onChange={(e) => setNewExam({ ...newExam, injuryId: e.target.value })}
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3.5 text-xs text-white font-black outline-none"
+                        >
+                          <option value="" className="bg-slate-900">Nenhum (Exame Avulso)</option>
+                          {injuries.map((inj) => (
+                            <option key={inj.id} value={inj.id} className="bg-slate-900">
+                              [{formatDate(inj.date)}] {inj.location || "Lesão"}: {inj.description}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase block mb-2 px-1">
+                        Resumo do Laudo / Observações Diagnósticas
+                      </label>
+                      <textarea
+                        value={newExam.notes || ""}
+                        onChange={(e) => setNewExam({ ...newExam, notes: e.target.value })}
+                        placeholder="Insira aqui a conclusão do laudo radiológico ou observações do médico responsável..."
+                        rows={3}
+                        className="w-full bg-slate-950 border border-slate-800 focus:border-brand-primary rounded-xl p-3.5 text-xs text-white font-medium outline-none resize-none"
+                      />
+                    </div>
+
+                    <div className="flex gap-4 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddExamModal(false)}
+                        className="w-1/2 border border-slate-800 hover:bg-slate-950 rounded-2xl text-[10px] font-black py-4 uppercase tracking-[0.15em] text-slate-400 transition-all cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        className="w-1/2 py-4 text-[10px] font-black tracking-widest uppercase"
+                      >
+                        Salvar no Banco de Dados
+                      </Button>
+                    </div>
+                  </form>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* LIGHTBOX VIEWER MODAL */}
+          <AnimatePresence>
+            {selectedExamForViewer && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-lg overflow-y-auto">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="w-full max-w-4xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative my-6 space-y-6"
+                >
+                  <button
+                    onClick={() => setSelectedExamForViewer(null)}
+                    className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${getCategoryBadge(selectedExamForViewer.category)}`}>
+                      {selectedExamForViewer.category}
+                    </span>
+                    <span className="text-xs font-bold text-slate-400">
+                      Data do Exame: {formatDate(selectedExamForViewer.date)}
+                    </span>
+                    <span className="text-xs font-mono text-slate-500">
+                      ({selectedExamForViewer.fileSize})
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-2xl font-black uppercase text-white tracking-tight">
+                      {selectedExamForViewer.title}
+                    </h3>
+                    <p className="text-xs font-mono text-slate-400 mt-1">
+                      Arquivo: {selectedExamForViewer.fileName}
+                    </p>
+                  </div>
+
+                  {/* Document / Image Viewer Box */}
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[350px] max-h-[60vh] overflow-auto">
+                    {selectedExamForViewer.fileType === "image" ? (
+                      <img
+                        src={selectedExamForViewer.fileUrl}
+                        alt={selectedExamForViewer.title}
+                        className="max-h-[55vh] max-w-full object-contain rounded-xl shadow-2xl"
+                      />
+                    ) : (
+                      <div className="w-full flex flex-col items-center gap-4 py-6 text-center">
+                        <iframe
+                          src={selectedExamForViewer.fileUrl}
+                          className="w-full h-[50vh] rounded-xl border border-slate-800 bg-white"
+                          title="Visualizador de PDF"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Notes & Linked Injury */}
+                  {selectedExamForViewer.notes && (
+                    <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
+                      <span className="text-[10px] font-black uppercase text-brand-primary tracking-widest block">
+                        Parecer Diagnóstico & Achados Clínicos:
+                      </span>
+                      <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
+                        "{selectedExamForViewer.notes}"
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Actions Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-800">
+                    <div className="text-[10px] font-bold text-slate-500">
+                      Armazenado no banco de dados com segurança
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <a
+                        href={selectedExamForViewer.fileUrl}
+                        download={selectedExamForViewer.fileName}
+                        className="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-500/10"
+                      >
+                        <Download className="w-4 h-4" />
+                        Baixar Arquivo Original
+                      </a>
+
+                      <button
+                        onClick={() => setSelectedExamForViewer(null)}
+                        className="px-5 py-3 bg-slate-900 border border-slate-800 text-slate-300 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                      >
+                        Fechar Leitor
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* CONFIRM DELETE EXAM MODAL */}
+          <AnimatePresence>
+            {confirmDeleteExam && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="w-full max-w-md bg-gradient-to-br from-[#020617] via-slate-950 to-[#020617] border border-red-500/20 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl relative space-y-6 text-center"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteExam(null)}
+                    className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-all"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+
+                  <div className="mx-auto w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 mb-2">
+                    <Trash2 className="w-6 h-6" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="inline-flex items-center gap-1.5 text-[9px] font-black tracking-widest text-red-400 uppercase">
+                      CONFIRMAR EXCLUSÃO DE EXAME
+                    </div>
+                    <h3 className="text-xl font-black italic uppercase tracking-tight text-white">
+                      Excluir Exame / Laudo?
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                      Você está prestes a excluir o exame <strong className="text-slate-200">"{confirmDeleteExam.title}"</strong> ({confirmDeleteExam.fileName}) do banco de dados.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteExam(null)}
+                      className="w-1/2 border border-slate-800 hover:bg-slate-950 rounded-2xl text-[10px] font-black py-4 uppercase tracking-[0.15em] text-slate-400 transition-all cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveExam(confirmDeleteExam.id)}
+                      className="w-1/2 bg-red-500 border border-red-500 text-white hover:bg-transparent hover:text-red-500 rounded-2xl text-[10px] font-black py-4 uppercase tracking-[0.15em] transition-all cursor-pointer shadow-lg shadow-red-500/10"
+                    >
+                      Confirmar Exclusão
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* RENDER ACTIVE SUBTAB CONTENT */}
       {activeSubTab === "body-map" && (
@@ -539,6 +1298,38 @@ export const InjuriesView: FC<InjuriesViewProps> = ({
                         {injury.notes}
                       </div>
                     )}
+
+                    {/* Attached exams badge */}
+                    {(() => {
+                      const linkedExams = medicalExams.filter((e) => e.injuryId === injury.id);
+                      if (linkedExams.length === 0) return null;
+                      return (
+                        <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center gap-2">
+                          <span className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1.5">
+                            <Paperclip className="w-3.5 h-3.5 text-brand-primary" />
+                            Exames & Laudos Anexados ({linkedExams.length}):
+                          </span>
+                          {linkedExams.map((ex) => (
+                            <button
+                              key={ex.id}
+                              onClick={() => {
+                                setSelectedExamForViewer(ex);
+                                setActiveSubTab("exams");
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 hover:border-brand-primary text-[10px] font-bold text-slate-200 transition-all cursor-pointer shadow-sm"
+                            >
+                              {ex.fileType === "pdf" ? (
+                                <FileText className="w-3.5 h-3.5 text-red-400" />
+                              ) : (
+                                <ImageIcon className="w-3.5 h-3.5 text-purple-400" />
+                              )}
+                              <span>{ex.title}</span>
+                              <Eye className="w-3 h-3 text-brand-primary ml-1" />
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 

@@ -19,6 +19,7 @@ const safeParse = (val: any, defaultVal: any = []) => {
 const parseBackupAthleteFields = (a: any) => {
   let injuryHistory = a.injury_history || '';
   let injuries = safeParse(a.injuries, []);
+  let medicalExams = safeParse(a.medical_exams || a.medicalExams, []);
   let trainingDays = safeParse(a.training_days, [1, 3, 5]);
   let academyDays = safeParse(a.training_days, [1, 3, 5]); // default/fallback
   let courtDays = [2, 4]; // default/fallback
@@ -40,6 +41,9 @@ const parseBackupAthleteFields = (a: any) => {
           if ((!a.training_days || a.training_days.length === 0) && parsed.trainingDays) {
             trainingDays = parsed.trainingDays || [1, 3, 5];
           }
+        }
+        if (parsed.hasOwnProperty('medicalExams') && Array.isArray(parsed.medicalExams)) {
+          medicalExams = parsed.medicalExams;
         }
         if (parsed.hasOwnProperty('academyDays') && Array.isArray(parsed.academyDays)) {
           academyDays = parsed.academyDays;
@@ -70,7 +74,7 @@ const parseBackupAthleteFields = (a: any) => {
     }
   }
   
-  return { injuryHistory, injuries, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup, posturalBackup, matches, photoUrl };
+  return { injuryHistory, injuries, medicalExams, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup, posturalBackup, matches, photoUrl };
 };
 
 const serializeBackupAthleteFields = (athlete: any) => {
@@ -80,6 +84,7 @@ const serializeBackupAthleteFields = (athlete: any) => {
   return JSON.stringify({
     legacy: athlete.injuryHistory || '',
     injuries: athlete.injuries || [],
+    medicalExams: athlete.medicalExams || [],
     trainingDays: athlete.trainingDays || [1, 3, 5],
     academyDays: athlete.academyDays || [],
     courtDays: athlete.courtDays || [],
@@ -290,6 +295,7 @@ export const supabaseService = {
           academyDays: parsedFields.academyDays,
           courtDays: parsedFields.courtDays,
           injuries: parsedFields.injuries,
+          medicalExams: parsedFields.medicalExams || [],
           matches: parsedFields.matches || [],
           wellness: (a.wellness || []).map((w: any) => {
             const exactSleep = w.calculated_sleep_hours !== undefined && w.calculated_sleep_hours !== null 
