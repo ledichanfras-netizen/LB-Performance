@@ -7732,27 +7732,36 @@ const PerformanceChart: FC<{ data: any[]; type: AssessmentType }> = ({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-slate-950/90 border border-slate-800/80 p-4 rounded-2xl shadow-2xl backdrop-blur-xl font-sans min-w-[190px]">
+        <div className="bg-slate-950/95 border border-slate-800 p-4 rounded-2xl shadow-2xl backdrop-blur-xl font-sans min-w-[190px]">
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-800 pb-2 mb-2 italic">
             Sessão: {label}
           </p>
           <div className="space-y-1.5">
-            {payload.map((p: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className="w-2 h-2 rounded-full shadow"
-                    style={{ backgroundColor: p.color }}
-                  />
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
-                    {p.name}
+            {payload.map((p: any, idx: number) => {
+              const itemColor = p.color || p.stroke || p.fill || "#3b82f6";
+              return (
+                <div key={idx} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full shadow-sm shrink-0"
+                      style={{ backgroundColor: itemColor }}
+                    />
+                    <span
+                      className="text-[10px] font-black uppercase tracking-wider"
+                      style={{ color: itemColor }}
+                    >
+                      {p.name}
+                    </span>
+                  </div>
+                  <span
+                    className="text-[11px] font-black italic"
+                    style={{ color: itemColor }}
+                  >
+                    {typeof p.value === "number" ? p.value.toFixed(1) : p.value}
                   </span>
                 </div>
-                <span className="text-[11px] font-black italic text-white">
-                  {typeof p.value === "number" ? p.value.toFixed(1) : p.value}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       );
@@ -10260,13 +10269,14 @@ const CmjReport: FC<{
                                   {payload.map((item: any, idx: number) => {
                                     let unit = item.dataKey === "altura" ? " cm" : " W";
                                     let name = item.dataKey === "altura" ? "Altura do Salto" : "Potência de Pico";
+                                    const itemColor = item.color || item.fill || "#3b82f6";
                                     return (
                                       <div key={idx} className="flex items-center justify-between gap-4">
                                         <div className="flex items-center gap-1.5">
-                                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color || item.fill }} />
-                                          <span className="text-slate-350 font-bold uppercase">{name}</span>
+                                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: itemColor }} />
+                                          <span className="font-bold uppercase" style={{ color: itemColor }}>{name}</span>
                                         </div>
-                                        <span className="font-extrabold italic" style={{ color: item.color || item.fill }}>
+                                        <span className="font-extrabold italic" style={{ color: itemColor }}>
                                           {item.value?.toFixed(1)}
                                           {unit}
                                         </span>
