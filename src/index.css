@@ -495,7 +495,26 @@ body.light-theme .recharts-tooltip-wrapper > div {
   background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
   color: #0f172a !important;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1) !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15) !important;
+}
+
+body.light-theme .recharts-tooltip-wrapper .text-white,
+body.light-theme .recharts-tooltip-wrapper .text-slate-100,
+body.light-theme .recharts-tooltip-wrapper .text-slate-200,
+body.light-theme .recharts-tooltip-wrapper .text-slate-300,
+body.light-theme .recharts-tooltip-wrapper .text-slate-350,
+body.light-theme .recharts-tooltip-wrapper .text-slate-400,
+body.light-theme .recharts-tooltip-wrapper .text-slate-500,
+body.light-theme .recharts-tooltip-item,
+body.light-theme .recharts-tooltip-item-name,
+body.light-theme .recharts-tooltip-item-value,
+body.light-theme .recharts-tooltip-label {
+  color: #0f172a !important;
+}
+
+body.light-theme .recharts-tooltip-wrapper div,
+body.light-theme .recharts-tooltip-wrapper p {
+  border-color: #e2e8f0 !important;
 }
 
 body.light-theme .recharts-text {

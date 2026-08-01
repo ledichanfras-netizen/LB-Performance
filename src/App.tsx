@@ -6343,7 +6343,7 @@ const DashboardView: FC<{
                       <Tooltip
                         contentStyle={{ backgroundColor: "#0e1322", border: "1px solid #1e293b", borderRadius: "1rem" }}
                         labelStyle={{ fontSize: "10px", fontWeight: "bold", textTransform: "uppercase", color: "#f59e0b" }}
-                        itemStyle={{ fontSize: "10px", color: "#fff", fontWeight: "bold" }}
+                        itemStyle={{ fontSize: "10px", fontWeight: "bold" }}
                       />
                       <Area yAxisId="left" type="monotone" dataKey="Carga Aguda" stroke="#3b82f6" strokeWidth={2.5} fillOpacity={1} fill="url(#acuteGrad)" />
                       <Line yAxisId="left" type="monotone" dataKey="Carga Crônica" stroke="#f59e0b" strokeWidth={2.5} strokeDasharray="5 5" dot={false} />
@@ -6466,7 +6466,7 @@ const DashboardView: FC<{
                         <Tooltip 
                           contentStyle={{ backgroundColor: "#0e1322", border: "1px solid #1e293b", borderRadius: "0.5rem" }}
                           labelStyle={{ fontSize: "10px", fontWeight: "bold", color: "#3b82f6" }}
-                          itemStyle={{ fontSize: "10px", color: "#fff" }}
+                          itemStyle={{ fontSize: "10px", fontWeight: "bold" }}
                         />
                         <Bar dataKey="hours" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                       </BarChart>
