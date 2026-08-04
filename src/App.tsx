@@ -89,6 +89,8 @@ import { MenstrualCycleDashboard } from "./components/MenstrualCycleDashboard";
 import { PosturalAssessmentPremium } from "./components/PosturalAssessmentPremium";
 import { CompetitionsCalendarView } from "./components/CompetitionsCalendarView";
 import { ProfilePhotoOptionsModal } from "./components/ProfilePhotoOptionsModal";
+import { AiPerformanceChatModal } from "./components/AiPerformanceChatModal";
+import { PwaInstallBanner } from "./components/PwaInstallBanner";
 import toast from "react-hot-toast";
 import { toJpeg } from "html-to-image";
 import ReactMarkdown from "react-markdown";
@@ -792,6 +794,7 @@ const EliteHubApp: FC<{
   const [dashboardSubTab, setDashboardSubTab] = useState<"pro" | "classic" | "elite-monitoring">("pro");
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -1560,6 +1563,15 @@ const EliteHubApp: FC<{
                 <span>MODELAGEM</span>
               </button>
 
+              {/* CHAT IA item */}
+              <button
+                onClick={() => setIsAiChatOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shrink-0 uppercase tracking-widest text-[10px] font-black bg-brand-primary text-slate-950 hover:bg-lime-400 shadow-[0_0_15px_rgba(204,255,0,0.35)] cursor-pointer"
+              >
+                <Brain className="w-4 h-4 shrink-0 text-slate-950" />
+                <span>CHAT IA</span>
+              </button>
+
               {/* 8. GUIA item */}
               <button
                 onClick={() => {
@@ -1816,6 +1828,20 @@ const EliteHubApp: FC<{
                 >
                   <Sparkles className={`w-4 h-4 shrink-0 ${activeTab === "ai-modeling" || aiModelingResult ? "text-brand-primary" : "text-slate-500"}`} />
                   <span>Modelagem</span>
+                </button>
+
+                {/* Chat IA Tab */}
+                <button
+                  onClick={() => setIsAiChatOpen(true)}
+                  className="flex items-center justify-between w-full px-4 py-3.5 rounded-xl text-left text-xs font-black uppercase tracking-wider transition-all duration-300 bg-brand-primary/10 border border-brand-primary/30 text-brand-primary hover:bg-brand-primary/20 hover:border-brand-primary shadow-lg cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <Brain className="w-4 h-4 shrink-0 text-brand-primary" />
+                    <span>Chat IA</span>
+                  </div>
+                  <span className="text-[9px] uppercase font-extrabold bg-brand-primary text-slate-950 px-1.5 py-0.5 rounded">
+                    Pro
+                  </span>
                 </button>
 
                 {/* 8. Guia Tab */}
@@ -4288,6 +4314,30 @@ const EliteHubApp: FC<{
                 </>
               )}
             </AnimatePresence>
+
+            {/* Floating Action Button for AI Performance Chat */}
+            <button
+              onClick={() => setIsAiChatOpen(true)}
+              className="fixed bottom-24 md:bottom-8 right-6 z-[1000] bg-brand-primary text-slate-950 hover:bg-lime-300 p-3.5 sm:p-4 rounded-full shadow-[0_10px_30px_rgba(204,255,0,0.45)] flex items-center gap-2.5 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-slate-950/30 group font-black"
+              title="Abrir Chat de Performance IA"
+            >
+              <Brain className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse text-slate-950" />
+              <span className="hidden sm:inline text-xs font-black uppercase tracking-wider pr-1 text-slate-950">Chat IA</span>
+              <span className="w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-900 absolute -top-0.5 -right-0.5 shadow-md animate-ping" />
+              <span className="w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-900 absolute -top-0.5 -right-0.5 shadow-md" />
+            </button>
+
+            <AiPerformanceChatModal
+              isOpen={isAiChatOpen}
+              onClose={() => setIsAiChatOpen(false)}
+              athletes={athletes}
+              selectedAthleteId={selectedId}
+              onSelectAthlete={(id) => setSelectedId(id)}
+            />
+
+            <PwaInstallBanner
+              deferredPrompt={deferredPrompt}
+            />
           </div>
         </>
       </div>

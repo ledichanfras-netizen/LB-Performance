@@ -2479,6 +2479,75 @@ Retorne o plano de treino estritamente em formato JSON estruturado com uma anál
   }
 });
 
+apiRouter.post('/ai-chat', authMiddleware, async (req, res) => {
+  const { messages, athleteContext } = req.body;
+  
+  if (!process.env.GEMINI_API_KEY) {
+    console.error("[AI Chat] GEMINI_API_KEY not configured on the server.");
+    return res.status(500).json({ error: "Chave de API do Gemini não configurada no servidor." });
+  }
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: "Mensagens inválidas fornecidas." });
+  }
+
+  const systemInstructions = `Você é um Cientista de Esporte de Elite, Médico do Esporte, Fisioterapeuta Biomecanista e Preparador Físico de nível Olímpico / Mundial da LB Sports.
+
+SEU PAPEL E DIRETRIZES:
+1. Você conversa diretamente com o Treinador / Preparador Físico / Fisioterapeuta em tom altamente técnico, pragmaticamente fundamentado em evidências científicas (IOC, NSCA, ACSM, BJSM, Haff, Gabbett, Stone, etc.).
+2. Responda em Português do Brasil (PT-BR) com clareza, formatação impecável em Markdown (listas, negritos, tabelas quando útil, tópicos bem estruturados).
+3. NUNCA mencione que você é um "modelo de linguagem", "IA", "LLM", "robô" ou "algoritmo". Apresente-se e atue exclusivamente como o Centro de Inteligência de Performance & Medicina Esportiva LB Sports.
+4. Quando fornecido o CONTEXTO DO ATLETA, use rigorosamente esses dados específicos (exames médicos, lesões, histórico, testes IMTP/CMJ, cargas, wellness, hidratação) para personalizar suas respostas. Se houver contradições ou riscos de lesão, alerte proativamente o treinador.
+5. Ao discutir intervenções, forneça parâmetros práticos de dosagem: séries, repetições, velocidade VBT (m/s), RPE/PSE, intervalo de descanso e critérios claros de retorno ao jogo (Return to Play - RTP).
+
+CONTEXTO DO ATLETA ATUAL:
+${athleteContext || 'Nenhum atleta selecionado no momento (discussão conceitual de fisiologia e metodologia).'}
+`;
+
+  try {
+    // Transform messages array into contents structure for GoogleGenAI SDK
+    const contents = messages.map((m: any) => {
+      const parts: any[] = [{ text: m.content || "" }];
+      
+      if (Array.isArray(m.images) && m.images.length > 0) {
+        m.images.forEach((imgStr: string) => {
+          if (imgStr && typeof imgStr === 'string') {
+            const dataParts = imgStr.split(',');
+            const mime = imgStr.match(/data:([^;]+);/)?.[1] || 'image/jpeg';
+            const base64 = dataParts[1] || dataParts[0];
+            parts.push({
+              inlineData: {
+                data: base64,
+                mimeType: mime
+              }
+            });
+          }
+        });
+      }
+
+      return {
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts
+      };
+    });
+
+    const response = await generateContentWithRetry({
+      contents,
+      config: {
+        systemInstruction: systemInstructions,
+        temperature: 0.7,
+        maxOutputTokens: 4096
+      }
+    });
+
+    const resultText = response.text || "Desculpe, não consegui processar a resposta no momento.";
+    res.json({ result: resultText });
+  } catch (error: any) {
+    console.error("[AI Chat] Erro no backend:", error);
+    res.status(500).json({ error: error.message || "Falha na comunicação com o assistente de IA." });
+  }
+});
+
 apiRouter.all('*', (req, res) => {
   console.warn(`API Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ error: `API Route not found: ${req.method} ${req.originalUrl}` });
