@@ -299,7 +299,78 @@ ${ath.workouts && ath.workouts.length > 0 ? ath.workouts.slice(0, 3).map(w => `-
     },
   ];
 
+  const markdownComponents = {
+    p: ({ children }: any) => (
+      <p className="mb-3 leading-relaxed text-slate-900 dark:text-slate-100 font-medium text-sm sm:text-base">
+        {children}
+      </p>
+    ),
+    strong: ({ children }: any) => (
+      <strong className="font-black text-slate-950 dark:text-amber-200 bg-amber-400/25 dark:bg-amber-400/20 px-1.5 py-0.5 rounded border border-amber-500/30">
+        {children}
+      </strong>
+    ),
+    ul: ({ children }: any) => (
+      <ul className="list-disc pl-5 my-2.5 space-y-1.5 text-slate-900 dark:text-slate-200 text-sm sm:text-base">
+        {children}
+      </ul>
+    ),
+    ol: ({ children }: any) => (
+      <ol className="list-decimal pl-5 my-2.5 space-y-1.5 text-slate-900 dark:text-slate-200 text-sm sm:text-base">
+        {children}
+      </ol>
+    ),
+    li: ({ children }: any) => (
+      <li className="leading-relaxed font-medium">
+        {children}
+      </li>
+    ),
+    h1: ({ children }: any) => (
+      <h1 className="text-base sm:text-lg font-black mt-4 mb-2 text-slate-950 dark:text-white border-b-2 border-brand-primary/40 pb-1 uppercase tracking-wide">
+        {children}
+      </h1>
+    ),
+    h2: ({ children }: any) => (
+      <h2 className="text-sm sm:text-base font-black mt-3 mb-1.5 text-slate-950 dark:text-white border-b border-slate-300 dark:border-slate-800 pb-0.5">
+        {children}
+      </h2>
+    ),
+    h3: ({ children }: any) => (
+      <h3 className="text-xs sm:text-sm font-bold mt-2.5 mb-1 text-slate-900 dark:text-slate-200">
+        {children}
+      </h3>
+    ),
+    blockquote: ({ children }: any) => (
+      <blockquote className="border-l-4 border-brand-primary pl-3 py-1.5 my-2.5 italic bg-brand-primary/10 dark:bg-slate-900/90 rounded-r text-slate-900 dark:text-slate-100 font-semibold">
+        {children}
+      </blockquote>
+    ),
+    code: ({ children }: any) => (
+      <code className="bg-slate-200 dark:bg-slate-800 text-slate-950 dark:text-amber-300 px-1.5 py-0.5 rounded text-xs font-mono font-black">
+        {children}
+      </code>
+    ),
+    table: ({ children }: any) => (
+      <div className="overflow-x-auto my-3 rounded-xl border border-slate-300 dark:border-slate-800 shadow-md">
+        <table className="w-full text-xs border-collapse">
+          {children}
+        </table>
+      </div>
+    ),
+    th: ({ children }: any) => (
+      <th className="bg-slate-200 dark:bg-slate-800 p-2.5 text-left font-black border-b border-slate-300 dark:border-slate-700 text-slate-950 dark:text-white uppercase tracking-wider text-[11px]">
+        {children}
+      </th>
+    ),
+    td: ({ children }: any) => (
+      <td className="p-2.5 border-b border-slate-200 dark:border-slate-800/80 text-slate-900 dark:text-slate-200 font-medium">
+        {children}
+      </td>
+    ),
+  };
+
   if (!isOpen) return null;
+
 
   return (
     <AnimatePresence>
@@ -451,10 +522,10 @@ ${ath.workouts && ath.workouts.length > 0 ? ath.workouts.slice(0, 3).map(w => `-
 
                     {/* Message Bubble */}
                     <div
-                      className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm border ${
+                      className={`p-4 sm:p-5 rounded-2xl text-sm sm:text-base leading-relaxed shadow-md border ${
                         isUser
-                          ? "bg-indigo-600/90 text-white border-indigo-500/50 rounded-tr-none"
-                          : "bg-slate-900/90 text-slate-100 border-slate-800 rounded-tl-none"
+                          ? "bg-brand-primary text-slate-950 font-bold border-brand-primary/60 rounded-tr-none shadow-brand-primary/10"
+                          : "ai-assistant-bubble bg-slate-900/95 text-slate-100 border-slate-700/80 rounded-tl-none"
                       }`}
                     >
                       {/* Attached images preview if user uploaded */}
@@ -473,10 +544,12 @@ ${ath.workouts && ath.workouts.length > 0 ? ath.workouts.slice(0, 3).map(w => `-
 
                       {/* Content rendering */}
                       {isUser ? (
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        <p className="whitespace-pre-wrap font-semibold text-slate-950">{msg.content}</p>
                       ) : (
-                        <div className="prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-800">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                        <div className="max-w-none space-y-1">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                            {msg.content}
+                          </ReactMarkdown>
                         </div>
                       )}
 
@@ -530,9 +603,9 @@ ${ath.workouts && ath.workouts.length > 0 ? ath.workouts.slice(0, 3).map(w => `-
           </div>
 
           {/* Quick Prompts Bar */}
-          <div className="bg-slate-900 border-t border-slate-800/80 px-4 py-2 overflow-x-auto">
+          <div className="bg-slate-900 border-t border-slate-800/80 px-4 py-2.5 overflow-x-auto">
             <div className="flex items-center gap-2 min-w-max">
-              <span className="text-[11px] text-slate-500 font-semibold flex items-center gap-1">
+              <span className="text-[11px] text-slate-400 font-bold flex items-center gap-1 uppercase tracking-wider shrink-0">
                 <Lightbulb className="w-3.5 h-3.5 text-amber-400" /> Sugestões Rápidas:
               </span>
               {quickPrompts.map((qp, idx) => (
@@ -540,7 +613,7 @@ ${ath.workouts && ath.workouts.length > 0 ? ath.workouts.slice(0, 3).map(w => `-
                   key={idx}
                   onClick={() => handleSendMessage(qp.prompt)}
                   disabled={isLoading}
-                  className="text-xs bg-slate-800 hover:bg-slate-700/80 text-slate-300 hover:text-white border border-slate-700/60 px-2.5 py-1 rounded-full transition-all whitespace-nowrap disabled:opacity-50"
+                  className="text-xs bg-slate-800 hover:bg-brand-primary text-slate-200 hover:text-slate-950 font-bold border border-slate-700/80 px-3 py-1.5 rounded-full transition-all whitespace-nowrap disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   {qp.label}
                 </button>
