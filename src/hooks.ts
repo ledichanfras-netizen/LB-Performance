@@ -163,16 +163,29 @@ export const useAthletes = (token?: string | null) => {
     };
   };
 
-  const athletes = rawAthletes.map(a => sortWorkoutExercises(ensureImtpAndMigrate(a)));
+  const sortWellnessEntries = (wellness: WellnessEntry[] | undefined): WellnessEntry[] => {
+    if (!Array.isArray(wellness)) return [];
+    return [...wellness].sort((x, y) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
+  };
+
+  const normalizeAthlete = (a: Athlete): Athlete => {
+    const normalized = sortWorkoutExercises(ensureImtpAndMigrate(a));
+    return {
+      ...normalized,
+      wellness: sortWellnessEntries(normalized.wellness)
+    };
+  };
+
+  const athletes = rawAthletes.map(a => normalizeAthlete(ensureImtpAndMigrate(a)));
 
   const setAthletes = (v: Athlete[] | ((prev: Athlete[]) => Athlete[])) => {
     if (typeof v === 'function') {
       setRawAthletes(prev => {
-        const mappedPrev = prev.map(a => sortWorkoutExercises(ensureImtpAndMigrate(a)));
-        return v(mappedPrev).map(sortWorkoutExercises);
+        const mappedPrev = prev.map(a => normalizeAthlete(a));
+        return v(mappedPrev).map(normalizeAthlete);
       });
     } else {
-      setRawAthletes(v.map(sortWorkoutExercises));
+      setRawAthletes(v.map(normalizeAthlete));
     }
   };
   const [loading, setLoading] = useState(true);
@@ -568,16 +581,15 @@ export const useAthletes = (token?: string | null) => {
   }, [token]);
 
   const save = async (newAthletes: Athlete[], specificAthleteId?: string) => {
-    // Immediate local cache update for maximum responsiveness
+    // Immediate local state and cache update for maximum responsiveness
     safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(newAthletes));
-    
     console.log("Iniciando sincronização em segundo plano...");
     setSyncing(true);
     try {
       if (specificAthleteId) {
         const athlete = newAthletes.find(a => a.id === specificAthleteId);
         if (athlete) {
-          // Optimized: save only the relevant athlete
+          // Optimized: save only the relevant athlete and keep local state intact
           await api.saveAthlete(athlete);
         } else {
           await api.saveAthletes(newAthletes);
@@ -594,13 +606,6 @@ export const useAthletes = (token?: string | null) => {
         }
       } catch (e) {}
       console.log("Sincronização concluída com sucesso.");
-
-      try {
-        console.log('[Save] Recarregando dados após save para evitar inconsistências de cache...');
-        await syncData(true);
-      } catch (reloadError) {
-        console.warn('[Save] Falha ao recarregar dados após save:', reloadError);
-      }
     } catch (e: any) {
       logError("Erro na sincronização:", e);
       const detail = e?.detail || e?.response?.data?.detail || '';
@@ -648,6 +653,7 @@ export const useAthletes = (token?: string | null) => {
           }
           return w;
         });
+        history.sort((x, y) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
         return { ...a, wellness: history };
       }
       return a;
