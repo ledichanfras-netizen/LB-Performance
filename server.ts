@@ -536,7 +536,7 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
 
         if (error) {
           console.error("[SERVIÇO] Erro Supabase Fallback:", error.message);
-          return [];
+          throw new Error(`Supabase Fallback failed: ${error.message}`);
         }
 
         return (athletes || []).map((a: any) => {

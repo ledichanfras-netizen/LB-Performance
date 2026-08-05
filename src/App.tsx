@@ -1956,8 +1956,12 @@ const EliteHubApp: FC<{
                   <button
                     onClick={async () => {
                       const toastId = toast.loading("Sincronizando Banco de Dados...");
-                      await syncData();
-                      toast.success("Dados Sincronizados com Sucesso!", { id: toastId });
+                      try {
+                        await syncData();
+                        toast.success("Dados Sincronizados com Sucesso!", { id: toastId });
+                      } catch (error: any) {
+                        toast.error(error?.message || "Falha ao sincronizar.", { id: toastId });
+                      }
                     }}
                     className="flex items-center justify-center gap-2.5 w-full py-3.5 bg-[#1F3AA2]/30 hover:bg-[#1F3AA2]/40 text-[#60A5FA] hover:text-white font-extrabold text-[10px] uppercase tracking-widest rounded-xl transition-all hover:scale-[1.02] active:scale-95 border border-[#1E40AF]/40 group"
                   >
@@ -2132,8 +2136,12 @@ const EliteHubApp: FC<{
                       <button
                         onClick={async () => {
                           const toastId = toast.loading("Sincronizando com banco de dados...");
-                          await syncData();
-                          toast.success("Dados sincronizados com sucesso!", { id: toastId });
+                          try {
+                            await syncData();
+                            toast.success("Dados sincronizados com sucesso!", { id: toastId });
+                          } catch (error: any) {
+                            toast.error(error?.message || "Falha ao sincronizar.", { id: toastId });
+                          }
                         }}
                         disabled={syncing}
                         className="flex items-center gap-2 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 hover:border-brand-primary/50 text-brand-primary hover:text-white transition-all cursor-pointer shadow-lg group"

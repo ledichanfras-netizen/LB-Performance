@@ -358,15 +358,23 @@ export const useAthletes = (token?: string | null) => {
           }
         }
 
-        const filtered = data.filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises');
+        let filtered = data.filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises');
         
         // Prevent accidental data deletion on temporary connection/empty-response quirks
         if (filtered.length === 0 && athletes.length > 0) {
-          console.warn('[Sync] Supabase/API retornou lista vazia de atletas, mas já temos dados na memória. Evitando sobrescrever dados locais.');
-          if (!isSilent) {
-            toast.error('Sincronização falhou: os dados remotos retornaram vazios. Tente novamente.');
+          console.warn('[Sync] Supabase/API retornou lista vazia de atletas, mas já temos dados na memória. Tentando nova leitura antes de abortar...');
+          const retryData = await api.loadAthletes();
+          filtered = (retryData || []).filter(a => !a.id.startsWith('model-') && a.id !== 'meta-custom-library-exercises');
+
+          if (filtered.length === 0) {
+            console.warn('[Sync] A segunda tentativa também retornou lista vazia. Mantendo dados locais.');
+            if (!isSilent) {
+              toast.error('Sincronização falhou: os dados remotos retornaram vazios. Tente novamente.');
+            }
+            throw new Error('Sincronização falhou: os dados remotos retornaram vazios. Tente novamente.');
           }
-          return;
+
+          console.log('[Sync] Segunda tentativa retornou dados válidos. Atualizando estado.');
         }
 
         // Detect if new workouts or wellness items arrived from another device during silent background sync
@@ -421,6 +429,7 @@ export const useAthletes = (token?: string | null) => {
         } else {
           console.warn('Conexão instável com o banco de dados. Utilizando dados locais/offline de forma transparente.');
         }
+        throw err;
       }
     } finally {
       if (!isSilent) setLoading(false);
