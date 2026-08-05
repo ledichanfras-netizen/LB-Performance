@@ -478,6 +478,11 @@ export const supabaseService = {
   async saveAthlete(athlete: Athlete): Promise<void> {
     console.log(`[Supabase] Iniciando salvamento do atleta: ${athlete.name} (${athlete.id})`);
     
+    const wellness = Array.isArray(athlete.wellness) ? athlete.wellness : [];
+    const externalSessions = Array.isArray(athlete.externalSessions) ? athlete.externalSessions : [];
+    const workouts = Array.isArray(athlete.workouts) ? athlete.workouts : [];
+    const assessments = athlete.assessments || {};
+
     const payload: any = {
       id: athlete.id,
       name: athlete.name,
@@ -494,6 +499,7 @@ export const supabaseService = {
       periodization_start: athlete.periodizationStart,
       periodization_end: athlete.periodizationEnd,
       training_days: athlete.trainingDays || [],
+      injuries: athlete.injuries || [],
       updated_at: new Date().toISOString()
     };
 
@@ -616,7 +622,7 @@ export const supabaseService = {
 
     // Workouts
     console.log(`[Supabase] Sincronizando treinos...`);
-    const incomingWkIds = (athlete.workouts || []).map(wk => wk.id).filter(id => id);
+    const incomingWkIds = workouts.map(wk => wk.id).filter(id => id);
     const { data: existingWks } = await supabase.from('workouts').select('id').eq('athlete_id', athlete.id);
     const toDeleteWkIds = (existingWks || []).filter(w => !incomingWkIds.includes(w.id)).map(w => w.id);
     
@@ -626,8 +632,9 @@ export const supabaseService = {
       }
     }
 
-    if (athlete.workouts && athlete.workouts.length > 0) {
-      for (const wk of athlete.workouts) {
+    if (workouts.length > 0) {
+      for (const wk of workouts) {
+        if (!wk.id) wk.id = `wk-${Date.now()}-${Math.random()}`;
         const { error: wkError } = await supabase.from('workouts').upsert({
           id: wk.id,
           athlete_id: athlete.id,
@@ -649,7 +656,7 @@ export const supabaseService = {
           throw wkError;
         }
 
-        if (wk.exercises) {
+        if (Array.isArray(wk.exercises)) {
           // Sync exercises: Delete exercises that are no longer in the list
           const { data: existingEx } = await supabase.from('prescribed_exercises').select('id').eq('workout_id', wk.id);
           const currentExIds = wk.exercises.map(e => e.id);
@@ -662,50 +669,52 @@ export const supabaseService = {
             }
           }
 
-           const exercisesList = wk.exercises || [];
-           for (let idx = 0; idx < exercisesList.length; idx++) {
-             const ex = exercisesList[idx];
-             const { error: exError } = await supabase.from('prescribed_exercises').upsert({
-               id: ex.id,
-               workout_id: wk.id,
-               name: ex.name,
-               muscle_group: ex.muscleGroup,
-               sets: ex.sets,
-               reps: ex.reps,
-               weight: ex.weight,
-               rest: ex.rest,
-               notes: ex.notes,
-               pain_level: ex.painLevel,
-               reps_type: ex.repsType || 'reps',
-               order_index: idx,
-               video_url: ex.videoUrl ?? null,
-               image_url: ex.imageUrl ?? null
-             });
+          const exercisesList = wk.exercises || [];
+          for (let idx = 0; idx < exercisesList.length; idx++) {
+            const ex = exercisesList[idx];
+            if (!ex.id) ex.id = `ex-${Date.now()}-${Math.random()}`;
+            const { error: exError } = await supabase.from('prescribed_exercises').upsert({
+              id: ex.id,
+              workout_id: wk.id,
+              name: ex.name,
+              muscle_group: ex.muscleGroup,
+              sets: ex.sets,
+              reps: ex.reps,
+              weight: ex.weight,
+              rest: ex.rest,
+              notes: ex.notes,
+              pain_level: ex.painLevel,
+              reps_type: ex.repsType || 'reps',
+              order_index: idx,
+              video_url: ex.videoUrl ?? null,
+              image_url: ex.imageUrl ?? null
+            });
             if (exError) {
               logError('[Supabase] Erro ao salvar exercício:', exError);
               throw exError;
             }
 
-            if (ex.performedSets) {
-              // Sync sets
+            if (Array.isArray(ex.performedSets)) {
               const { data: existingSets } = await supabase.from('performed_sets').select('id').eq('exercise_id', ex.id);
               const currentSetIds = ex.performedSets.map(s => s.id).filter(id => id);
               const setsToDelete = (existingSets || []).filter(s => !currentSetIds.includes(s.id)).map(s => s.id);
-              
               if (setsToDelete.length > 0) {
                 await supabase.from('performed_sets').delete().in('id', setsToDelete);
               }
-
               if (ex.performedSets.length > 0) {
-                const { error: setsError } = await supabase.from('performed_sets').upsert(ex.performedSets.map(s => ({
-                  id: s.id || `s-${Date.now()}-${Math.random()}`,
-                  exercise_id: ex.id,
-                  reps: s.reps,
-                  weight: s.weight,
-                  rpe: s.rpe
-                })));
+                const { error: setsError } = await supabase.from('performed_sets').upsert(ex.performedSets.map((s: any) => {
+                  if (!s.id) s.id = `s-${Date.now()}-${Math.random()}`;
+                  return {
+                    id: s.id,
+                    exercise_id: ex.id,
+                    reps: s.reps,
+                    weight: s.weight,
+                    rpe: s.rpe,
+                    is_completed: s.isCompleted ?? false
+                  };
+                }));
                 if (setsError) {
-                  logError('[Supabase] Erro ao salvar séries realizadas:', setsError);
+                  logError('[Supabase] Erro ao salvar conjuntos de exercícios:', setsError);
                   throw setsError;
                 }
               }

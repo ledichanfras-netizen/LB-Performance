@@ -506,6 +506,21 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
   try {
     const loadFromSupabase = async () => {
         console.log(`[SERVIÇO] Carregando dados via Supabase Fallback... ${isAthlete ? `(Atleta: ${athleteId})` : '(Todos)'}`);
+
+        const fetchTableSafely = async (tableName: string) => {
+          try {
+            const { data, error } = await supabase.from(tableName).select('*');
+            if (error) {
+              console.warn(`[SERVIÇO] Alerta ao carregar tabela '${tableName}' do Supabase:`, error.message);
+              return [];
+            }
+            return data || [];
+          } catch (err: any) {
+            console.warn(`[SERVIÇO] Exceção ao carregar tabela '${tableName}' do Supabase:`, err.message || err);
+            return [];
+          }
+        };
+
         let query = supabase
           .from('athletes')
           .select(`
@@ -518,16 +533,9 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
                 *,
                 performed_sets (*)
               )
-            ),
-            bioimpedance (*),
-            isometric_strength (*),
-            cmj (*),
-            drop_jump (*),
-            vo2max (*),
-            speed (*),
-            imtp (*)
+            )
           `);
-        
+
         if (isAthlete && athleteId) {
           query = query.eq('id', athleteId);
         }
@@ -538,6 +546,44 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
           console.error("[SERVIÇO] Erro Supabase Fallback:", error.message);
           throw new Error(`Supabase Fallback failed: ${error.message}`);
         }
+
+        const [
+          bioimpedanceData,
+          isometricStrengthData,
+          cmjData,
+          dropJumpData,
+          vo2maxData,
+          speedData,
+          imtpData
+        ] = await Promise.all([
+          fetchTableSafely('bioimpedance'),
+          fetchTableSafely('isometric_strength'),
+          fetchTableSafely('cmj'),
+          fetchTableSafely('drop_jump'),
+          fetchTableSafely('vo2max'),
+          fetchTableSafely('speed'),
+          fetchTableSafely('imtp')
+        ]);
+
+        const mapByAthleteId = (rows: any[]) => {
+          const grouped: Map<string, any[]> = new Map();
+          rows.forEach(item => {
+            if (item && item.athlete_id) {
+              const list = grouped.get(item.athlete_id) || [];
+              list.push(item);
+              grouped.set(item.athlete_id, list);
+            }
+          });
+          return grouped;
+        };
+
+        const bioMap = mapByAthleteId(bioimpedanceData);
+        const strengthMap = mapByAthleteId(isometricStrengthData);
+        const cmjMap = mapByAthleteId(cmjData);
+        const dropJumpMap = mapByAthleteId(dropJumpData);
+        const vo2maxMap = mapByAthleteId(vo2maxData);
+        const speedMap = mapByAthleteId(speedData);
+        const imtpMap = mapByAthleteId(imtpData);
 
         return (athletes || []).map((a: any) => {
           const parsedFields = parseBackupAthleteFields(a);
@@ -554,130 +600,126 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
             trainingDays: parsedFields.trainingDays,
             injuries: parsedFields.injuries,
             matches: parsedFields.matches || [],
-          wellness: (a.wellness || []).map((w: any) => ({
-            ...w,
-            sleep: w.calculated_sleep_hours !== undefined && w.calculated_sleep_hours !== null ? Number(w.calculated_sleep_hours) : (typeof w.sleep === 'number' ? w.sleep : parseFloat(w.sleep) || 0),
-            cognitiveLoad: w.cognitive_load,
-            readinessScore: w.readiness_score,
-            travelFatigue: w.travel_fatigue,
-            sleepQuality: w.sleep_quality,
-            menstrualPhase: w.menstrual_phase || "Nenhuma",
-            menstrualSymptoms: Array.isArray(w.menstrual_symptoms)
-              ? w.menstrual_symptoms
-              : typeof w.menstrual_symptoms === 'string'
-              ? JSON.parse(w.menstrual_symptoms)
-              : [],
-            hrv: w.hrv,
-            sleepHoursFormatted: w.sleep_hours_formatted,
-            sleepStartTime: w.sleep_start_time || w.sleepStartTime,
-            wakeUpTime: w.wake_up_time || w.wakeUpTime,
-            calculatedSleepHours: w.calculated_sleep_hours ?? w.calculatedSleepHours,
-            isMatchDay: w.is_match_day ?? w.isMatchDay ?? false,
-            emotionalReadiness: w.emotional_readiness ?? w.emotionalReadiness,
-            psychologicalReadiness: w.psychological_readiness ?? w.psychologicalReadiness,
-            psychologyNotes: w.psychology_notes || w.psychologyNotes
-          })),
-          externalSessions: (a.external_sessions || []).map((es: any) => ({
-            ...es,
-            durationMinutes: es.duration_minutes
-          })),
-          workouts: (a.workouts || []).map((wk: any) => ({
-            ...wk,
-            durationMinutes: wk.duration_minutes,
-            totalLoad: wk.total_load,
-            trainerNotes: wk.trainer_notes,
-            exercises: (wk.prescribed_exercises || []).map((ex: any) => ({ 
-              ...ex, 
-              muscleGroup: ex.muscle_group,
-              painLevel: ex.pain_level,
-              repsType: ex.reps_type || 'reps',
-              videoUrl: ex.video_url || '',
-              imageUrl: ex.image_url || '',
-              performedSets: (ex.performed_sets || []).map((s: any) => ({
-                ...s,
-                isCompleted: s.is_completed ?? false
-              }))
-            })).sort((x: any, y: any) => (x.order_index || 0) - (y.order_index || 0))
-          })),
-          assessments: {
-            bioimpedance: (a.bioimpedance || [])
-              .map((b: any) => ({ ...b, fatPercentage: b.fat_percentage, muscleMass: b.muscle_mass, visceralFat: b.visceral_fat, hydration: b.hydration, basalMetabolism: b.basal_metabolism, metabolicAge: b.metabolic_age, boneMass: b.bone_mass, physiqueRating: b.physique_rating, fatArmR: b.fat_arm_r, fatArmL: b.fat_arm_l, fatLegR: b.fat_leg_r, fatLegL: b.fat_leg_l, fatTrunk: b.fat_trunk, muscleArmR: b.muscle_arm_r, muscleArmL: b.muscle_arm_l, muscleLegR: b.muscle_leg_r, muscleLegL: b.muscle_leg_l, muscleTrunk: b.muscle_trunk }))
-              .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
-            isometricStrength: (a.isometric_strength || [])
-              .map((s: any) => ({ ...s, halfSquatKgf: s.half_squat_kgf, quadricepsR: s.quadriceps_r, quadricepsL: s.quadriceps_l, hamstringsR: s.hamstrings_r, hamstringsL: s.hamstrings_l, iqRatioR: s.iq_ratio_r, iqRatioL: s.iq_ratio_l }))
-              .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
-            cmj: (a.cmj || [])
-              .map((c: any) => ({ ...c, rsi: c.rsi, flightTime: c.flight_time, weight: c.weight }))
-              .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
-            dropJump: (() => {
-              const dbDj = (a.drop_jump || []).map((dj: any) => ({
-                ...dj,
-                id: dj.id,
-                date: dj.date,
-                weight: dj.weight ?? 0,
-                dropHeight: dj.drop_height !== undefined ? dj.drop_height : dj.dropHeight,
-                jumpHeight: dj.jump_height !== undefined ? dj.jump_height : dj.jumpHeight,
-                flightTime: dj.flight_time !== undefined ? dj.flight_time : dj.flightTime,
-                contactTime: dj.contact_time !== undefined ? dj.contact_time : dj.contactTime,
-                meanForce: dj.mean_force !== undefined ? dj.mean_force : dj.meanForce,
-                meanPower: dj.mean_power !== undefined ? dj.mean_power : dj.meanPower,
-                stiffness: dj.stiffness !== undefined ? dj.stiffness : dj.stiffness,
-                rsi: dj.rsi,
-                observations: dj.observations
-              }));
-              const bkDj = parsedFields.dropJumpBackup || [];
-              const mergedMap = new Map();
-              for (const item of bkDj) {
-                if (item && item.id) mergedMap.set(item.id, item);
-              }
-              for (const item of dbDj) {
-                if (item && item.id) mergedMap.set(item.id, item);
-              }
-              return Array.from(mergedMap.values()).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
-            })(),
-            vo2max: (a.vo2max || [])
-              .map((v: any) => ({ ...v, vam: v.vam, maxSpeed: v.max_speed, maxHeartRate: v.max_heart_rate, thresholdHeartRate: v.threshold_heart_rate, thresholdSpeed: v.threshold_speed, rec10s: v.rec_10s, rec30s: v.rec_30s, rec60s: v.rec_60s, maxVentilation: v.max_ventilation }))
-              .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
-            speed: (a.speed || [])
-              .map((sp: any) => ({ ...sp, time5m: sp.time_5m, time10m: sp.time_10m, time20m: sp.time_20m, time30m: sp.time_30m, speed5m: sp.speed_5m, speed10m: sp.speed_10m, speed20m: sp.speed_20m, speed30m: sp.speed_30m }))
-              .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
-            imtp: (() => {
-              const dbIm = (a.imtp || []).map((im: any) => ({
-                ...im,
-                id: im.id,
-                date: im.date,
-                weight: im.weight,
-                peakForce: im.peak_force,
-                relativePeakForce: im.relative_peak_force,
-                timeToPeakForce: im.time_to_peak_force,
-                meanForce: im.mean_force,
-                rfdPeak: im.rfd_peak,
-                rfd100: im.rfd_100,
-                rfd200: im.rfd_200,
-                rfd300: im.rfd_300,
-                impulsePeak: im.impulse_peak,
-                impulse100: im.impulse_100,
-                impulse200: im.impulse_200,
-                impulse300: im.impulse_300,
-                aiDetails: im.ai_details ? (typeof im.ai_details === 'string' ? JSON.parse(im.ai_details) : im.ai_details) : undefined,
-                observations: im.observations
-              }));
-              const bkIm = parsedFields.imtpBackup || [];
-              const mergedMap = new Map();
-              for (const item of bkIm) {
-                if (item && item.id) mergedMap.set(item.id, item);
-              }
-              for (const item of dbIm) {
-                if (item && item.id) mergedMap.set(item.id, item);
-              }
-              return Array.from(mergedMap.values()).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
-            })(),
-            postural: (() => {
-              const bkPostural = parsedFields.posturalBackup || [];
-              return [...bkPostural].sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
-            })()
-          }
-        }; });
+            wellness: (a.wellness || []).map((w: any) => ({
+              ...w,
+              sleep: w.calculated_sleep_hours !== undefined && w.calculated_sleep_hours !== null ? Number(w.calculated_sleep_hours) : (typeof w.sleep === 'number' ? w.sleep : parseFloat(w.sleep) || 0),
+              cognitiveLoad: w.cognitive_load,
+              readinessScore: w.readiness_score,
+              travelFatigue: w.travel_fatigue,
+              sleepQuality: w.sleep_quality,
+              menstrualPhase: w.menstrual_phase || "Nenhuma",
+              menstrualSymptoms: Array.isArray(w.menstrual_symptoms)
+                ? w.menstrual_symptoms
+                : typeof w.menstrual_symptoms === 'string'
+                ? JSON.parse(w.menstrual_symptoms)
+                : [],
+              hrv: w.hrv,
+              sleepHoursFormatted: w.sleep_hours_formatted,
+              sleepStartTime: w.sleep_start_time || w.sleepStartTime,
+              wakeUpTime: w.wake_up_time || w.wakeUpTime,
+              calculatedSleepHours: w.calculated_sleep_hours ?? w.calculatedSleepHours,
+              isMatchDay: w.is_match_day ?? w.isMatchDay ?? false,
+              emotionalReadiness: w.emotional_readiness ?? w.emotionalReadiness,
+              psychologicalReadiness: w.psychological_readiness ?? w.psychologicalReadiness,
+              psychologyNotes: w.psychology_notes || w.psychologyNotes
+            })),
+            externalSessions: (a.external_sessions || []).map((es: any) => ({
+              ...es,
+              durationMinutes: es.duration_minutes
+            })),
+            workouts: (a.workouts || []).map((wk: any) => ({
+              ...wk,
+              durationMinutes: wk.duration_minutes,
+              totalLoad: wk.total_load,
+              trainerNotes: wk.trainer_notes,
+              exercises: (wk.prescribed_exercises || []).map((ex: any) => ({ 
+                ...ex, 
+                muscleGroup: ex.muscle_group,
+                painLevel: ex.pain_level,
+                repsType: ex.reps_type || 'reps',
+                videoUrl: ex.video_url || '',
+                imageUrl: ex.image_url || '',
+                performedSets: (ex.performed_sets || []).map((s: any) => ({
+                  ...s,
+                  isCompleted: s.is_completed ?? false
+                }))
+              })).sort((x: any, y: any) => (x.order_index || 0) - (y.order_index || 0))
+            })),
+            assessments: {
+              bioimpedance: (bioMap.get(a.id) || []).map((b: any) => ({ ...b, fatPercentage: b.fat_percentage, muscleMass: b.muscle_mass, visceralFat: b.visceral_fat, hydration: b.hydration, basalMetabolism: b.basal_metabolism, metabolicAge: b.metabolic_age, boneMass: b.bone_mass, physiqueRating: b.physique_rating, fatArmR: b.fat_arm_r, fatArmL: b.fat_arm_l, fatLegR: b.fat_leg_r, fatLegL: b.fat_leg_l, fatTrunk: b.fat_trunk, muscleArmR: b.muscle_arm_r, muscleArmL: b.muscle_arm_l, muscleLegR: b.muscle_leg_r, muscleLegL: b.muscle_leg_l, muscleTrunk: b.muscle_trunk }))
+                .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
+              isometricStrength: (strengthMap.get(a.id) || []).map((s: any) => ({ ...s, halfSquatKgf: s.half_squat_kgf, quadricepsR: s.quadriceps_r, quadricepsL: s.quadriceps_l, hamstringsR: s.hamstrings_r, hamstringsL: s.hamstrings_l, iqRatioR: s.iq_ratio_r, iqRatioL: s.iq_ratio_l }))
+                .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
+              cmj: (cmjMap.get(a.id) || []).map((c: any) => ({ ...c, rsi: c.rsi, flightTime: c.flight_time, weight: c.weight }))
+                .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
+              dropJump: (() => {
+                const dbDj = (dropJumpMap.get(a.id) || []).map((dj: any) => ({
+                  ...dj,
+                  id: dj.id,
+                  date: dj.date,
+                  weight: dj.weight ?? 0,
+                  dropHeight: dj.drop_height !== undefined ? dj.drop_height : dj.dropHeight,
+                  jumpHeight: dj.jump_height !== undefined ? dj.jump_height : dj.jumpHeight,
+                  flightTime: dj.flight_time !== undefined ? dj.flight_time : dj.flightTime,
+                  contactTime: dj.contact_time !== undefined ? dj.contact_time : dj.contactTime,
+                  meanForce: dj.mean_force !== undefined ? dj.mean_force : dj.meanForce,
+                  meanPower: dj.mean_power !== undefined ? dj.mean_power : dj.meanPower,
+                  stiffness: dj.stiffness !== undefined ? dj.stiffness : dj.stiffness,
+                  rsi: dj.rsi,
+                  observations: dj.observations
+                }));
+                const bkDj = parsedFields.dropJumpBackup || [];
+                const mergedMap = new Map();
+                for (const item of bkDj) {
+                  if (item && item.id) mergedMap.set(item.id, item);
+                }
+                for (const item of dbDj) {
+                  if (item && item.id) mergedMap.set(item.id, item);
+                }
+                return Array.from(mergedMap.values()).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
+              })(),
+              vo2max: (vo2maxMap.get(a.id) || []).map((v: any) => ({ ...v, vam: v.vam, maxSpeed: v.max_speed, maxHeartRate: v.max_heart_rate, thresholdHeartRate: v.threshold_heart_rate, thresholdSpeed: v.threshold_speed, rec10s: v.rec_10s, rec30s: v.rec_30s, rec60s: v.rec_60s, maxVentilation: v.max_ventilation }))
+                .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
+              speed: (speedMap.get(a.id) || []).map((sp: any) => ({ ...sp, time5m: sp.time_5m, time10m: sp.time_10m, time20m: sp.time_20m, time30m: sp.time_30m, speed5m: sp.speed_5m, speed10m: sp.speed_10m, speed20m: sp.speed_20m, speed30m: sp.speed_30m }))
+                .sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date)),
+              imtp: (() => {
+                const dbIm = (imtpMap.get(a.id) || []).map((im: any) => ({
+                  ...im,
+                  id: im.id,
+                  date: im.date,
+                  weight: im.weight,
+                  peakForce: im.peak_force,
+                  relativePeakForce: im.relative_peak_force,
+                  timeToPeakForce: im.time_to_peak_force,
+                  meanForce: im.mean_force,
+                  rfdPeak: im.rfd_peak,
+                  rfd100: im.rfd_100,
+                  rfd200: im.rfd_200,
+                  rfd300: im.rfd_300,
+                  impulsePeak: im.impulse_peak,
+                  impulse100: im.impulse_100,
+                  impulse200: im.impulse_200,
+                  impulse300: im.impulse_300,
+                  aiDetails: im.ai_details ? (typeof im.ai_details === 'string' ? JSON.parse(im.ai_details) : im.ai_details) : undefined,
+                  observations: im.observations
+                }));
+                const bkIm = parsedFields.imtpBackup || [];
+                const mergedMap = new Map();
+                for (const item of bkIm) {
+                  if (item && item.id) mergedMap.set(item.id, item);
+                }
+                for (const item of dbIm) {
+                  if (item && item.id) mergedMap.set(item.id, item);
+                }
+                return Array.from(mergedMap.values()).sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
+              })(),
+              postural: (() => {
+                const bkPostural = parsedFields.posturalBackup || [];
+                return [...bkPostural].sort((x: any, y: any) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
+              })()
+            }
+          };
+        });
     };
 
     if (!isDbConnected || !process.env.DATABASE_URL) {
