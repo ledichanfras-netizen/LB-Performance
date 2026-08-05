@@ -35,7 +35,7 @@ async function resilientFetch(url: string, options: RequestInit = {}, retries = 
   let attempt = 1;
   while (attempt <= retries) {
     try {
-      const response = await fetch(url, options);
+      const response = await fetch(url, { cache: 'no-store', ...options });
       return response;
     } catch (error: any) {
       const isNetErr = error && (
@@ -363,6 +363,9 @@ export const useAthletes = (token?: string | null) => {
         // Prevent accidental data deletion on temporary connection/empty-response quirks
         if (filtered.length === 0 && athletes.length > 0) {
           console.warn('[Sync] Supabase/API retornou lista vazia de atletas, mas já temos dados na memória. Evitando sobrescrever dados locais.');
+          if (!isSilent) {
+            toast.error('Sincronização falhou: os dados remotos retornaram vazios. Tente novamente.');
+          }
           return;
         }
 
@@ -582,6 +585,13 @@ export const useAthletes = (token?: string | null) => {
         }
       } catch (e) {}
       console.log("Sincronização concluída com sucesso.");
+
+      try {
+        console.log('[Save] Recarregando dados após save para evitar inconsistências de cache...');
+        await syncData(true);
+      } catch (reloadError) {
+        console.warn('[Save] Falha ao recarregar dados após save:', reloadError);
+      }
     } catch (e: any) {
       logError("Erro na sincronização:", e);
       const detail = e?.detail || e?.response?.data?.detail || '';
@@ -652,6 +662,7 @@ export const useAthletes = (token?: string | null) => {
     try {
       if (token) {
         const res = await fetch(`/api/wellness/${wellnessId}`, {
+          cache: 'no-store',
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -723,6 +734,7 @@ export const useAthletes = (token?: string | null) => {
     try {
       if (token) {
         const res = await fetch(`/api/workouts/${workoutId}`, {
+          cache: 'no-store',
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -823,6 +835,7 @@ export const useAthletes = (token?: string | null) => {
     try {
       if (token) {
         const res = await fetch(`/api/assessments/${type}/${assessmentId}`, {
+          cache: 'no-store',
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -865,6 +878,7 @@ export const useAthletes = (token?: string | null) => {
     try {
       if (token) {
         const res = await fetch(`/api/atletas/${athleteId}`, {
+          cache: 'no-store',
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -1344,6 +1358,7 @@ export const useAthletes = (token?: string | null) => {
     try {
       if (token) {
         const res = await fetch(`/api/sessions/${sessionId}`, {
+          cache: 'no-store',
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
