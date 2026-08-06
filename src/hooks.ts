@@ -620,7 +620,7 @@ export const useAthletes = (token?: string | null) => {
   const updateAthlete = async (athleteId: string, data: Partial<Athlete>) => {
     const updated = athletes.map(a => a.id === athleteId ? { ...a, ...data } : a);
     setAthletes(updated);
-    await save(updated, athleteId);
+    save(updated, athleteId);
     toast.success("Atleta atualizado!");
   };
 
@@ -639,7 +639,7 @@ export const useAthletes = (token?: string | null) => {
     });
 
     setAthletes(updated);
-    await save(updated, athleteId);
+    save(updated, athleteId);
     toast.success("Prontidão registrada!");
   };
 
@@ -661,12 +661,11 @@ export const useAthletes = (token?: string | null) => {
     });
 
     setAthletes(updated);
-    await save(updated, athleteId);
+    save(updated, athleteId);
     toast.success("Prontidão atualizada!");
   };
 
   const deleteWellness = async (athleteId: string, wellnessId: string) => {
-    setSyncing(true);
     const updated = athletes.map(a => {
       if (a.id === athleteId) {
         return { ...a, wellness: (a.wellness || []).filter(w => w.id !== wellnessId) };
@@ -674,31 +673,33 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updated);
+    safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
+    toast.success("Check-in removido!");
 
-    try {
-      if (token) {
-        const res = await fetch(`/api/wellness/${wellnessId}`, {
-          cache: 'no-store',
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
+    setSyncing(true);
+    (async () => {
+      try {
+        if (token) {
+          const res = await fetch(`/api/wellness/${wellnessId}`, {
+            cache: 'no-store',
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (!res.ok) {
+            throw new Error(`Erro ao deletar wellness via API. Status: ${res.status}`);
           }
-        });
-        if (!res.ok) {
-          throw new Error(`Erro ao deletar wellness via API. Status: ${res.status}`);
+        } else {
+          await supabaseService.deleteWellness(wellnessId);
         }
-      } else {
-        await supabaseService.deleteWellness(wellnessId);
+      } catch (e) {
+        logError("Erro ao deletar wellness:", e);
+        toast.error("Erro ao sincronizar exclusão.");
+      } finally {
+        setSyncing(false);
       }
-      
-      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
-      toast.success("Check-in removido!");
-    } catch (e) {
-      logError("Erro ao deletar wellness:", e);
-      toast.error("Erro ao sincronizar exclusão.");
-    } finally {
-      setSyncing(false);
-    }
+    })();
   };
 
   const addWorkout = async (athleteId: string, workout: Omit<Workout, 'id'>) => {
@@ -716,7 +717,7 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updated);
-    await save(updated, athleteId);
+    save(updated, athleteId);
     toast.success("Treino adicionado!");
   };
 
@@ -734,11 +735,10 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updated);
-    await save(updated, athleteId);
+    save(updated, athleteId);
   };
 
   const deleteWorkout = async (athleteId: string, workoutId: string) => {
-    setSyncing(true);
     const updated = athletes.map(a => {
       if (a.id === athleteId) {
         return { ...a, workouts: (a.workouts || []).filter(w => w.id !== workoutId) };
@@ -746,31 +746,33 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updated);
+    safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
+    toast.success("Treino removido!");
 
-    try {
-      if (token) {
-        const res = await fetch(`/api/workouts/${workoutId}`, {
-          cache: 'no-store',
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
+    setSyncing(true);
+    (async () => {
+      try {
+        if (token) {
+          const res = await fetch(`/api/workouts/${workoutId}`, {
+            cache: 'no-store',
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (!res.ok) {
+            throw new Error(`Erro ao deletar treino via API. Status: ${res.status}`);
           }
-        });
-        if (!res.ok) {
-          throw new Error(`Erro ao deletar treino via API. Status: ${res.status}`);
+        } else {
+          await supabaseService.deleteWorkout(workoutId);
         }
-      } else {
-        await supabaseService.deleteWorkout(workoutId);
+      } catch (e) {
+        logError("Erro ao deletar treino:", e);
+        toast.error("Erro ao sincronizar exclusão.");
+      } finally {
+        setSyncing(false);
       }
-      
-      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
-      toast.success("Treino removido!");
-    } catch (e) {
-      logError("Erro ao deletar treino:", e);
-      toast.error("Erro ao sincronizar exclusão.");
-    } finally {
-      setSyncing(false);
-    }
+    })();
   };
 
   const updateWorkout = async (athleteId: string, workout: Workout) => {
@@ -795,7 +797,7 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updated);
-    await save(updated, athleteId);
+    save(updated, athleteId);
     toast.success("Treino atualizado!");
   };
 
@@ -810,7 +812,7 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updated);
-    await save(updated, athleteId);
+    save(updated, athleteId);
     toast.success(`Avaliação salva!`);
   };
 
@@ -828,12 +830,11 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updated);
-    await save(updated, athleteId);
+    save(updated, athleteId);
     toast.success(`Avaliação atualizada!`);
   };
 
   const removeAssessment = async (athleteId: string, type: AssessmentType, assessmentId: string) => {
-    setSyncing(true);
     const updatedAthletes = athletes.map(a => {
       if (a.id === athleteId) {
         const currentAssessments = a.assessments || { bioimpedance: [], isometricStrength: [], imtp: [], cmj: [], dropJump: [], vo2max: [], speed: [] };
@@ -847,31 +848,33 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updatedAthletes);
+    safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updatedAthletes));
+    toast.success(`Avaliação removida!`);
 
-    try {
-      if (token) {
-        const res = await fetch(`/api/assessments/${type}/${assessmentId}`, {
-          cache: 'no-store',
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
+    setSyncing(true);
+    (async () => {
+      try {
+        if (token) {
+          const res = await fetch(`/api/assessments/${type}/${assessmentId}`, {
+            cache: 'no-store',
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (!res.ok) {
+            throw new Error(`Erro ao deletar avaliação via API. Status: ${res.status}`);
           }
-        });
-        if (!res.ok) {
-          throw new Error(`Erro ao deletar avaliação via API. Status: ${res.status}`);
+        } else {
+          await supabaseService.deleteAssessment(type, assessmentId);
         }
-      } else {
-        await supabaseService.deleteAssessment(type, assessmentId);
+      } catch (e) {
+        logError("Erro ao deletar avaliação:", e);
+        toast.error("Erro ao sincronizar exclusão.");
+      } finally {
+        setSyncing(false);
       }
-
-      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updatedAthletes));
-      toast.success(`Avaliação removida!`);
-    } catch (e) {
-      logError("Erro ao deletar avaliação:", e);
-      toast.error("Erro ao sincronizar exclusão.");
-    } finally {
-      setSyncing(false);
-    }
+    })();
   };
 
   const addAthlete = async (data: any) => {
@@ -885,7 +888,7 @@ export const useAthletes = (token?: string | null) => {
     };
     const updated = [newAthlete, ...athletes];
     setAthletes(updated);
-    await save(updated, freshId);
+    save(updated, freshId);
     toast.success("Atleta cadastrado!");
   };
 
@@ -1334,7 +1337,7 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updated);
-    await save(updated);
+    save(updated);
     toast.success("Treino de quadra registrado!");
   };
 
@@ -1354,12 +1357,11 @@ export const useAthletes = (token?: string | null) => {
     });
 
     setAthletes(updated);
-    await save(updated, athleteId);
+    save(updated, athleteId);
     toast.success("Treino de quadra atualizado!");
   };
 
   const deleteExternalSession = async (athleteId: string, sessionId: string) => {
-    setSyncing(true);
     const updated = athletes.map(a => {
       if (a.id === athleteId) {
         const history = Array.isArray(a.externalSessions) ? a.externalSessions : [];
@@ -1368,31 +1370,33 @@ export const useAthletes = (token?: string | null) => {
       return a;
     });
     setAthletes(updated);
+    safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
+    toast.success("Sessão removida!");
 
-    try {
-      if (token) {
-        const res = await fetch(`/api/sessions/${sessionId}`, {
-          cache: 'no-store',
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
+    setSyncing(true);
+    (async () => {
+      try {
+        if (token) {
+          const res = await fetch(`/api/sessions/${sessionId}`, {
+            cache: 'no-store',
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (!res.ok) {
+            throw new Error(`Erro ao deletar sessão via API. Status: ${res.status}`);
           }
-        });
-        if (!res.ok) {
-          throw new Error(`Erro ao deletar sessão via API. Status: ${res.status}`);
+        } else {
+          await supabaseService.deleteExternalSession(sessionId);
         }
-      } else {
-        await supabaseService.deleteExternalSession(sessionId);
+      } catch (e) {
+        logError("Erro ao deletar sessão:", e);
+        toast.error("Erro ao sincronizar exclusão.");
+      } finally {
+        setSyncing(false);
       }
-      
-      safeLocalStorage.setItem('lb_athletes_cache', JSON.stringify(updated));
-      toast.success("Sessão removida!");
-    } catch (e) {
-      logError("Erro ao deletar sessão:", e);
-      toast.error("Erro ao sincronizar exclusão.");
-    } finally {
-      setSyncing(false);
-    }
+    })();
   };
 
   const importDemoAthlete = async () => {

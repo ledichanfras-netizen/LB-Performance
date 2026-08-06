@@ -16,6 +16,141 @@ const safeParse = (val: any, defaultVal: any = []) => {
   return val;
 };
 
+const safeNum = (val: any, fallback: number = 0): number => {
+  if (val === undefined || val === null || val === '') return fallback;
+  if (typeof val === 'number') return isNaN(val) ? fallback : val;
+  if (typeof val === 'string') {
+    const cleaned = val.trim().replace(',', '.').replace(/[^0-9.-]/g, '');
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? fallback : parsed;
+  }
+  return fallback;
+};
+
+function isWellnessEqual(w: any, ext: any) {
+  if (!ext) return false;
+  return (
+    w.date === ext.date &&
+    (w.fatigue ?? 0) === (ext.fatigue ?? 0) &&
+    Math.round(safeNum(w.sleep, 0)) === Math.round(safeNum(ext.sleep, 0)) &&
+    (w.stress ?? 0) === (ext.stress ?? 0) &&
+    (w.soreness ?? 0) === (ext.soreness ?? 0) &&
+    (w.mood ?? 0) === (ext.mood ?? 0) &&
+    (w.cognitiveLoad ?? 0) === (ext.cognitive_load ?? ext.cognitiveLoad ?? 0) &&
+    (w.readinessScore ? Math.round(w.readinessScore) : 0) === (ext.readiness_score ?? ext.readinessScore ?? 0) &&
+    (w.travelFatigue ?? 0) === (ext.travel_fatigue ?? ext.travelFatigue ?? 0) &&
+    (w.sleepQuality ?? 0) === (ext.sleep_quality ?? ext.sleepQuality ?? 0) &&
+    (w.menstrualPhase || 'Nenhuma') === (ext.menstrual_phase || ext.menstrualPhase || 'Nenhuma') &&
+    JSON.stringify(w.menstrualSymptoms || []) === JSON.stringify(safeParse(ext.menstrual_symptoms || ext.menstrualSymptoms, [])) &&
+    (w.hrv ?? null) === (ext.hrv ?? null) &&
+    (w.sleepHoursFormatted || null) === (ext.sleep_hours_formatted || ext.sleepHoursFormatted || null) &&
+    (w.sleepStartTime || null) === (ext.sleep_start_time || ext.sleepStartTime || null) &&
+    (w.wakeUpTime || null) === (ext.wake_up_time || ext.wakeUpTime || null) &&
+    (w.calculatedSleepHours !== undefined && w.calculatedSleepHours !== null ? safeNum(w.calculatedSleepHours, 0) : safeNum(w.sleep, 0)) === safeNum(ext.calculated_sleep_hours ?? ext.calculatedSleepHours, 0) &&
+    (w.isMatchDay ?? false) === (ext.is_match_day ?? ext.isMatchDay ?? false) &&
+    (w.emotionalReadiness ?? null) === (ext.emotional_readiness ?? ext.emotionalReadiness ?? null) &&
+    (w.psychologicalReadiness ?? null) === (ext.psychological_readiness ?? ext.psychologicalReadiness ?? null) &&
+    (w.psychologyNotes || null) === (ext.psychology_notes || ext.psychologyNotes || null)
+  );
+}
+
+function isSessionEqual(es: any, ext: any) {
+  if (!ext) return false;
+  return (
+    es.date === ext.date &&
+    (es.type || '') === (ext.type || '') &&
+    (es.durationMinutes ?? 0) === (ext.duration_minutes ?? ext.durationMinutes ?? 0) &&
+    (es.rpe ?? 0) === (ext.rpe ?? 0) &&
+    (es.notes || '') === (ext.notes || '') &&
+    (es.load ?? 0) === (ext.load ?? 0)
+  );
+}
+
+function isAssessmentEqual(asm: any, ext: any) {
+  if (!ext) return false;
+  if (
+    asm.date !== ext.date ||
+    (asm.weight ?? null) !== (ext.weight ?? null) ||
+    (asm.observations || '') !== (ext.observations || '')
+  ) {
+    return false;
+  }
+  const keys = Object.keys(asm).filter(k => k !== 'id' && k !== 'date' && k !== 'weight' && k !== 'observations' && k !== 'athleteId' && k !== 'athlete_id' && k !== 'aiDetails');
+  for (const key of keys) {
+    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    const incomingVal = asm[key] ?? null;
+    const existingVal = ext[snakeKey] !== undefined ? ext[snakeKey] : (ext[key] !== undefined ? ext[key] : null);
+    if (incomingVal !== existingVal) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isWorkoutEqual(wk: any, ext: any) {
+  if (!ext) return false;
+  if (
+    wk.date !== ext.date ||
+    (wk.name ?? null) !== (ext.name ?? null) ||
+    (wk.phase ?? null) !== (ext.phase ?? null) ||
+    (wk.status ?? null) !== (ext.status ?? null) ||
+    (wk.rpe ?? null) !== (ext.rpe ?? null) ||
+    (wk.totalLoad ?? null) !== (ext.total_load ?? ext.totalLoad ?? null) ||
+    (wk.durationMinutes ?? null) !== (ext.duration_minutes ?? ext.durationMinutes ?? null) ||
+    (wk.monotony ?? null) !== (ext.monotony ?? null) ||
+    (wk.strain ?? null) !== (ext.strain ?? null) ||
+    (wk.feedback ?? null) !== (ext.feedback ?? null) ||
+    (wk.trainerNotes ?? null) !== (ext.trainer_notes ?? ext.trainerNotes ?? null)
+  ) {
+    return false;
+  }
+
+  const incExs = wk.exercises || [];
+  const extExs = ext.exercises || [];
+  if (incExs.length !== extExs.length) return false;
+
+  for (let i = 0; i < incExs.length; i++) {
+    const ie = incExs[i];
+    const ee = extExs[i];
+
+    if (
+      ie.name !== ee.name ||
+      (ie.muscleGroup ?? null) !== (ee.muscle_group ?? ee.muscleGroup ?? null) ||
+      (parseInt(ie.sets) || 0) !== (ee.sets ?? 0) ||
+      String(ie.reps ?? '0') !== String(ee.reps ?? '0') ||
+      String(ie.weight ?? '0') !== String(ee.weight ?? '0') ||
+      (ie.rest ?? null) !== (ee.rest ?? null) ||
+      (ie.notes ?? null) !== (ee.notes ?? null) ||
+      (ie.painLevel ?? null) !== (ee.pain_level ?? ee.painLevel ?? null) ||
+      (ie.repsType ?? 'reps') !== (ee.reps_type ?? ee.repsType ?? 'reps') ||
+      (ie.videoUrl ?? null) !== (ee.video_url ?? ee.videoUrl ?? null) ||
+      (ie.imageUrl ?? null) !== (ee.image_url ?? ee.imageUrl ?? null)
+    ) {
+      return false;
+    }
+
+    const incSets = ie.performedSets || ie.performed_sets || [];
+    const extSets = ee.performedSets || ee.performed_sets || [];
+    if (incSets.length !== extSets.length) return false;
+
+    for (let j = 0; j < incSets.length; j++) {
+      const is = incSets[j];
+      const es = extSets[j];
+
+      if (
+        (is.reps ?? null) !== (es.reps ?? null) ||
+        (is.weight ?? null) !== (es.weight ?? null) ||
+        (is.rpe ?? null) !== (es.rpe ?? null) ||
+        (is.isCompleted ?? false) !== (es.is_completed ?? es.isCompleted ?? false)
+      ) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 const parseBackupAthleteFields = (a: any) => {
   let injuryHistory = a.injury_history || '';
   let injuries = safeParse(a.injuries, []);
@@ -478,6 +613,54 @@ export const supabaseService = {
   async saveAthlete(athlete: Athlete): Promise<void> {
     console.log(`[Supabase] Iniciando salvamento do atleta: ${athlete.name} (${athlete.id})`);
     
+    // Fetch existing data from Supabase for diffing to optimize queries
+    const { data: existingWks_direct } = await supabase.from('workouts').select('*').eq('athlete_id', athlete.id);
+    let existingWkTree: any[] = [];
+    if (existingWks_direct && existingWks_direct.length > 0) {
+      const wkIds = existingWks_direct.map((w: any) => w.id);
+      const { data: existingExs } = await supabase.from('prescribed_exercises').select('*').in('workout_id', wkIds);
+      if (existingExs && existingExs.length > 0) {
+        const exIds = existingExs.map((e: any) => e.id);
+        const { data: existingSets } = await supabase.from('performed_sets').select('*').in('exercise_id', exIds);
+
+        existingWkTree = existingWks_direct.map((w: any) => {
+          const exercises = (existingExs || []).filter((e: any) => e.workout_id === w.id).sort((x, y) => (x.order_index || 0) - (y.order_index || 0)).map((e: any) => {
+            const performedSets = (existingSets || []).filter((s: any) => s.exercise_id === e.id);
+            return { ...e, performedSets };
+          });
+          return { ...w, exercises };
+        });
+      } else {
+        existingWkTree = existingWks_direct.map((w: any) => ({ ...w, exercises: [] }));
+      }
+    }
+    const existingWkMap = new Map(existingWkTree.map((w: any) => [w.id, w]));
+
+    const { data: existingWl } = await supabase.from('wellness').select('*').eq('athlete_id', athlete.id);
+    const existingWlMap = new Map((existingWl || []).map((w: any) => [w.id, w]));
+
+    const { data: existingSes } = await supabase.from('external_sessions').select('*').eq('athlete_id', athlete.id);
+    const existingSesMap = new Map((existingSes || []).map((s: any) => [s.id, s]));
+
+    const getExistingAssessments = async (table: string) => {
+      try {
+        const { data } = await supabase.from(table).select('*').eq('athlete_id', athlete.id);
+        return data || [];
+      } catch (e) {
+        return [];
+      }
+    };
+
+    const existingAssessments = {
+      isometricStrength: new Map((await getExistingAssessments('isometric_strength')).map(a => [a.id, a])),
+      cmj: new Map((await getExistingAssessments('cmj')).map(a => [a.id, a])),
+      vo2max: new Map((await getExistingAssessments('vo2max')).map(a => [a.id, a])),
+      bioimpedance: new Map((await getExistingAssessments('bioimpedance')).map(a => [a.id, a])),
+      speed: new Map((await getExistingAssessments('speed')).map(a => [a.id, a])),
+      dropJump: new Map((await getExistingAssessments('drop_jump')).map(a => [a.id, a])),
+      imtp: new Map((await getExistingAssessments('imtp')).map(a => [a.id, a]))
+    };
+
     const wellness = Array.isArray(athlete.wellness) ? athlete.wellness : [];
     const externalSessions = Array.isArray(athlete.externalSessions) ? athlete.externalSessions : [];
     const workouts = Array.isArray(athlete.workouts) ? athlete.workouts : [];
@@ -570,8 +753,12 @@ export const supabaseService = {
         await supabase.from('wellness').delete().eq('athlete_id', athlete.id);
       }
       
-      if (athlete.wellness.length > 0) {
-        const { error: wError } = await supabase.from('wellness').upsert(athlete.wellness.map(w => ({
+      const wellnessToUpsert = athlete.wellness.filter(w => {
+        const ext = existingWlMap.get(w.id);
+        return !isWellnessEqual(w, ext);
+      });
+      if (wellnessToUpsert.length > 0) {
+        const { error: wError } = await supabase.from('wellness').upsert(wellnessToUpsert.map(w => ({
           id: w.id,
           athlete_id: athlete.id,
           date: w.date,
@@ -602,8 +789,12 @@ export const supabaseService = {
         await supabase.from('external_sessions').delete().eq('athlete_id', athlete.id);
       }
 
-      if (athlete.externalSessions.length > 0) {
-        const { error: esError } = await supabase.from('external_sessions').upsert(athlete.externalSessions.map(es => ({
+      const sessionsToUpsert = athlete.externalSessions.filter(es => {
+        const ext = existingSesMap.get(es.id);
+        return !isSessionEqual(es, ext);
+      });
+      if (sessionsToUpsert.length > 0) {
+        const { error: esError } = await supabase.from('external_sessions').upsert(sessionsToUpsert.map(es => ({
           id: es.id,
           athlete_id: athlete.id,
           date: es.date,
@@ -635,6 +826,10 @@ export const supabaseService = {
     if (workouts.length > 0) {
       for (const wk of workouts) {
         if (!wk.id) wk.id = `wk-${Date.now()}-${Math.random()}`;
+        const ext = existingWkMap.get(wk.id);
+        if (isWorkoutEqual(wk, ext)) {
+          continue; // SKIP UNCHANGED WORKOUT TREE DIRECT SUPABASE!
+        }
         const { error: wkError } = await supabase.from('workouts').upsert({
           id: wk.id,
           athlete_id: athlete.id,
@@ -755,176 +950,218 @@ export const supabaseService = {
       const assessmentPromises: Promise<any>[] = [];
 
       if (bioimpedance && bioimpedance.length > 0) {
-        assessmentPromises.push((async () => {
-          const { error } = await supabase.from('bioimpedance').upsert(bioimpedance.map(b => ({
-            id: b.id || `bio-${Date.now()}-${Math.random()}`,
-            athlete_id: athlete.id,
-            date: b.date,
-            weight: b.weight ?? 0,
-            fat_percentage: b.fatPercentage ?? 0,
-            muscle_mass: b.muscleMass ?? 0,
-            visceral_fat: b.visceralFat ?? 0,
-            hydration: b.hydration ?? 0,
-            basal_metabolism: b.basalMetabolism ?? 0,
-            metabolic_age: b.metabolicAge ?? 0,
-            bone_mass: b.boneMass ?? 0,
-            physique_rating: b.physiqueRating ?? 0,
-            fat_arm_r: b.fatArmR ?? 0,
-            fat_arm_l: b.fatArmL ?? 0,
-            fat_leg_r: b.fatLegR ?? 0,
-            fat_leg_l: b.fatLegL ?? 0,
-            fat_trunk: b.fatTrunk ?? 0,
-            muscle_arm_r: b.muscleArmR ?? 0,
-            muscle_arm_l: b.muscleArmL ?? 0,
-            muscle_leg_r: b.muscleLegR ?? 0,
-            muscle_leg_l: b.muscleLegL ?? 0,
-            muscle_trunk: b.muscleTrunk ?? 0,
-            observations: b.observations || ''
-          })));
-          if (error) throw error;
-        })());
+        const itemsToUpsert = bioimpedance.filter(b => {
+          const ext = existingAssessments.bioimpedance.get(b.id);
+          return !isAssessmentEqual(b, ext);
+        });
+        if (itemsToUpsert.length > 0) {
+          assessmentPromises.push((async () => {
+            const { error } = await supabase.from('bioimpedance').upsert(itemsToUpsert.map(b => ({
+              id: b.id || `bio-${Date.now()}-${Math.random()}`,
+              athlete_id: athlete.id,
+              date: b.date,
+              weight: b.weight ?? 0,
+              fat_percentage: b.fatPercentage ?? 0,
+              muscle_mass: b.muscleMass ?? 0,
+              visceral_fat: b.visceralFat ?? 0,
+              hydration: b.hydration ?? 0,
+              basal_metabolism: b.basalMetabolism ?? 0,
+              metabolic_age: b.metabolicAge ?? 0,
+              bone_mass: b.boneMass ?? 0,
+              physique_rating: b.physiqueRating ?? 0,
+              fat_arm_r: b.fatArmR ?? 0,
+              fat_arm_l: b.fatArmL ?? 0,
+              fat_leg_r: b.fatLegR ?? 0,
+              fat_leg_l: b.fatLegL ?? 0,
+              fat_trunk: b.fatTrunk ?? 0,
+              muscle_arm_r: b.muscleArmR ?? 0,
+              muscle_arm_l: b.muscleArmL ?? 0,
+              muscle_leg_r: b.muscleLegR ?? 0,
+              muscle_leg_l: b.muscleLegL ?? 0,
+              muscle_trunk: b.muscleTrunk ?? 0,
+              observations: b.observations || ''
+            })));
+            if (error) throw error;
+          })());
+        }
       }
 
       if (isometricStrength && isometricStrength.length > 0) {
-        assessmentPromises.push((async () => {
-          const { error } = await supabase.from('isometric_strength').upsert(isometricStrength.map(s => ({
-            id: s.id || `str-${Date.now()}-${Math.random()}`,
-            athlete_id: athlete.id,
-            date: s.date,
-            half_squat_kgf: s.halfSquatKgf ?? 0,
-            quadriceps_r: s.quadricepsR ?? 0,
-            quadriceps_l: s.quadricepsL ?? 0,
-            hamstrings_r: s.hamstringsR ?? 0,
-            hamstrings_l: s.hamstringsL ?? 0,
-            iq_ratio_r: s.iqRatioR ?? 0,
-            iq_ratio_l: s.iqRatioL ?? 0,
-            observations: s.observations || ''
-          })));
-          if (error) throw error;
-        })());
+        const itemsToUpsert = isometricStrength.filter(s => {
+          const ext = existingAssessments.isometricStrength.get(s.id);
+          return !isAssessmentEqual(s, ext);
+        });
+        if (itemsToUpsert.length > 0) {
+          assessmentPromises.push((async () => {
+            const { error } = await supabase.from('isometric_strength').upsert(itemsToUpsert.map(s => ({
+              id: s.id || `str-${Date.now()}-${Math.random()}`,
+              athlete_id: athlete.id,
+              date: s.date,
+              half_squat_kgf: s.halfSquatKgf ?? 0,
+              quadriceps_r: s.quadricepsR ?? 0,
+              quadriceps_l: s.quadricepsL ?? 0,
+              hamstrings_r: s.hamstringsR ?? 0,
+              hamstrings_l: s.hamstringsL ?? 0,
+              iq_ratio_r: s.iqRatioR ?? 0,
+              iq_ratio_l: s.iqRatioL ?? 0,
+              observations: s.observations || ''
+            })));
+            if (error) throw error;
+          })());
+        }
       }
 
       if (cmj && cmj.length > 0) {
-        assessmentPromises.push((async () => {
-          const payload = cmj.map(c => ({
-            id: c.id || `cmj-${Date.now()}-${Math.random()}`,
-            athlete_id: athlete.id,
-            date: c.date,
-            height: c.height ?? 0,
-            power: c.power ?? 0,
-            depth: c.depth ?? 0,
-            rsi: c.rsi ?? 0,
-            flight_time: c.flightTime ?? 0,
-            weight: c.weight ?? 0,
-            average_force: c.averageForce ?? 0,
-            observations: c.observations || ''
-          }));
-          const { error } = await supabase.from('cmj').upsert(payload);
-          if (error) {
-            console.warn("Failing to upsert with average_force column, retrying without it:", error.message);
-            const fallbackPayload = payload.map(({ average_force, ...rest }) => rest);
-            const { error: fallbackError } = await supabase.from('cmj').upsert(fallbackPayload);
-            if (fallbackError) throw fallbackError;
-          }
-        })());
+        const itemsToUpsert = cmj.filter(c => {
+          const ext = existingAssessments.cmj.get(c.id);
+          return !isAssessmentEqual(c, ext);
+        });
+        if (itemsToUpsert.length > 0) {
+          assessmentPromises.push((async () => {
+            const payload = itemsToUpsert.map(c => ({
+              id: c.id || `cmj-${Date.now()}-${Math.random()}`,
+              athlete_id: athlete.id,
+              date: c.date,
+              height: c.height ?? 0,
+              power: c.power ?? 0,
+              depth: c.depth ?? 0,
+              rsi: c.rsi ?? 0,
+              flight_time: c.flightTime ?? 0,
+              weight: c.weight ?? 0,
+              average_force: c.averageForce ?? 0,
+              observations: c.observations || ''
+            }));
+            const { error } = await supabase.from('cmj').upsert(payload);
+            if (error) {
+              console.warn("Failing to upsert with average_force column, retrying without it:", error.message);
+              const fallbackPayload = payload.map(({ average_force, ...rest }) => rest);
+              const { error: fallbackError } = await supabase.from('cmj').upsert(fallbackPayload);
+              if (fallbackError) throw fallbackError;
+            }
+          })());
+        }
       }
 
       if (dropJump && dropJump.length > 0) {
-        assessmentPromises.push((async () => {
-          try {
-            const { error } = await supabase.from('drop_jump').upsert(dropJump.map(dj => ({
-              id: dj.id || `dj-${Date.now()}-${Math.random()}`,
-              athlete_id: athlete.id,
-              date: dj.date,
-              weight: dj.weight ?? 0,
-              drop_height: dj.dropHeight ?? 30,
-              jump_height: dj.jumpHeight ?? 0,
-              flight_time: dj.flightTime ?? 0,
-              contact_time: dj.contactTime ?? 0,
-              mean_force: dj.meanForce ?? 0,
-              mean_power: dj.meanPower ?? 0,
-              stiffness: dj.stiffness ?? 0,
-              rsi: dj.rsi ?? 0,
-              observations: dj.observations || ''
-            })));
-            if (error) throw error;
-          } catch (err: any) {
-            console.warn(`⚠️ Erro ao persistir dados na tabela "drop_jump" no Supabase. O suporte a Drop Jump requer a execução da migração SQL no seu banco.`, err);
-          }
-        })());
+        const itemsToUpsert = dropJump.filter(dj => {
+          const ext = existingAssessments.dropJump.get(dj.id);
+          return !isAssessmentEqual(dj, ext);
+        });
+        if (itemsToUpsert.length > 0) {
+          assessmentPromises.push((async () => {
+            try {
+              const { error } = await supabase.from('drop_jump').upsert(itemsToUpsert.map(dj => ({
+                id: dj.id || `dj-${Date.now()}-${Math.random()}`,
+                athlete_id: athlete.id,
+                date: dj.date,
+                weight: dj.weight ?? 0,
+                drop_height: dj.dropHeight ?? 30,
+                jump_height: dj.jumpHeight ?? 0,
+                flight_time: dj.flightTime ?? 0,
+                contact_time: dj.contactTime ?? 0,
+                mean_force: dj.meanForce ?? 0,
+                mean_power: dj.meanPower ?? 0,
+                stiffness: dj.stiffness ?? 0,
+                rsi: dj.rsi ?? 0,
+                observations: dj.observations || ''
+              })));
+              if (error) throw error;
+            } catch (err: any) {
+              console.warn(`⚠️ Erro ao persistir dados na tabela "drop_jump" no Supabase. O suporte a Drop Jump requer a execução da migração SQL no seu banco.`, err);
+            }
+          })());
+        }
       }
 
       if (vo2max && vo2max.length > 0) {
-        assessmentPromises.push((async () => {
-          const { error } = await supabase.from('vo2max').upsert(vo2max.map(v => ({
-            id: v.id || `vo2-${Date.now()}-${Math.random()}`,
-            athlete_id: athlete.id,
-            date: v.date,
-            vo2max: v.vo2max ?? 0,
-            max_heart_rate: v.maxHeartRate ?? 0,
-            threshold_heart_rate: v.thresholdHeartRate ?? 0,
-            max_speed: v.maxSpeed ?? 0,
-            threshold_speed: v.thresholdSpeed ?? 0,
-            vam: v.vam ?? 0,
-            rec_10s: v.rec10s ?? 0,
-            rec_30s: v.rec30s ?? 0,
-            rec_60s: v.rec60s ?? 0,
-            max_ventilation: v.maxVentilation ?? 0,
-            score: v.score ?? 0,
-            observations: v.observations || ''
-          })));
-          if (error) throw error;
-        })());
+        const itemsToUpsert = vo2max.filter(v => {
+          const ext = existingAssessments.vo2max.get(v.id);
+          return !isAssessmentEqual(v, ext);
+        });
+        if (itemsToUpsert.length > 0) {
+          assessmentPromises.push((async () => {
+            const { error } = await supabase.from('vo2max').upsert(itemsToUpsert.map(v => ({
+              id: v.id || `vo2-${Date.now()}-${Math.random()}`,
+              athlete_id: athlete.id,
+              date: v.date,
+              vo2max: v.vo2max ?? 0,
+              max_heart_rate: v.maxHeartRate ?? 0,
+              threshold_heart_rate: v.thresholdHeartRate ?? 0,
+              max_speed: v.maxSpeed ?? 0,
+              threshold_speed: v.thresholdSpeed ?? 0,
+              vam: v.vam ?? 0,
+              rec_10s: v.rec10s ?? 0,
+              rec_30s: v.rec30s ?? 0,
+              rec_60s: v.rec60s ?? 0,
+              max_ventilation: v.maxVentilation ?? 0,
+              score: v.score ?? 0,
+              observations: v.observations || ''
+            })));
+            if (error) throw error;
+          })());
+        }
       }
 
       if (speed && speed.length > 0) {
-        assessmentPromises.push((async () => {
-          const { error } = await supabase.from('speed').upsert(speed.map(sp => ({
-            id: sp.id || `spd-${Date.now()}-${Math.random()}`,
-            athlete_id: athlete.id,
-            date: sp.date,
-            time_5m: sp.time5m ?? 0,
-            time_10m: sp.time10m ?? 0,
-            time_20m: sp.time20m ?? 0,
-            time_30m: sp.time30m ?? 0,
-            speed_5m: sp.speed5m ?? 0,
-            speed_10m: sp.speed10m ?? 0,
-            speed_20m: sp.speed20m ?? 0,
-            speed_30m: sp.speed30m ?? 0,
-            observations: sp.observations || ''
-          })));
-          if (error) throw error;
-        })());
+        const itemsToUpsert = speed.filter(sp => {
+          const ext = existingAssessments.speed.get(sp.id);
+          return !isAssessmentEqual(sp, ext);
+        });
+        if (itemsToUpsert.length > 0) {
+          assessmentPromises.push((async () => {
+            const { error } = await supabase.from('speed').upsert(itemsToUpsert.map(sp => ({
+              id: sp.id || `spd-${Date.now()}-${Math.random()}`,
+              athlete_id: athlete.id,
+              date: sp.date,
+              time_5m: sp.time5m ?? 0,
+              time_10m: sp.time10m ?? 0,
+              time_20m: sp.time20m ?? 0,
+              time_30m: sp.time30m ?? 0,
+              speed_5m: sp.speed5m ?? 0,
+              speed_10m: sp.speed10m ?? 0,
+              speed_20m: sp.speed20m ?? 0,
+              speed_30m: sp.speed30m ?? 0,
+              observations: sp.observations || ''
+            })));
+            if (error) throw error;
+          })());
+        }
       }
 
       if (imtp && imtp.length > 0) {
-        assessmentPromises.push((async () => {
-          try {
-            const { error } = await supabase.from('imtp').upsert(imtp.map(im => ({
-              id: im.id || `im-${Date.now()}-${Math.random()}`,
-              athlete_id: athlete.id,
-              date: im.date,
-              weight: im.weight,
-              peak_force: im.peakForce ?? 0,
-              relative_peak_force: im.relativePeakForce ?? 0,
-              time_to_peak_force: im.timeToPeakForce ?? 0,
-              mean_force: im.meanForce ?? 0,
-              rfd_peak: im.rfdPeak ?? 0,
-              rfd_100: im.rfd100 ?? 0,
-              rfd_200: im.rfd200 ?? 0,
-              rfd_300: im.rfd300 ?? 0,
-              impulse_peak: im.impulsePeak ?? 0,
-              impulse_100: im.impulse100 ?? 0,
-              impulse_200: im.impulse200 ?? 0,
-              impulse_300: im.impulse300 ?? 0,
-              ai_details: im.aiDetails ? JSON.stringify(im.aiDetails) : null,
-              observations: im.observations || ''
-            })));
-            if (error) throw error;
-          } catch (err: any) {
-            console.warn(`⚠️ Erro ao persistir dados na tabela "imtp" no Supabase. O suporte a IMTP requer a execução da migração SQL no seu banco.`, err);
-          }
-        })());
+        const itemsToUpsert = imtp.filter(im => {
+          const ext = existingAssessments.imtp.get(im.id);
+          return !isAssessmentEqual(im, ext);
+        });
+        if (itemsToUpsert.length > 0) {
+          assessmentPromises.push((async () => {
+            try {
+              const { error } = await supabase.from('imtp').upsert(itemsToUpsert.map(im => ({
+                id: im.id || `im-${Date.now()}-${Math.random()}`,
+                athlete_id: athlete.id,
+                date: im.date,
+                weight: im.weight,
+                peak_force: im.peakForce ?? 0,
+                relative_peak_force: im.relativePeakForce ?? 0,
+                time_to_peak_force: im.timeToPeakForce ?? 0,
+                mean_force: im.meanForce ?? 0,
+                rfd_peak: im.rfdPeak ?? 0,
+                rfd_100: im.rfd100 ?? 0,
+                rfd_200: im.rfd200 ?? 0,
+                rfd_300: im.rfd300 ?? 0,
+                impulse_peak: im.impulsePeak ?? 0,
+                impulse_100: im.impulse100 ?? 0,
+                impulse_200: im.impulse200 ?? 0,
+                impulse_300: im.impulse300 ?? 0,
+                ai_details: im.aiDetails ? JSON.stringify(im.aiDetails) : null,
+                observations: im.observations || ''
+              })));
+              if (error) throw error;
+            } catch (err: any) {
+              console.warn(`⚠️ Erro ao persistir dados na tabela "imtp" no Supabase. O suporte a IMTP requer a execução da migração SQL no seu banco.`, err);
+            }
+          })());
+        }
       }
 
       try {
