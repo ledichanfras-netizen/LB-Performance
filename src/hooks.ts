@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Athlete, AssessmentType, WellnessEntry, Workout, PrescribedExercise, ExerciseSet, ExternalSession } from './types';
-import { calculateReadiness, calculateWorkoutLoad, calculateAdvancedMetrics, calculateAge, getSafeDateTime, getLocalDateString } from './utils';
+import { calculateReadiness, calculateWorkoutLoad, calculateAdvancedMetrics, calculateAge, getSafeDateTime, getLocalDateString, normalizeExternalSessions } from './utils';
 import { ENRICHED_LIBRARY } from './data/exercises';
 import toast from 'react-hot-toast';
 import { GoogleGenAI, Type } from "@google/genai";
@@ -172,7 +172,8 @@ export const useAthletes = (token?: string | null) => {
     const normalized = sortWorkoutExercises(ensureImtpAndMigrate(a));
     return {
       ...normalized,
-      wellness: sortWellnessEntries(normalized.wellness)
+      wellness: sortWellnessEntries(normalized.wellness),
+      externalSessions: normalizeExternalSessions(normalized.externalSessions)
     };
   };
 
@@ -1322,12 +1323,11 @@ export const useAthletes = (token?: string | null) => {
   };
 
   const addExternalSession = async (athleteId: string, session: Omit<ExternalSession, 'id' | 'load'>) => {
-    const load = session.durationMinutes * session.rpe;
     const updated = athletes.map(a => {
       if (a.id === athleteId) {
         const history = Array.isArray(a.externalSessions) ? a.externalSessions : [];
-        const newSession = { ...session, id: `ext-${Date.now()}`, load };
-        const newHistory = [newSession, ...history].sort((x, y) => getSafeDateTime(y.date) - getSafeDateTime(x.date));
+        const newSession = { ...session, id: `ext-${Date.now()}` };
+        const newHistory = normalizeExternalSessions([newSession, ...history]);
         
         return { ...a, externalSessions: newHistory };
       }
@@ -1344,12 +1344,11 @@ export const useAthletes = (token?: string | null) => {
         const history = (a.externalSessions || []).map(s => {
           if (s.id === sessionId) {
             const updatedSession = { ...s, ...data };
-            updatedSession.load = updatedSession.durationMinutes * updatedSession.rpe;
             return updatedSession;
           }
           return s;
         });
-        return { ...a, externalSessions: history };
+        return { ...a, externalSessions: normalizeExternalSessions(history) };
       }
       return a;
     });

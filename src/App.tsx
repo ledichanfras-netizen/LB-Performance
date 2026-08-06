@@ -4663,7 +4663,9 @@ const ExternalSessionManager: FC<{
 
           <div className="space-y-3">
             {(athlete.externalSessions || []).length > 0 ? (
-              [...(athlete.externalSessions || [])].map((s) => (
+              [...(athlete.externalSessions || [])]
+                .sort((a, b) => getSafeDateTime(b.date) - getSafeDateTime(a.date))
+                .map((s) => (
                 <div
                   key={s.id}
                   className="flex justify-between items-center p-4 bg-slate-950 rounded-2xl border border-slate-800 group hover:border-slate-700 transition-all"

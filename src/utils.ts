@@ -151,16 +151,39 @@ export const calculateWorkoutInternalLoad = (workout: Workout): number => {
   return (workout.rpe || 0) * (workout.durationMinutes || 60);
 };
 
+export const calculateExternalSessionLoad = (session?: { durationMinutes?: number; rpe?: number; load?: number } | null): number => {
+  const providedLoad = Number(session?.load);
+  if (Number.isFinite(providedLoad) && providedLoad > 0) {
+    return providedLoad;
+  }
+
+  const duration = Number(session?.durationMinutes ?? 0);
+  const rpe = Number(session?.rpe ?? 0);
+  return duration * rpe;
+};
+
+export const normalizeExternalSessions = (sessions: any[] = []) => {
+  return [...(Array.isArray(sessions) ? sessions : [])]
+    .map((session) => ({
+      ...session,
+      load: calculateExternalSessionLoad(session),
+    }))
+    .sort((a, b) => getSafeDateTime(b.date) - getSafeDateTime(a.date));
+};
+
 export const calculateAdvancedMetrics = (workouts: Workout[], externalSessions: any[] = []) => {
   const completedWorkouts = workouts.filter(w => w.status === 'completed' && w.rpe);
+  const normalizedExternalSessions = normalizeExternalSessions(externalSessions);
   
   // Combine all sessions (gym + external)
   const allSessions = [
     ...completedWorkouts.map(w => ({ date: w.date, load: calculateWorkoutInternalLoad(w) })),
-    ...externalSessions.map(s => ({ date: s.date, load: s.load || (s.durationMinutes * s.rpe) }))
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    ...normalizedExternalSessions.map(s => ({ date: s.date, load: s.load }))
+  ].sort((a, b) => getSafeDateTime(b.date) - getSafeDateTime(a.date));
 
-  const last7Days = allSessions.slice(0, 7);
+  const now = Date.now();
+  const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+  const last7Days = allSessions.filter(s => getSafeDateTime(s.date) >= sevenDaysAgo).slice(0, 7);
 
   if (last7Days.length === 0) return { monotony: 0, strain: 0 };
 
@@ -178,22 +201,20 @@ export const calculateAdvancedMetrics = (workouts: Workout[], externalSessions: 
 };
 
 export const calculateACWR = (workouts: Workout[], externalSessions: any[] = []) => {
+  const normalizedExternalSessions = normalizeExternalSessions(externalSessions);
   const allSessions = [
     ...workouts.filter(w => w.status === 'completed' && w.rpe).map(w => ({ date: w.date, load: calculateWorkoutInternalLoad(w) })),
-    ...externalSessions.map(s => ({ date: s.date, load: s.load || (s.durationMinutes * s.rpe) }))
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    ...normalizedExternalSessions.map(s => ({ date: s.date, load: s.load }))
+  ].sort((a, b) => getSafeDateTime(b.date) - getSafeDateTime(a.date));
 
   if (allSessions.length === 0) return { ratio: 1.0, acute: 0, chronic: 0, status: 'Estável', color: 'text-emerald-400' };
 
-  const today = new Date();
-  const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(today.getDate() - 7);
-  
-  const twentyEightDaysAgo = new Date(today);
-  twentyEightDaysAgo.setDate(today.getDate() - 28);
+  const now = Date.now();
+  const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000);
+  const twentyEightDaysAgo = now - (28 * 24 * 60 * 60 * 1000);
 
-  const acuteSessions = allSessions.filter(s => new Date(s.date) >= sevenDaysAgo);
-  const chronicSessions = allSessions.filter(s => new Date(s.date) >= twentyEightDaysAgo);
+  const acuteSessions = allSessions.filter(s => getSafeDateTime(s.date) >= sevenDaysAgo);
+  const chronicSessions = allSessions.filter(s => getSafeDateTime(s.date) >= twentyEightDaysAgo);
 
   const acuteLoad = acuteSessions.reduce((acc, s) => acc + s.load, 0) / 7;
   const chronicLoad = chronicSessions.reduce((acc, s) => acc + s.load, 0) / 28;
