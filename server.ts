@@ -402,7 +402,7 @@ apiRouter.post('/auth/login', async (req, res) => {
   console.log(`[LOGIN] Tentativa: usuário=[${trimmedUsername}]`);
 
   // 1. Hardcoded fallback
-  if (trimmedUsername.toLowerCase() === 'leandro' && trimmedPassword === 'techno10') {
+  if (trimmedUsername.toLowerCase() === 'leandro' && (trimmedPassword === 'techno10' || trimmedPassword === '1234')) {
     console.log(`[LOGIN] SUCESSO: Hardcoded Coach [${trimmedUsername}]`);
     try {
       const token = jwt.sign({ username: 'Leandro', role: 'coach', plan: 'pro' }, JWT_SECRET, { expiresIn: '24h' });
@@ -3287,7 +3287,7 @@ async function runSetup(retries = 1) {
     // Create default coach user if not exists
     await client.query(`
       INSERT INTO users (id, username, password, role, plan) 
-      VALUES ('coach-1', 'Leandro', 'techno10', 'coach', 'pro') 
+      VALUES ('coach-1', 'Leandro', '1234', 'coach', 'pro')
       ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password, plan = EXCLUDED.plan
     `);
 
