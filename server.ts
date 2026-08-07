@@ -127,12 +127,20 @@ const getSafeDateTime = (dateStr: any): number => {
 const parseBackupAthleteFields = (a: any) => {
   let injuryHistory = a.injury_history || '';
   let injuries = safeParseJson(a.injuries, []);
+  let medicalExams = [];
   let trainingDays = safeParseJson(a.training_days, [1, 3, 5]);
+  let academyDays = safeParseJson(a.training_days, [1, 3, 5]); // default/fallback
+  let courtDays = [2, 4]; // default/fallback
   let dropJumpBackup = [];
   let imtpBackup = [];
   let posturalBackup = [];
   let matches = [];
   let photoUrl = a.photo_url || a.photoUrl || undefined;
+  let bodyMapRecords = [];
+  let team = undefined;
+  let category = undefined;
+  let weight = undefined;
+  let height = undefined;
 
   if (a.injury_history && typeof a.injury_history === 'string' && a.injury_history.trim().startsWith('{')) {
     try {
@@ -147,6 +155,17 @@ const parseBackupAthleteFields = (a: any) => {
             trainingDays = parsed.trainingDays || [1, 3, 5];
           }
         }
+        if (parsed.hasOwnProperty('medicalExams') && Array.isArray(parsed.medicalExams)) {
+          medicalExams = parsed.medicalExams;
+        }
+        if (parsed.hasOwnProperty('academyDays') && Array.isArray(parsed.academyDays)) {
+          academyDays = parsed.academyDays;
+        } else if (parsed.hasOwnProperty('trainingDays') && Array.isArray(parsed.trainingDays)) {
+          academyDays = parsed.trainingDays;
+        }
+        if (parsed.hasOwnProperty('courtDays') && Array.isArray(parsed.courtDays)) {
+          courtDays = parsed.courtDays;
+        }
         if (parsed.hasOwnProperty('dropJumpBackup') && Array.isArray(parsed.dropJumpBackup)) {
           dropJumpBackup = parsed.dropJumpBackup;
         }
@@ -159,8 +178,23 @@ const parseBackupAthleteFields = (a: any) => {
         if (parsed.hasOwnProperty('matches') && Array.isArray(parsed.matches)) {
           matches = parsed.matches;
         }
+        if (parsed.hasOwnProperty('bodyMapRecords') && Array.isArray(parsed.bodyMapRecords)) {
+          bodyMapRecords = parsed.bodyMapRecords;
+        }
         if (parsed.photoUrl) {
           photoUrl = parsed.photoUrl;
+        }
+        if (parsed.hasOwnProperty('team')) {
+          team = parsed.team;
+        }
+        if (parsed.hasOwnProperty('category')) {
+          category = parsed.category;
+        }
+        if (parsed.hasOwnProperty('weight')) {
+          weight = parsed.weight;
+        }
+        if (parsed.hasOwnProperty('height')) {
+          height = parsed.height;
         }
       }
     } catch (e) {
@@ -168,7 +202,7 @@ const parseBackupAthleteFields = (a: any) => {
     }
   }
   
-  return { injuryHistory, injuries, trainingDays, dropJumpBackup, imtpBackup, posturalBackup, matches, photoUrl };
+  return { injuryHistory, injuries, medicalExams, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup, posturalBackup, matches, photoUrl, bodyMapRecords, team, category, weight, height };
 };
 
 const serializeBackupAthleteFields = (athlete: any) => {
@@ -178,12 +212,20 @@ const serializeBackupAthleteFields = (athlete: any) => {
   return JSON.stringify({
     legacy: athlete.injuryHistory || '',
     injuries: athlete.injuries || [],
+    medicalExams: athlete.medicalExams || [],
     trainingDays: athlete.trainingDays || [1, 3, 5],
+    academyDays: athlete.academyDays || [],
+    courtDays: athlete.courtDays || [],
     dropJumpBackup: dropJump,
     imtpBackup: imtp,
     posturalBackup: postural,
     matches: athlete.matches || [],
-    photoUrl: athlete.photoUrl || athlete.photo_url || ''
+    photoUrl: athlete.photoUrl || athlete.photo_url || '',
+    bodyMapRecords: athlete.bodyMapRecords || [],
+    team: athlete.team || '',
+    category: athlete.category || '',
+    weight: athlete.weight || null,
+    height: athlete.height || null
   });
 };
 
@@ -598,8 +640,16 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
             periodizationStart: a.periodization_start,
             periodizationEnd: a.periodization_end,
             trainingDays: parsedFields.trainingDays,
+            academyDays: parsedFields.academyDays,
+            courtDays: parsedFields.courtDays,
             injuries: parsedFields.injuries,
+            medicalExams: parsedFields.medicalExams || [],
             matches: parsedFields.matches || [],
+            bodyMapRecords: parsedFields.bodyMapRecords || [],
+            team: parsedFields.team || undefined,
+            category: parsedFields.category || undefined,
+            weight: parsedFields.weight || undefined,
+            height: parsedFields.height || undefined,
             wellness: (a.wellness || []).map((w: any) => ({
               ...w,
               sleep: w.calculated_sleep_hours !== undefined && w.calculated_sleep_hours !== null ? Number(w.calculated_sleep_hours) : (typeof w.sleep === 'number' ? w.sleep : parseFloat(w.sleep) || 0),
@@ -820,8 +870,16 @@ apiRouter.get('/ler', authMiddleware, async (req, res) => {
         periodizationStart: a.periodization_start,
         periodizationEnd: a.periodization_end,
         trainingDays: parsedFields.trainingDays,
+        academyDays: parsedFields.academyDays,
+        courtDays: parsedFields.courtDays,
         injuries: parsedFields.injuries,
+        medicalExams: parsedFields.medicalExams || [],
         matches: parsedFields.matches || [],
+        bodyMapRecords: parsedFields.bodyMapRecords || [],
+        team: parsedFields.team || undefined,
+        category: parsedFields.category || undefined,
+        weight: parsedFields.weight || undefined,
+        height: parsedFields.height || undefined,
       wellness: (wellnessByAth[a.id] || []).map((w: any) => ({
         ...w,
         cognitiveLoad: w.cognitive_load,

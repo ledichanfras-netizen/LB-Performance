@@ -163,6 +163,11 @@ const parseBackupAthleteFields = (a: any) => {
   let posturalBackup = [];
   let matches = [];
   let photoUrl = a.photo_url || a.photoUrl || undefined;
+  let bodyMapRecords = [];
+  let team = undefined;
+  let category = undefined;
+  let weight = undefined;
+  let height = undefined;
 
   if (a.injury_history && typeof a.injury_history === 'string' && a.injury_history.trim().startsWith('{')) {
     try {
@@ -200,8 +205,23 @@ const parseBackupAthleteFields = (a: any) => {
         if (parsed.hasOwnProperty('matches') && Array.isArray(parsed.matches)) {
           matches = parsed.matches;
         }
+        if (parsed.hasOwnProperty('bodyMapRecords') && Array.isArray(parsed.bodyMapRecords)) {
+          bodyMapRecords = parsed.bodyMapRecords;
+        }
         if (parsed.photoUrl) {
           photoUrl = parsed.photoUrl;
+        }
+        if (parsed.hasOwnProperty('team')) {
+          team = parsed.team;
+        }
+        if (parsed.hasOwnProperty('category')) {
+          category = parsed.category;
+        }
+        if (parsed.hasOwnProperty('weight')) {
+          weight = parsed.weight;
+        }
+        if (parsed.hasOwnProperty('height')) {
+          height = parsed.height;
         }
       }
     } catch (e) {
@@ -209,7 +229,7 @@ const parseBackupAthleteFields = (a: any) => {
     }
   }
   
-  return { injuryHistory, injuries, medicalExams, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup, posturalBackup, matches, photoUrl };
+  return { injuryHistory, injuries, medicalExams, trainingDays, academyDays, courtDays, dropJumpBackup, imtpBackup, posturalBackup, matches, photoUrl, bodyMapRecords, team, category, weight, height };
 };
 
 const serializeBackupAthleteFields = (athlete: any) => {
@@ -227,7 +247,12 @@ const serializeBackupAthleteFields = (athlete: any) => {
     imtpBackup: imtp,
     posturalBackup: postural,
     matches: athlete.matches || [],
-    photoUrl: athlete.photoUrl || athlete.photo_url || ''
+    photoUrl: athlete.photoUrl || athlete.photo_url || '',
+    bodyMapRecords: athlete.bodyMapRecords || [],
+    team: athlete.team || '',
+    category: athlete.category || '',
+    weight: athlete.weight || null,
+    height: athlete.height || null
   });
 };
 
@@ -432,6 +457,11 @@ export const supabaseService = {
           injuries: parsedFields.injuries,
           medicalExams: parsedFields.medicalExams || [],
           matches: parsedFields.matches || [],
+          bodyMapRecords: parsedFields.bodyMapRecords || [],
+          team: parsedFields.team || undefined,
+          category: parsedFields.category || undefined,
+          weight: parsedFields.weight || undefined,
+          height: parsedFields.height || undefined,
           wellness: (a.wellness || []).map((w: any) => {
             const exactSleep = w.calculated_sleep_hours !== undefined && w.calculated_sleep_hours !== null 
               ? Number(w.calculated_sleep_hours) 
