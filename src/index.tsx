@@ -5,6 +5,13 @@ import App from './App';
 import { Toaster } from 'react-hot-toast';
 import './index.css';
 
+// Silencia logs de console em ambiente de produção para máxima performance (ETAPA 10)
+if (import.meta.env.PROD) {
+  console.log = () => {};
+  console.info = () => {};
+  console.warn = () => {};
+}
+
 // Unregister any active service workers to prevent api route interception and PWA routing issues
 if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then((registrations) => {
