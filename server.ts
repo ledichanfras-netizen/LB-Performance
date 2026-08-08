@@ -88,7 +88,7 @@ app.use((req, res, next) => {
 });
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL || undefined,
   ssl: process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') ? { rejectUnauthorized: false } : false,
   connectionTimeoutMillis: 3000, // Reduzido para 3 segundos para falhar rápido se desativado
   idleTimeoutMillis: 30000,
@@ -301,28 +301,30 @@ pool.on('error', (err) => {
   isDbConnected = false;
 });
 
-// Verificação periódica de conexão
-setInterval(async () => {
-  if (process.env.DATABASE_URL) {
-    try {
-      const client = await pool.connect();
-      client.release();
-      if (!isDbConnected) {
-        console.log("Conexão com o banco de dados restabelecida.");
-        isDbConnected = true;
-        await ensureColumns();
+// Verificação periódica de conexão (apenas fora do ambiente Serverless do Vercel)
+if (!process.env.VERCEL) {
+  setInterval(async () => {
+    if (process.env.DATABASE_URL) {
+      try {
+        const client = await pool.connect();
+        client.release();
+        if (!isDbConnected) {
+          console.log("Conexão com o banco de dados restabelecida.");
+          isDbConnected = true;
+          await ensureColumns();
+        }
+      } catch (err: any) {
+        const maskedUrl = process.env.DATABASE_URL.substring(0, 15) + "...";
+        if (isDbConnected) {
+          console.error(`Conexão com o banco de dados perdida. URL: ${maskedUrl} Erro:`, err.message || err);
+          isDbConnected = false;
+        }
       }
-    } catch (err: any) {
-      const maskedUrl = process.env.DATABASE_URL.substring(0, 15) + "...";
-      if (isDbConnected) {
-        console.error(`Conexão com o banco de dados perdida. URL: ${maskedUrl} Erro:`, err.message || err);
-        isDbConnected = false;
-      }
+    } else {
+      console.error("DATABASE_URL não configurada no ambiente.");
     }
-  } else {
-    console.error("DATABASE_URL não configurada no ambiente.");
-  }
-}, 30000);
+  }, 30000);
+}
 
 // Initial check
 if (process.env.DATABASE_URL) {
@@ -3320,8 +3322,10 @@ async function runSetup(retries = 1) {
 }
 
 async function startServer() {
-  // Configuração do banco em segundo plano para não travar o início do servidor
-  runSetup().catch(e => console.error("Falha na configuração inicial do banco de dados:", e));
+  // Configuração do banco em segundo plano (apenas se não estiver no Vercel)
+  if (!process.env.VERCEL) {
+    runSetup().catch(e => console.error("Falha na configuração inicial do banco de dados:", e));
+  }
   
   const distPath = path.join(__dirname, 'dist');
   const indexPath = path.join(distPath, 'index.html');
@@ -3429,6 +3433,7 @@ async function startServer() {
     });
   }
 
+  // Apenas inicia o escuta de porta em ambientes tradicionais (não serveless do Vercel)
   app.listen(port, '0.0.0.0', () => {
     console.log(`[SERVIÇO] Servidor Iniciado`);
     console.log(`[SERVIÇO] Porta: ${port}`);
@@ -3436,6 +3441,8 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
 
 export default app;
