@@ -1,4 +1,4 @@
-import React, { FC, useState, useMemo, useEffect, useRef } from "react";
+import React, { FC, useState, useMemo, useEffect, useRef, lazy, Suspense } from "react";
 import {
   LineChart,
   Line,
@@ -153,10 +153,10 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import Home from "./pages/Home";
-import Venda from "./pages/Venda";
-import Dashboard from "./pages/Dashboard";
-import Ranking from "./pages/Ranking";
+const Home = lazy(() => import("./pages/Home"));
+const Venda = lazy(() => import("./pages/Venda"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Ranking = lazy(() => import("./pages/Ranking"));
 import { UserWithPlan, isPro } from "./utils/plan";
 
 // Safely wrapped localStorage to prevent crashes on restricted engines/mobile frames/iframes
@@ -18072,36 +18072,42 @@ const App: FC = () => {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/venda" element={<Venda />} />
-        <Route
-          path="/dashboard"
-          element={
-            user && user.plan === "pro" ? (
-              <Dashboard user={user} />
-            ) : (
-              <Navigate to="/venda" replace />
-            )
-          }
-        />
-        <Route
-          path="/ranking"
-          element={
-            user && user.plan === "pro" ? (
-              <Ranking />
-            ) : (
-              <Navigate to="/venda" replace />
-            )
-          }
-        />
-        <Route
-          path="/hub/*"
-          element={<EliteHubApp user={user} setUser={setUser} />}
-        />
-        {/* Fallback for existing links if any */}
-        <Route path="*" element={<Home />} />
-      </Routes>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen bg-[#02050E] text-white">
+          <div className="w-10 h-10 border-4 border-t-[#308FFA] border-r-transparent border-b-[#308FFA] border-l-transparent rounded-full animate-spin"></div>
+        </div>
+      }>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/venda" element={<Venda />} />
+          <Route
+            path="/dashboard"
+            element={
+              user && user.plan === "pro" ? (
+                <Dashboard user={user} />
+              ) : (
+                <Navigate to="/venda" replace />
+              )
+            }
+          />
+          <Route
+            path="/ranking"
+            element={
+              user && user.plan === "pro" ? (
+                <Ranking />
+              ) : (
+                <Navigate to="/venda" replace />
+              )
+            }
+          />
+          <Route
+            path="/hub/*"
+            element={<EliteHubApp user={user} setUser={setUser} />}
+          />
+          {/* Fallback for existing links if any */}
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 };
